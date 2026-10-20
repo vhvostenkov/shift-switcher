@@ -277,9 +277,9 @@ final class App: NSObject, NSApplicationDelegate {
         if AXUIElementIsAttributeSettable(field.element, kAXSelectedTextAttribute as CFString, &settable) == .success,
            settable.boolValue, AXUIElementSetAttributeValue(field.element, kAXSelectedTextAttribute as CFString, text as CFString) == .success,
            awaitValue(expected, field: field) { return true }
-        // WebKit advertises the selected-text setter but can ignore it. Use targeted
-        // Unicode input only in verified hosts, without touching the clipboard.
-        let hosts: Set<String> = ["com.apple.Safari", "com.google.Chrome", "com.apple.Notes"]
+        // WebKit and Electron can ignore the selected-text setter. Use targeted
+        // Unicode input only in explicitly supported hosts, without touching the clipboard.
+        let hosts: Set<String> = ["com.apple.Safari", "com.google.Chrome", "com.apple.Notes", "com.openai.codex"]
         guard hosts.contains(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? ""),
               CGPreflightPostEventAccess(), text.utf16.count <= 256, let chunks = TextEvents.chunks(text),
               let unchanged = sameField(field), unchanged.value == field.value, unchanged.range == range else {
