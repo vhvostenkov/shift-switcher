@@ -6,7 +6,7 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from commerce.catalog import DEFAULT_CATALOG
-from commerce.delivery import deliver_one, enqueue
+from commerce.delivery import deliver_one, enqueue, load_config
 from commerce.ledger import bank_token
 from commerce.service import Commerce
 
@@ -27,6 +27,15 @@ class MailQueueTests(unittest.TestCase):
         self.event['Token']=bank_token(self.event,'test-only-password');self.service.notification(self.event)
     def tearDown(self):self.temp.cleanup()
     def sender(self,message,recipient):self.sent.append((message,recipient))
+    def test_private_mail_file_cannot_enable_sending_or_override_environment(self):
+        folder=Path(self.temp.name)
+        mail=folder/'mail.json';mail.write_text(json.dumps(dict(smtp_host='smtp.example.test',smtp_user='sender@example.test',smtp_password='fixture-only',smtp_from='sender@example.test',smtp_enabled=True,environment='LIVE',checkout_enabled=True)))
+        config=folder/'config.json';config.write_text(json.dumps(dict(environment='DEMO',smtp_enabled=False,checkout_enabled=False,smtp_config=str(mail))))
+        loaded=load_config(config)
+        self.assertEqual(loaded['environment'],'DEMO')
+        self.assertFalse(loaded['smtp_enabled']);self.assertFalse(loaded['checkout_enabled'])
+        self.assertEqual(loaded['smtp_password'],'fixture-only')
+
     def test_license_goes_only_to_stored_buyer_with_matching_attachment(self):
         self.assertEqual(deliver_one(self.temp.name,self.config,sender=self.sender),'SENT')
         message,recipient=self.sent[0]

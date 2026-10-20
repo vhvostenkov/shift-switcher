@@ -80,10 +80,20 @@ def deliver_one(folder,config,*,sender=None):
         return 'SENT'
 
 
+def load_config(path):
+    config=json.loads(Path(path).read_text())
+    if config.get('smtp_config'):
+        mail=json.loads(Path(config['smtp_config']).read_text())
+        # A mail file cannot enable LIVE or override bank/readiness settings.
+        for key in ['smtp_host','smtp_user','smtp_password','smtp_from']:
+            config[key]=mail[key]
+    return config
+
+
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--data',required=True);parser.add_argument('--config',required=True)
     parser.add_argument('--send',action='store_true');args=parser.parse_args()
-    config=json.loads(Path(args.config).read_text())
+    config=load_config(args.config)
     if not args.send:
         with closing(sqlite3.connect(Path(args.data)/'orders.sqlite')) as db:
             ensure_tables(db);print(json.dumps(dict(db.execute('SELECT status,COUNT(*) FROM mail_jobs GROUP BY status'))))
