@@ -31,21 +31,21 @@ for pid in owned:
 time.sleep(1)
 report=root/'build'/('compatibility-'+target+'.json' if target else 'native-acceptance.json')
 logpath=root/'build'/('qa-'+args.target+'.log')
-command=[str(app),'--compatibility-acceptance='+target if target else '--native-acceptance']
-env=dict(os.environ)
-if args.diagnostics:env['SHIFT_SWITCHER_DIAGNOSTICS']='1'
+command=['open','-n','-g',str(app.parents[2]),'--stdout',str(logpath),'--stderr',str(logpath)]
+if args.diagnostics:command+=['--env','SHIFT_SWITCHER_DIAGNOSTICS=1']
+command+=['--args','--compatibility-acceptance='+target if target else '--native-acceptance']
 started=time.time()
-with logpath.open('w') as log:
-    process=subprocess.Popen(command,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,env=env)
-    for _ in range(90):
-        if report.exists() and report.stat().st_mtime>=started:
-            data=json.loads(report.read_text())
-            data['binary_sha256']=hashlib.sha256(app.read_bytes()).hexdigest()
-            data['source_commit']=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip()
-            data['source_dirty']=bool(subprocess.check_output(['git','status','--porcelain','--','Sources','Tests','build.sh'],cwd=root,text=True).strip())
-            report.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n')
-            print(json.dumps({'target':args.target,'passed':sum(r['passed'] for r in data['results']),'total':len(data['results']),'report':str(report),'binary_sha256':data['binary_sha256']},ensure_ascii=False))
-            raise SystemExit(0 if all(r['passed'] for r in data['results']) else 1)
-        if process.poll() is not None:raise SystemExit('Candidate exited before producing a fresh report; previous results are not accepted')
-        time.sleep(.5)
+if subprocess.run(command).returncode:
+    raise SystemExit('LaunchServices could not start the candidate. Unlock the Mac and check its permission prompts; no previous report is accepted.')
+for _ in range(90):
+    if report.exists() and report.stat().st_mtime>=started:
+        data=json.loads(report.read_text())
+        data['launch_method']='LaunchServices'
+        data['binary_sha256']=hashlib.sha256(app.read_bytes()).hexdigest()
+        data['source_commit']=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip()
+        data['source_dirty']=bool(subprocess.check_output(['git','status','--porcelain','--','Sources','Tests','build.sh'],cwd=root,text=True).strip())
+        report.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n')
+        print(json.dumps({'target':args.target,'passed':sum(r['passed'] for r in data['results']),'total':len(data['results']),'report':str(report),'binary_sha256':data['binary_sha256']},ensure_ascii=False))
+        raise SystemExit(0 if all(r['passed'] for r in data['results']) else 1)
+    time.sleep(.5)
 raise SystemExit('No fresh report within 45 seconds')
