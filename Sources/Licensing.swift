@@ -1,6 +1,7 @@
 import AppKit
 import CryptoKit
 import Security
+import LocalAuthentication
 
 final class LicenseManager {
     private let service = (Bundle.main.bundleIdentifier ?? "local.viktor.ShiftSwitcher") + ".licensing.v1"
@@ -20,7 +21,7 @@ final class LicenseManager {
     private(set) var expires: Int64 = 0
     var hasPro: Bool { storageReady && (licensed || days > 0) }
     var environment: String { (Bundle.main.bundleIdentifier ?? "").hasSuffix(".Candidate") ? "DEMO" : "LIVE" }
-    private var api: URL { URL(string: "https://vhvost.com/shift-switcher/api/")! }
+    private var api: URL { URL(string: "https://vhvost.com/pay/api/")! }
     init() {
         if let url = Bundle.main.url(forResource: "license-public-keys", withExtension: "json"), let raw = try? Data(contentsOf: url),
            let decoded = try? JSONDecoder().decode([String: String].self, from: raw) { keys = decoded }
@@ -43,8 +44,9 @@ final class LicenseManager {
     func read(_ account: String) -> String? { store.read(account) }
     private func legacyRead(_ account: String) -> String? {
         var result: CFTypeRef?
+        let context = LAContext(); context.interactionNotAllowed = true
         let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
-            kSecAttrAccount as String: account, kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne, kSecUseAuthenticationUI as String: kSecUseAuthenticationUIFail]
+            kSecAttrAccount as String: account, kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne, kSecUseAuthenticationContext as String: context]
         guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess, let data = result as? Data else { return nil }
         return String(data: data, encoding: .utf8)
     }
@@ -124,5 +126,5 @@ final class LicenseManager {
             }
         }.resume()
     }
-    func buy() { NSWorkspace.shared.open(URL(string: "https://vhvost.com/shift-switcher/checkout")!) }
+    func buy() { NSWorkspace.shared.open(URL(string: "https://vhvost.com/pay/?product=shift-switcher-pro-v1")!) }
 }

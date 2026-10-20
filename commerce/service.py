@@ -114,8 +114,9 @@ class Commerce:
             if attempted: raise ValueError('payment_pending_review')
             self.event(row['order_id'],'init_started')
             origin=self.config['origin'].rstrip('/')
+            checkout=self.config.get('checkout_url',origin+'/checkout')
             result=self.bank.init_connectivity_probe(row['order_id'], price=row['amount'],
-                notification_url=origin+'/api/notification', success_url=origin+'/checkout?result=success', fail_url=origin+'/checkout?result=fail')
+                notification_url=origin+'/api/notification', success_url=checkout+'?result=success', fail_url=checkout+'?result=fail')
             self.ledger.bind_payment(row['order_id'],str(result['PaymentId']))
             with closing(self.ledger.connect()) as db:
                 db.execute('UPDATE sessions SET payment_url=? WHERE order_id=?',(result['PaymentURL'],row['order_id']))
