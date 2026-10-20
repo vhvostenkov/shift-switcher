@@ -138,7 +138,7 @@ struct SettingsView: View {
                     permission("Мониторинг ввода", subtitle: "Чтобы распознавать ⇧⇧", enabled: model.monitoring) { model.openMonitoring() }
                 }
                 HStack {
-                    Text("Парольные поля пропускаются. Автоматика отключена в терминалах и редакторах кода.")
+                    Text("Парольные поля пропускаются. В терминалах и редакторах кода автоматика по умолчанию отключена.")
                         .font(.system(size: 9)).foregroundColor(.secondary).fixedSize(horizontal: false, vertical: true)
                     Spacer()
                     Button("Инструкция ↗") { model.app?.help() }.buttonStyle(.plain).font(.system(size: 10)).foregroundColor(accent)
