@@ -1,0 +1,17 @@
+{
+  "tested_at": "2026-10-20",
+  "environment": "DEMO",
+  "init_verified": true,
+  "card_source": "official merchant test case 1; no real card",
+  "before_refund": "CONFIRMED",
+  "after_refund": "REFUNDED",
+  "payment_matches": true,
+  "terminal_matches": true,
+  "amount_before": 49900,
+  "payment_id_sha256": "677f8b65ab1cf2bda7d3d771a31e5751873e1b3cc49f2957994ccd34b6398d72",
+  "tls_verified": true,
+  "system_trust_changed": false,
+  "webhook_verified": false,
+  "fiscal_receipt_verified": false,
+  "client_license_verified": false
+}

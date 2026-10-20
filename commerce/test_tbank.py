@@ -42,6 +42,23 @@ class DemoTransportTests(unittest.TestCase):
         with self.assertRaises(BankError):
             self.init(self.client(response))
 
+    def test_current_bank_payment_host(self):
+        response = {'TerminalKey': 'testDEMO', 'Success': True, 'ErrorCode': '0', 'PaymentId': '123', 'OrderId': 'ss_test', 'Amount': 49900, 'PaymentURL': 'https://pay.tbank-online.com/test-only'}
+        self.assertEqual(self.init(self.client(response))['PaymentURL'], response['PaymentURL'])
+
+    def test_bank_host_on_arbitrary_port_rejected(self):
+        response = {'TerminalKey': 'testDEMO', 'Success': True, 'ErrorCode': '0', 'PaymentId': '123', 'OrderId': 'ss_test', 'Amount': 49900, 'PaymentURL': 'https://pay.tbank-online.com:8443/test-only'}
+        with self.assertRaises(BankError): self.init(self.client(response))
+
+    def test_probe_does_not_fabricate_a_receipt(self):
+        def transport(method, payload):
+            self.assertNotIn('Receipt', payload)
+            self.assertEqual(payload['Amount'], 49900)
+            self.assertIn('DEMO', payload['Description'])
+            return {'TerminalKey': 'testDEMO', 'Success': True, 'ErrorCode': '0', 'PaymentId': '123', 'OrderId': 'ss_test', 'Amount': 49900, 'PaymentURL': 'https://pay.tbank-online.com/test-only'}
+        client = TBankDemo('testDEMO', 'test-only-password', transport=transport)
+        client.init_connectivity_probe('ss_test', notification_url='https://example.test/webhook', success_url='https://example.test/success', fail_url='https://example.test/fail')
+
     def test_receipt_is_required(self):
         with self.assertRaises(ValueError):
             self.init(self.client(), receipt={})

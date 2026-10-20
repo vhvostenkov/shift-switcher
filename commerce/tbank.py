@@ -52,16 +52,32 @@ class TBankDemo:
         # Receipt generation is a separate, owner-approved integration; never fabricate it.
         if not isinstance(receipt, dict) or not receipt:
             raise ValueError('explicit receipt configuration required')
+        return self._init(order, price, notification_url, success_url, fail_url, receipt)
+
+    def init_connectivity_probe(self, order, *, notification_url, success_url, fail_url):
+        """DEMO API probe without a fiscal receipt; never grants a paid license."""
+        if not isinstance(order, str) or not order.startswith('ss_') or len(order) > 36:
+            raise ValueError('unexpected probe order')
+        return self._init(order, 49900, notification_url, success_url, fail_url, None)
+
+    def _init(self, order, price, notification_url, success_url, fail_url, receipt):
         urls = [urlparse(u) for u in (notification_url, success_url, fail_url)]
         if any(u.scheme != 'https' or not u.hostname or u.username or u.password for u in urls) or len({u.netloc for u in urls}) != 1:
             raise ValueError('same-origin HTTPS callback URLs required')
-        result = self._request('Init', {'OrderId': order, 'Amount': price,
+        data = {'OrderId': order, 'Amount': price,
             'Description': 'Shift Switcher Pro 1.x, 2 Mac', 'NotificationURL': notification_url,
-            'SuccessURL': success_url, 'FailURL': fail_url, 'Receipt': receipt})
+            'SuccessURL': success_url, 'FailURL': fail_url}
+        if receipt is not None:
+            data['Receipt'] = receipt
+        else:
+            data['Description'] = 'Shift Switcher DEMO connectivity probe; no license'
+        result = self._request('Init', data)
         payment = str(result.get('PaymentId', ''))
         target = urlparse(result.get('PaymentURL', ''))
         if not payment.isascii() or not payment.isdigit() or amount(result.get('Amount')) != price or result.get('OrderId') != order:
             raise BankError('Init identity or amount mismatch')
-        if target.scheme != 'https' or target.hostname not in {'securepay.tinkoff.ru', 'securepay.tbank.ru'} or target.username or target.password:
+        # pay.tbank-online.com was returned by the authenticated bank API in
+        # the 2026-10-20 DEMO probe. Do not accept arbitrary *.tbank domains.
+        if target.scheme != 'https' or target.hostname not in {'securepay.tinkoff.ru', 'securepay.tbank.ru', 'pay.tbank-online.com'} or target.port not in (None, 443) or target.username or target.password:
             raise BankError('unexpected bank payment URL')
         return result
