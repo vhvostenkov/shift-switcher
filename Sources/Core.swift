@@ -67,3 +67,18 @@ struct DoubleShift {
         lastTap = time; return false
     }
 }
+
+// Quartz input chunks keep composed characters and UTF-16 surrogate pairs intact.
+enum TextEvents {
+    static func chunks(_ text: String, limit: Int = 16) -> [String]? {
+        var result: [String] = [], current = ""
+        for character in text {
+            let part = String(character)
+            guard part.utf16.count <= limit else { return nil }
+            if current.utf16.count + part.utf16.count > limit { result.append(current); current = "" }
+            current += part
+        }
+        if !current.isEmpty { result.append(current) }
+        return result
+    }
+}

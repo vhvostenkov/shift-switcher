@@ -114,4 +114,10 @@ check(reopenedStore.read("certificate") == storedTestCertificate, "certificate s
 check((try! FileManager.default.attributesOfItem(atPath: storeFolder.path)[.posixPermissions] as! NSNumber).intValue == 0o700, "license folder is private")
 check((try! FileManager.default.attributesOfItem(atPath: storeFolder.appendingPathComponent("license-state.json").path)[.posixPermissions] as! NSNumber).intValue == 0o600, "license file is private")
 
+check(TextEvents.chunks("привет hello")?.joined() == "привет hello", "Unicode chunks preserve text")
+let emojiText = String(repeating: "😀привет ", count: 8)
+check(TextEvents.chunks(emojiText)?.joined() == emojiText, "Unicode chunks preserve surrogate pairs")
+check(TextEvents.chunks(emojiText)?.allSatisfy { $0.utf16.count <= 16 } == true, "Unicode event chunks stay bounded")
+check(TextEvents.chunks("a" + String(repeating: "\u{0301}", count: 30)) == nil, "oversized composed character is rejected before input")
+
 print("PASS: \(count) checks")

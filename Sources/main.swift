@@ -96,7 +96,11 @@ final class App: NSObject, NSApplicationDelegate {
         }
         fputs("accessibility=\(AXIsProcessTrusted()) inputMonitoring=\(CGPreflightListenEventAccess())\n", stderr)
         connect()
-        if CommandLine.arguments.contains("--native-acceptance") {
+        if let argument = CommandLine.arguments.first(where: { $0.hasPrefix("--compatibility-acceptance=") }) {
+            let target = String(argument.dropFirst("--compatibility-acceptance=".count))
+            acceptance = NativeAcceptance(app: self, target: target)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.acceptance?.start() }
+        } else if CommandLine.arguments.contains("--native-acceptance") {
             acceptance = NativeAcceptance(app: self)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.acceptance?.start() }
         } else if !CommandLine.arguments.contains("--background") && NSAppleEventManager.shared().currentAppleEvent?.paramDescriptor(forKeyword: AEKeyword(keyAELaunchedAsLogInItem))?.booleanValue != true {
@@ -135,6 +139,7 @@ final class App: NSObject, NSApplicationDelegate {
         report(AXIsProcessTrusted() ? "Готово — \(shortcutPreferences.correction.title)" : "Нужен доступ: Универсальный доступ")
     }
     func handle(_ type: CGEventType, _ event: CGEvent) {
+        guard event.getIntegerValueField(.eventSourceUserData) != 0x535357 else { return }
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
             detector.reset(); autoGeneration += 1
             if let tap = tap { CGEvent.tapEnable(tap: tap, enable: true) }; return
@@ -216,7 +221,7 @@ final class App: NSObject, NSApplicationDelegate {
             guard !validWord(before, language: currentLanguage), validWord(after, language: targetLanguage) else { return }
         }
         guard replace(field: field, range: range, text: after) else {
-            if !automatic { report("Приложение не разрешает замену через Accessibility", failure: true) }; return
+            if !automatic { report("Не удалось безопасно заменить текст в этом поле", failure: true) }; return
         }
         let expected = ns.replacingCharacters(in: range, with: after)
         let newRange = NSRange(location: range.location, length: (after as NSString).length)
@@ -229,20 +234,58 @@ final class App: NSObject, NSApplicationDelegate {
         switchInput(for: after)
         report(automatic ? "Автоматически исправлено · отмена в меню ⇧⇧" : "Раскладка исправлена · повторите \(shortcutPreferences.correction.title) для обратной замены")
     }
-    func replace(field: Field, range: NSRange, text: String) -> Bool {
-        guard let current = self.field(), current.pid == field.pid,
-              CFEqual(current.element, field.element), current.value == field.value, current.range == field.range else { return false }
-        var settable = DarwinBoolean(false)
-        guard AXUIElementIsAttributeSettable(field.element, kAXSelectedTextAttribute as CFString, &settable) == .success,
-              settable.boolValue, setSelection(field.element, range) else { return false }
-        guard let selected = self.field(), selected.pid == field.pid,
-              CFEqual(selected.element, field.element), selected.value == field.value, selected.range == range else { return false }
-        guard AXUIElementSetAttributeValue(field.element, kAXSelectedTextAttribute as CFString, text as CFString) == .success else {
-            setSelection(field.element, field.range); return false
+    private func sameField(_ field: Field) -> Field? {
+        guard let current = self.field(), current.pid == field.pid, CFEqual(current.element, field.element) else { return nil }
+        return current
+    }
+    private func awaitValue(_ expected: String, field: Field) -> Bool {
+        for _ in 0..<16 {
+            guard let current = sameField(field) else { return false }
+            if current.value == expected { return true }
+            usleep(5000)
         }
+        return false
+    }
+    func replace(field: Field, range: NSRange, text: String) -> Bool {
+        guard let current = sameField(field), current.value == field.value, current.range == field.range,
+              setSelection(field.element, range) else { return false }
+        for _ in 0..<16 {
+            guard let selected = sameField(field), selected.value == field.value else { return false }
+            if selected.range == range { break }
+            usleep(5000)
+        }
+        guard let selected = sameField(field), selected.value == field.value, selected.range == range else { return false }
         let expected = (field.value as NSString).replacingCharacters(in: range, with: text)
-        guard (attribute(field.element, kAXValueAttribute) as? String) == expected else { return false }
-        return true
+        var settable = DarwinBoolean(false)
+        if AXUIElementIsAttributeSettable(field.element, kAXSelectedTextAttribute as CFString, &settable) == .success,
+           settable.boolValue, AXUIElementSetAttributeValue(field.element, kAXSelectedTextAttribute as CFString, text as CFString) == .success,
+           awaitValue(expected, field: field) { return true }
+        // WebKit advertises the selected-text setter but can ignore it. Use targeted
+        // Unicode input only in verified hosts, without touching the clipboard.
+        let hosts: Set<String> = ["com.apple.Safari", "com.google.Chrome", "com.apple.Notes"]
+        guard hosts.contains(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? ""),
+              CGPreflightPostEventAccess(), text.utf16.count <= 256, let chunks = TextEvents.chunks(text),
+              let unchanged = sameField(field), unchanged.value == field.value, unchanged.range == range else {
+            if let unchanged = sameField(field), unchanged.value == field.value, unchanged.range == range { setSelection(field.element, field.range) }
+            return false
+        }
+        var value = field.value, replacement = range
+        for chunk in chunks {
+            guard let current = sameField(field), current.value == value, current.range == replacement else { return false }
+            let units = Array(chunk.utf16)
+            for down in [true, false] {
+                guard sameField(field) != nil else { return false }
+                let event = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: down)!
+                event.flags = []
+                event.setIntegerValueField(.eventSourceUserData, value: 0x535357)
+                if down { units.withUnsafeBufferPointer { event.keyboardSetUnicodeString(stringLength: units.count, unicodeString: $0.baseAddress!) } }
+                event.postToPid(field.pid)
+            }
+            value = (value as NSString).replacingCharacters(in: replacement, with: chunk)
+            guard awaitValue(value, field: field) else { return false }
+            replacement = NSRange(location: replacement.location + units.count, length: 0)
+        }
+        return value == expected
     }
     func validWord(_ word: String, language: String) -> Bool {
         let checker = NSSpellChecker.shared
