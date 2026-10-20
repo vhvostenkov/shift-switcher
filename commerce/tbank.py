@@ -54,11 +54,12 @@ class TBankDemo:
             raise ValueError('explicit receipt configuration required')
         return self._init(order, price, notification_url, success_url, fail_url, receipt)
 
-    def init_connectivity_probe(self, order, *, notification_url, success_url, fail_url):
+    def init_connectivity_probe(self, order, *, price=49900, notification_url, success_url, fail_url):
         """DEMO API probe without a fiscal receipt; never grants a paid license."""
         if not isinstance(order, str) or not order.startswith('ss_') or len(order) > 36:
             raise ValueError('unexpected probe order')
-        return self._init(order, 49900, notification_url, success_url, fail_url, None)
+        if type(price) is not int or not 0 < price <= 10000000: raise ValueError("invalid probe price")
+        return self._init(order, price, notification_url, success_url, fail_url, None)
 
     def _init(self, order, price, notification_url, success_url, fail_url, receipt):
         urls = [urlparse(u) for u in (notification_url, success_url, fail_url)]

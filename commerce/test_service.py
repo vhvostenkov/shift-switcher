@@ -87,5 +87,31 @@ class ServiceTests(unittest.TestCase):
         self.pay()
         with self.assertRaises(ValueError):self.service.license_file('c'*64)
 
+    def test_catalog_product_and_price_are_bound_to_order(self):
+        from copy import deepcopy
+        from commerce.catalog import DEFAULT_CATALOG
+        products=deepcopy(DEFAULT_CATALOG)
+        products['test-second-product']=dict(products['shift-switcher-pro-v1'],name='Test fixture product',amount=9900,devices=1)
+        self.config['products']=products
+        service=Commerce(self.folder.name,self.config,bank=self.bank)
+        _, order=service.create_checkout(self.token,'buyer@example.test','test-second-product')
+        self.assertEqual(order['amount'],9900)
+        self.assertEqual(order['product'],'test-second-product')
+        with self.assertRaises(ValueError): service.create_checkout(self.token,'buyer@example.test','shift-switcher-pro-v1')
+        with self.assertRaises(ValueError): service.create_checkout('c'*64,'buyer@example.test','unknown-product')
+
+    def test_product_certificate_and_device_limit_stay_separate(self):
+        import base64
+        from commerce.catalog import DEFAULT_CATALOG
+        products={**DEFAULT_CATALOG,'test-second-product':dict(DEFAULT_CATALOG['shift-switcher-pro-v1'],name='Test fixture product',amount=9900,devices=1)}
+        self.config['products']=products
+        service=Commerce(self.folder.name,self.config,bank=self.bank)
+        order,key,_=service.ledger.create_order('test-second-product')
+        with service.ledger.connect() as db: db.execute("UPDATE orders SET status='CONFIRMED' WHERE id=?",(order,))
+        cert=service.activate(key,'b'*64)['certificate']
+        raw=cert.split('.')[1]; payload=json.loads(base64.urlsafe_b64decode(raw+'='*(-len(raw)%4)))
+        self.assertEqual(payload['product'],'test-second-product')
+        with self.assertRaises(ValueError): service.activate(key,'c'*64)
+
 
 if __name__=='__main__':unittest.main()

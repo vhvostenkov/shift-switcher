@@ -11,7 +11,9 @@ from pathlib import Path
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-PRODUCT = "shift-switcher-pro-v1"
+from .catalog import DEFAULT_PRODUCT, catalog_from
+
+PRODUCT = DEFAULT_PRODUCT
 
 
 def bank_token(payload: dict, password: str) -> str:
@@ -39,12 +41,13 @@ def b64(data: bytes) -> str:
 
 class Ledger:
     def __init__(self, path: Path, *, terminal: str, password: str,
-                 signing_key: Ed25519PrivateKey, key_id: str, sandbox: bool = True):
+                 signing_key: Ed25519PrivateKey, key_id: str, sandbox: bool = True, products=None):
         if not terminal or not password or not key_id:
             raise ValueError("explicit credentials and signing key ID required")
         if sandbox != terminal.endswith("DEMO"):
             raise ValueError("terminal environment mismatch")
         self.path, self.terminal, self.password = str(path), terminal, password
+        self.products = catalog_from({} if products is None else {"products": products})
         self.sandbox = sandbox
         self.signing_key, self.key_id = signing_key, key_id
         with closing(self.connect()) as db:
@@ -65,17 +68,18 @@ class Ledger:
         db.execute("PRAGMA foreign_keys=ON")
         return db
 
-    def create_order(self) -> tuple[str, str, int]:
+    def create_order(self, product=PRODUCT) -> tuple[str, str, int]:
         # Price is server-owned. A client cannot pass an amount or an early-bird flag.
+        if product not in self.products: raise ValueError("unknown product")
         order = "ss_" + uuid.uuid4().hex
         key = secrets.token_urlsafe(32)
         with closing(self.connect()) as db:
             db.execute("BEGIN IMMEDIATE")
             # Early slots require an explicit reservation design before production.
             # Keep a fixed price until that design exists; do not oversell a limited offer.
-            price = 49900
+            price = self.products[product]["amount"]
             db.execute("INSERT INTO orders VALUES(?,?,?,NULL,'NEW',?)",
-                       (order, PRODUCT, price, hashlib.sha256(key.encode()).hexdigest()))
+                       (order, product, price, hashlib.sha256(key.encode()).hexdigest()))
             db.commit()
         return order, key, price
 
@@ -137,11 +141,11 @@ class Ledger:
             if not row or row["status"] != "CONFIRMED":
                 raise ValueError("license not paid or revoked")
             devices = {r[0] for r in db.execute("SELECT device FROM activations WHERE order_id=?", (row["id"],))}
-            if device not in devices and len(devices) >= 2:
+            if device not in devices and len(devices) >= self.products[row["product"]]["devices"]:
                 raise ValueError("device limit reached")
             db.execute("INSERT OR IGNORE INTO activations VALUES(?,?)", (row["id"], device))
             db.commit()
-        payload = {"schema": 1, "product": PRODUCT, "license": row["id"], "device": device,
+        payload = {"schema": 1, "product": row["product"], "license": row["id"], "device": device,
                    "issued_at": now, "valid_until": now + 30 * 86400, "key_id": self.key_id,
                    "environment": "DEMO" if self.sandbox else "LIVE"}
         encoded = b64(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode())

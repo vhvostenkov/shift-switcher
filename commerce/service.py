@@ -19,6 +19,7 @@ from cryptography.hazmat.primitives import serialization
 
 from .ledger import Ledger, PRODUCT
 from .tbank import TBankDemo
+from .catalog import catalog_from
 
 
 def digest(text):
@@ -33,10 +34,11 @@ class Commerce:
     def __init__(self, folder, config, *, bank=None):
         self.folder, self.config = Path(folder), config
         self.folder.mkdir(mode=0o700, parents=True, exist_ok=True)
+        self.products = catalog_from(config)
         self.cipher = Fernet(config['encryption_key'].encode())
         signer = serialization.load_pem_private_key(config['signing_key'].encode(), password=None)
         self.ledger = Ledger(self.folder/'orders.sqlite', terminal=config['terminal'], password=config['password'],
-            signing_key=signer, key_id=config['key_id'], sandbox=True)
+            signing_key=signer, key_id=config['key_id'], sandbox=True, products=self.products)
         self.bank = bank or TBankDemo(config['terminal'], config['password'], ca_file=config.get('ca_file'))
         with closing(self.ledger.connect()) as db:
             db.executescript('''
@@ -71,7 +73,8 @@ class Commerce:
             db.execute('INSERT INTO events(at,order_id,kind,detail) VALUES(?,?,?,?)',
                        (int(time.time()), order, kind, detail))
 
-    def create_checkout(self, request_id, email):
+    def create_checkout(self, request_id, email, product=PRODUCT):
+        if product not in self.products: raise ValueError('unknown_product')
         if not self.config.get('checkout_enabled'): raise ValueError('checkout_closed')
         if not isinstance(request_id,str) or not re.fullmatch(r'[a-f0-9]{64}', request_id): raise ValueError('invalid_request')
         if not isinstance(email,str) or len(email)>254 or not re.fullmatch(r'[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+',email): raise ValueError('invalid_email')
@@ -81,22 +84,22 @@ class Commerce:
             db.execute('BEGIN IMMEDIATE')
             row=db.execute('SELECT * FROM sessions WHERE request_id=?',(digest(request_id),)).fetchone()
             if row:
-                if self.cipher.decrypt(row['email'].encode()).decode()!=email: raise ValueError('request_conflict')
+                if self.cipher.decrypt(row['email'].encode()).decode()!=email or db.execute('SELECT product FROM orders WHERE id=?',(row['order_id'],)).fetchone()[0]!=product: raise ValueError('request_conflict')
                 return request_id, self.checkout_status(request_id)
             import uuid
             order='ss_'+uuid.uuid4().hex
             key=secrets.token_urlsafe(32)
-            db.execute("INSERT INTO orders VALUES(?,?,?,NULL,'NEW',?)",(order,PRODUCT,49900,digest(key)))
+            db.execute("INSERT INTO orders VALUES(?,?,?,NULL,'NEW',?)",(order,product,self.products[product]['amount'],digest(key)))
             db.execute('INSERT INTO sessions VALUES(?,?,?,?,?,?,?)',
                 (digest(request_id),digest(request_id),order,self.cipher.encrypt(key.encode()).decode(),self.cipher.encrypt(email.encode()).decode(),None,int(time.time())))
             db.commit()
-        self.event(order,'created','DEMO; 49900 kopecks')
+        self.event(order,'created','DEMO; '+product)
         return request_id, self.checkout_status(request_id)
 
     def session(self, token):
         if not isinstance(token,str) or not re.fullmatch(r'[a-f0-9]{64}',token): raise ValueError('unknown_session')
         with closing(self.ledger.connect()) as db:
-            row=db.execute('SELECT sessions.*,orders.status,orders.amount,orders.payment_id FROM sessions JOIN orders ON orders.id=sessions.order_id WHERE hash=?',(digest(token),)).fetchone()
+            row=db.execute('SELECT sessions.*,orders.status,orders.amount,orders.product,orders.payment_id FROM sessions JOIN orders ON orders.id=sessions.order_id WHERE hash=?',(digest(token),)).fetchone()
         if not row or row['created'] < time.time()-7*86400: raise ValueError('unknown_session')
         return row
 
@@ -111,7 +114,7 @@ class Commerce:
             if attempted: raise ValueError('payment_pending_review')
             self.event(row['order_id'],'init_started')
             origin=self.config['origin'].rstrip('/')
-            result=self.bank.init_connectivity_probe(row['order_id'],
+            result=self.bank.init_connectivity_probe(row['order_id'], price=row['amount'],
                 notification_url=origin+'/api/notification', success_url=origin+'/checkout?result=success', fail_url=origin+'/checkout?result=fail')
             self.ledger.bind_payment(row['order_id'],str(result['PaymentId']))
             with closing(self.ledger.connect()) as db:
@@ -122,7 +125,7 @@ class Commerce:
     def checkout_status(self, token):
         row=self.session(token)
         return {'order':row['order_id'],'status':row['status'],'amount':row['amount'],
-                'environment':'DEMO','receipt_status':self.receipt_status(row['order_id']), 'receipt_url':self.receipt_url(row['order_id'])}
+                'product':row['product'],'name':self.products[row['product']]['name'],'environment':'DEMO','receipt_status':self.receipt_status(row['order_id']), 'receipt_url':self.receipt_url(row['order_id'])}
 
     def receipt_url(self, order):
         with closing(self.ledger.connect()) as db:
@@ -149,7 +152,7 @@ class Commerce:
     def license_file(self, token):
         row=self.session(token)
         if row['status']!='CONFIRMED': raise ValueError('license_not_paid')
-        return {'schema':1,'product':PRODUCT,'environment':'DEMO','license_key':self.cipher.decrypt(row['encrypted_key'].encode()).decode()}
+        return {'schema':1,'product':row['product'],'environment':'DEMO','license_key':self.cipher.decrypt(row['encrypted_key'].encode()).decode()}
 
     def activate(self, key, device):
         if not isinstance(key,str) or not 30<=len(key)<=100: raise ValueError('invalid_license')
@@ -188,6 +191,7 @@ def handler_for(service):
                 service.limit(ip,'general',120)
                 if method=='GET':
                     if path=='/api/health': self.send(200,{'ok':True,'environment':'DEMO','revision':service.config.get('revision','local')}); return
+                    if path=='/api/catalog': self.send(200,{'products':service.products,'environment':'DEMO'}); return
                     if path=='/api/order': self.send(200,service.checkout_status(self.token())); return
                     if path=='/api/license': self.send(200,service.license_file(self.token())); return
                     self.send(404,{'error':'not_found'}); return
@@ -201,8 +205,8 @@ def handler_for(service):
                 if not isinstance(data,dict): raise ValueError('object_required')
                 if path=='/api/checkout':
                     service.limit(ip,'checkout',5)
-                    token,result=service.create_checkout(data.get('request_id'),data.get('email'))
-                    self.send(200,result,cookie='ss_session='+token+'; Secure; HttpOnly; SameSite=Lax; Path=/shift-switcher/; Max-Age=604800'); return
+                    token,result=service.create_checkout(data.get('request_id'),data.get('email'),data.get('product',PRODUCT))
+                    self.send(200,result,cookie='ss_session='+token+'; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800'); return
                 if path=='/api/pay': self.send(200,{'payment_url':service.start_payment(self.token())}); return
                 if path=='/api/notification':
                     self.send(200,service.notification(data),kind='text/plain'); return
