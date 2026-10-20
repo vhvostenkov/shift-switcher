@@ -11,6 +11,7 @@ from pathlib import Path
 
 root=Path(__file__).resolve().parent.parent
 parser=argparse.ArgumentParser()
+parser.add_argument('--launch-only',action='store_true',help='Restart the same verified bundle without test arguments')
 parser.add_argument('--target',choices=['TextEdit','Safari','Chrome','Notes'],default='TextEdit')
 args=parser.parse_args()
 target={'Safari':'com.apple.Safari','Chrome':'com.google.Chrome','Notes':'com.apple.Notes'}.get(args.target)
@@ -30,10 +31,12 @@ for pid in owned:
 time.sleep(1)
 report=root/'build'/('compatibility-'+target+'.json' if target else 'native-acceptance.json')
 command=['open','-a',str(app.parents[2])]
-command+=['--args','--compatibility-acceptance='+target if target else '--native-acceptance']
+if not args.launch_only:command+=['--args','--compatibility-acceptance='+target if target else '--native-acceptance']
 started=time.time()
 if subprocess.run(command).returncode:
     raise SystemExit('LaunchServices could not start the candidate. Unlock the Mac and check its permission prompts; no previous report is accepted.')
+if args.launch_only:
+    print('Verified candidate launched normally without test arguments');raise SystemExit(0)
 for _ in range(90):
     if report.exists() and report.stat().st_mtime>=started:
         data=json.loads(report.read_text())

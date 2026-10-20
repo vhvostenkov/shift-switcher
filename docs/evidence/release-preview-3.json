@@ -11,5 +11,13 @@
   "apple_signing": "ad-hoc; no notarization",
   "license_environment": "DEMO",
   "live_sales": false,
-  "url": "https://github.com/vhvostenkov/shift-switcher/releases/tag/v0.3.0-preview.3"
+  "url": "https://github.com/vhvostenkov/shift-switcher/releases/tag/v0.3.0-preview.3",
+  "public_download_verified": true,
+  "download_bytes": 1928646,
+  "normal_restart_verified": true,
+  "keychain_prompt_on_normal_restart": false,
+  "accessibility_granted": true,
+  "input_monitoring_granted": true,
+  "automation_enabled": true,
+  "paused": false
 }
