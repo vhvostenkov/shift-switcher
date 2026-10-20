@@ -54,6 +54,7 @@ final class App: NSObject, NSApplicationDelegate {
     var paused = false
     var lastEdit: Edit?
     var autoGeneration = 0
+    private let diagnostics = ProcessInfo.processInfo.environment["SHIFT_SWITCHER_DIAGNOSTICS"] == "1"
     let excluded = Set(["com.apple.Terminal", "com.googlecode.iterm2", "com.microsoft.VSCode", "dev.zed.Zed", "com.jetbrains.intellij", "com.jetbrains.pycharm", "com.apple.dt.Xcode", "com.agilebits.onepassword7", "com.1password.1password", "com.apple.Passwords"])
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -155,12 +156,16 @@ final class App: NSObject, NSApplicationDelegate {
             } else { detector.otherKey() }
         } else if type == .keyDown {
             detector.otherKey(); autoGeneration += 1
+            if diagnostics && code == 49 {
+                fputs("[diagnostic] space auto=\(autoEnabled) pro=\(license.hasPro) modifiers=\(modifiers.rawValue) field=\(field() != nil) app=\(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "none")\n", stderr)
+            }
             guard autoEnabled, license.hasPro, modifiers.isEmpty, code == 49,
                   let bundle = NSWorkspace.shared.frontmostApplication?.bundleIdentifier,
                   preferences.mode(for: bundle, defaultExclusions: excluded) == .automatic,
                   let field = field() else { return }
             let generation = autoGeneration
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.035) {
+                if self.diagnostics { fputs("[diagnostic] delayed generation=\(self.autoGeneration == generation) field=\(self.field() != nil)\n", stderr) }
                 guard self.autoGeneration == generation, self.autoEnabled, !self.paused,
                       let current = self.field(), current.pid == field.pid, CFEqual(current.element, field.element),
                       current.range.length == 0, current.range.location == field.range.location + 1,
