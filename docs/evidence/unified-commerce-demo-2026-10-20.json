@@ -21,9 +21,11 @@
   "support_general_store_approved": false,
   "support_response": "Redirected to T-Business account chat",
   "support_response_message": "1a1589c6a75dfc3f",
-  "deployed_service_revision": "22e0c13",
+  "deployed_service_revision": "b98c13f",
   "public_checkout_enabled": false,
-  "commerce_tests_mac": 60,
-  "commerce_tests_rf": 60,
-  "smtp_delivery_verified": false
+  "commerce_tests_mac": 61,
+  "commerce_tests_rf": 61,
+  "smtp_delivery_verified": false,
+  "smtp_transport_inbox_verified": true,
+  "automatic_mail_enabled": false
 }
