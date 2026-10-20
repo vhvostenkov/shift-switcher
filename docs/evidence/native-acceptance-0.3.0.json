@@ -1,0 +1,45 @@
+{
+  "accessibility": true,
+  "fixture": "ShiftSwitcher-native-test-1792482557.txt",
+  "input": "CGEvent synthetic keyboard events; not physical keyboard",
+  "postEventAccess": true,
+  "results": [
+    {
+      "detail": "value=привет, range=Optional({0, 6})",
+      "passed": true,
+      "scenario": "double_shift_selection"
+    },
+    {
+      "detail": "value=test привет, range=Optional({11, 0})",
+      "passed": true,
+      "scenario": "double_shift_last_word"
+    },
+    {
+      "detail": "value=привет ",
+      "passed": true,
+      "scenario": "automatic_en_to_ru"
+    },
+    {
+      "detail": "value=hello ",
+      "passed": true,
+      "scenario": "automatic_ru_to_en"
+    },
+    {
+      "detail": "value=hello ",
+      "passed": true,
+      "scenario": "valid_word_unchanged"
+    },
+    {
+      "detail": "Control+Option+Space in test fixture",
+      "passed": true,
+      "scenario": "hotkey_selection"
+    },
+    {
+      "detail": "Control+Option+Z in same unchanged fixture",
+      "passed": true,
+      "scenario": "hotkey_undo"
+    }
+  ],
+  "testedAt": "2026-10-20T07:49:24Z",
+  "binary_sha256": "4098e9fc34ba04966a7d8219bf7dde62f16bbe2a341ab11b27c6a1161093bdfb"
+}
