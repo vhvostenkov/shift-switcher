@@ -134,7 +134,7 @@ final class NativeAcceptance {
         app.detector.reset(); app.autoGeneration += 1; return true
     }
     func postShift(_ down: Bool) {
-        guard field() != nil else { return }
+        guard !down || field() != nil else { return }
         let event = CGEvent(keyboardEventSource: nil, virtualKey: 56, keyDown: down)!
         event.type = .flagsChanged
         event.flags = down ? CGEventFlags(rawValue: CGEventFlags.maskShift.rawValue | 2) : []
@@ -145,9 +145,17 @@ final class NativeAcceptance {
         postShift(true)
         later(0.04) { self.postShift(false)
             self.later(0.06) { self.postShift(true)
-                self.later(0.04) { self.postShift(false); self.later(0.35, done) }
+                self.later(0.04) { self.postShift(false); self.later(0.35) { self.resultWhenReady(done) } }
             }
         }
+    }
+    func resultWhenReady(_ done: @escaping () -> Void, attempts: Int = 30) {
+        guard field() != nil else {
+            if attempts > 0 { later(0.05) { self.resultWhenReady(done, attempts: attempts - 1) } }
+            else { record("focus", false, "Fixture focus did not settle after input-source change"); finish() }
+            return
+        }
+        done()
     }
     func selected() {
         editor?.activate(options: [.activateIgnoringOtherApps])
@@ -290,6 +298,7 @@ final class NativeAcceptance {
         results.append(["scenario": name, "passed": passed, "detail": detail])
     }
     func finish() {
+        postShift(false) // Always release the modifier owned by this test.
         if app.shortcuts.setCorrection(originalShortcut) { app.shortcutPreferences.correction = originalShortcut }
         if app.shortcuts.setUndo(originalKeyboardUndo) { app.shortcutPreferences.keyboardUndo = originalKeyboardUndo }
         app.autoEnabled = originalAuto

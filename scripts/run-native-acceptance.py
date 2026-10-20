@@ -37,7 +37,7 @@ if args.diagnostics:env['SHIFT_SWITCHER_DIAGNOSTICS']='1'
 started=time.time()
 with logpath.open('w') as log:
     process=subprocess.Popen(command,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,env=env)
-    for _ in range(60):
+    for _ in range(90):
         if report.exists() and report.stat().st_mtime>=started:
             data=json.loads(report.read_text())
             data['binary_sha256']=hashlib.sha256(app.read_bytes()).hexdigest()
@@ -48,4 +48,4 @@ with logpath.open('w') as log:
             raise SystemExit(0 if all(r['passed'] for r in data['results']) else 1)
         if process.poll() is not None:raise SystemExit('Candidate exited before producing a fresh report; previous results are not accepted')
         time.sleep(.5)
-raise SystemExit('No fresh report within 30 seconds')
+raise SystemExit('No fresh report within 45 seconds')
