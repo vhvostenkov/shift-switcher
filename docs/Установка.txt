@@ -1,4 +1,4 @@
-Shift Switcher 0.2.0 beta
+Shift Switcher — инструкция по установке
 macOS 13+ · Apple silicon (M-серия)
 
 1. Перенесите Shift Switcher.app в папку «Программы».

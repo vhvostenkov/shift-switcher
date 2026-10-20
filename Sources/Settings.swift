@@ -1,6 +1,7 @@
 import AppKit
 import SwiftUI
 import ApplicationServices
+import ServiceManagement
 
 final class SettingsModel: ObservableObject {
     weak var app: App?
@@ -8,6 +9,10 @@ final class SettingsModel: ObservableObject {
     @Published var paused = false
     @Published var accessibility = false
     @Published var monitoring = false
+    @Published var appModes: [String: AppCorrectionMode] = [:]
+    @Published var ignoredWords: [String] = []
+    @Published var launchAtLogin = false
+    @Published var loginNeedsApproval = false
     private var timer: Timer?
     init(app: App) {
         self.app = app
@@ -19,9 +24,32 @@ final class SettingsModel: ObservableObject {
         guard let app = app else { return }
         automatic = app.autoEnabled; paused = app.paused
         accessibility = AXIsProcessTrusted(); monitoring = CGPreflightListenEventAccess()
+        appModes = app.preferences.appModes; ignoredWords = app.preferences.ignoredWords
+        launchAtLogin = SMAppService.mainApp.status == .enabled
+        loginNeedsApproval = SMAppService.mainApp.status == .requiresApproval
     }
     func setAutomatic(_ value: Bool) { if app?.autoEnabled != value { app?.toggleAuto() }; refresh() }
     func setPaused(_ value: Bool) { if app?.paused != value { app?.togglePause() }; refresh() }
+    func setMode(_ raw: String, bundle: String) {
+        _ = app?.preferences.setMode(AppCorrectionMode(rawValue: raw), for: bundle)
+        app?.autoGeneration += 1
+        refresh()
+    }
+    func addWord(_ word: String) -> Bool {
+        let result = app?.preferences.addIgnoredWord(word) ?? false
+        refresh(); return result
+    }
+    func removeWord(_ word: String) { app?.preferences.removeIgnoredWord(word); refresh() }
+    func setLogin(_ enabled: Bool) {
+        do {
+            if enabled { try SMAppService.mainApp.register() }
+            else { try SMAppService.mainApp.unregister() }
+        } catch {
+            let alert = NSAlert(); alert.messageText = "Не удалось изменить автозапуск"
+            alert.informativeText = "Проверьте раздел «Основные → Объекты входа» в настройках macOS."; alert.runModal()
+        }
+        refresh()
+    }
     func openMonitoring() {
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent")!)
     }
@@ -33,6 +61,7 @@ private let ink = Color(red: 0.085, green: 0.09, blue: 0.11)
 struct SettingsView: View {
     @ObservedObject var model: SettingsModel
     @State private var converted = false
+    @State private var showRules = false
     var ready: Bool { model.accessibility && model.monitoring }
     var body: some View {
         HStack(spacing: 0) {
@@ -45,6 +74,10 @@ struct SettingsView: View {
                     .font(.system(size: 13, weight: .semibold)).foregroundColor(accent)
                     .padding(12).frame(maxWidth: .infinity, alignment: .leading)
                     .background(accent.opacity(0.10)).cornerRadius(10)
+                Button { showRules = true } label: {
+                    Label("Личные правила", systemImage: "slider.horizontal.3")
+                        .font(.system(size: 12)).padding(12).frame(maxWidth: .infinity, alignment: .leading)
+                }.buttonStyle(.plain).foregroundColor(.secondary).padding(.top, 8)
                 Spacer()
                 VStack(alignment: .leading, spacing: 9) {
                     Image(systemName: "lock.shield").font(.system(size: 20)).foregroundColor(accent)
@@ -52,7 +85,7 @@ struct SettingsView: View {
                     Text("Без отправки текста\nи истории ввода.").font(.system(size: 11)).foregroundColor(.secondary).lineSpacing(3)
                 }
                 Divider().padding(.vertical, 20)
-                Text("ВЕРСИЯ 0.2 · BETA").font(.system(size: 9, weight: .medium, design: .monospaced)).tracking(1.4).foregroundColor(.secondary)
+                Text("\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "") · PREVIEW").font(.system(size: 9, weight: .medium, design: .monospaced)).tracking(1.4).foregroundColor(.secondary)
             }.padding(.horizontal, 22).padding(.top, 38).padding(.bottom, 26).frame(width: 188)
                 .background(Color.black.opacity(0.18))
             VStack(alignment: .leading, spacing: 19) {
@@ -112,6 +145,7 @@ struct SettingsView: View {
                 }
             }.padding(30).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }.frame(width: 872, height: 628).background(ink).preferredColorScheme(.dark)
+            .sheet(isPresented: $showRules) { RulesView(model: model) { showRules = false } }
     }
     func setting(_ title: String, subtitle: String, icon: String, value: Binding<Bool>) -> some View {
         HStack(spacing: 13) {
@@ -153,4 +187,92 @@ final class SettingsWindow: NSWindowController {
         super.init(window: window)
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+}
+
+
+private struct RulesView: View {
+    @ObservedObject var model: SettingsModel
+    let close: () -> Void
+    @State private var page = 0
+    @State private var selectedBundle = ""
+    @State private var word = ""
+    @State private var wordError = false
+    private var runningApps: [(id: String, name: String)] {
+        var unique: [String: String] = [:]
+        for app in NSWorkspace.shared.runningApplications where app.activationPolicy == .regular {
+            if let bundle = app.bundleIdentifier, bundle != Bundle.main.bundleIdentifier { unique[bundle] = app.localizedName ?? bundle }
+        }
+        for bundle in model.appModes.keys where unique[bundle] == nil { unique[bundle] = bundle }
+        return unique.map { (id: $0.key, name: $0.value) }.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            HStack {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Личные правила").font(.system(size: 24, weight: .semibold))
+                    Text("Настройте исправление под свой рабочий день.").font(.system(size: 12)).foregroundColor(.secondary)
+                }
+                Spacer()
+                Button("Готово", action: close).keyboardShortcut(.defaultAction)
+            }
+            Picker("Раздел", selection: $page) {
+                Text("Программы").tag(0); Text("Слова").tag(1); Text("Запуск").tag(2)
+            }.pickerStyle(.segmented)
+            if page == 0 {
+                Text("Выберите запущенную программу и задайте её режим. Глобальный переключатель автоматики всё равно должен быть включён.").font(.system(size: 12)).foregroundColor(.secondary)
+                Picker("Программа", selection: $selectedBundle) {
+                    Text("Выберите программу").tag("")
+                    ForEach(runningApps, id: \.id) { item in Text(item.name).tag(item.id) }
+                }
+                if !selectedBundle.isEmpty {
+                    Picker("Режим", selection: Binding(get: { model.appModes[selectedBundle]?.rawValue ?? "default" }, set: { model.setMode($0, bundle: selectedBundle) })) {
+                        Text("По умолчанию").tag("default")
+                        ForEach(AppCorrectionMode.allCases, id: \.rawValue) { Text($0.title).tag($0.rawValue) }
+                    }
+                    Text(selectedBundle).font(.system(size: 10, design: .monospaced)).foregroundColor(.secondary)
+                }
+                Divider()
+                Text("Сохранённые правила").font(.system(size: 12, weight: .semibold))
+                ScrollView {
+                    VStack(spacing: 12) {
+                        ForEach(model.appModes.keys.sorted(), id: \.self) { bundle in
+                            HStack {
+                                Text(bundle).font(.system(size: 11)).lineLimit(1)
+                                Spacer(); Text(model.appModes[bundle]?.title ?? "").font(.system(size: 10)).foregroundColor(.secondary)
+                                Button("Сбросить") { model.setMode("default", bundle: bundle) }.font(.system(size: 10))
+                            }
+                        }
+                        if model.appModes.isEmpty { Text("Пока используются стандартные режимы.").font(.system(size: 12)).foregroundColor(.secondary) }
+                    }
+                }
+            } else if page == 1 {
+                Text("Автоматика не будет менять эти слова. Ручное исправление двойным Shift остаётся доступным.").font(.system(size: 12)).foregroundColor(.secondary)
+                HStack {
+                    TextField("Например, название компании", text: $word).textFieldStyle(.roundedBorder).onSubmit(addWord)
+                    Button("Добавить", action: addWord)
+                }
+                if wordError { Text("Введите одно слово без пробелов, не длиннее 100 символов.").font(.system(size: 11)).foregroundColor(.orange) }
+                ScrollView {
+                    VStack(spacing: 12) {
+                        ForEach(model.ignoredWords, id: \.self) { item in
+                            HStack { Text(item).font(.system(size: 13)); Spacer(); Button("Удалить") { model.removeWord(item) }.font(.system(size: 11)) }
+                        }
+                        if model.ignoredWords.isEmpty { Text("Личный словарь пока пуст.").font(.system(size: 12)).foregroundColor(.secondary) }
+                    }
+                }
+            } else {
+                Toggle("Запускать вместе с Mac", isOn: Binding(get: { model.launchAtLogin }, set: model.setLogin)).toggleStyle(.switch).tint(accent)
+                Text("При входе приложение останется в строке меню.").font(.system(size: 12)).foregroundColor(.secondary)
+                if model.loginNeedsApproval {
+                    Text("Подтвердите автозапуск в настройках macOS → Основные → Объекты входа.").font(.system(size: 12)).foregroundColor(.orange)
+                }
+            }
+            Spacer(minLength: 0)
+            Text("Правила и словарь хранятся только на этом Mac. Парольные поля и Secure Input всегда пропускаются.").font(.system(size: 10)).foregroundColor(.secondary)
+        }.padding(28).frame(width: 650, height: 490).background(ink).preferredColorScheme(.dark)
+    }
+    private func addWord() {
+        wordError = !model.addWord(word)
+        if !wordError { word = "" }
+    }
 }

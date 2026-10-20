@@ -36,6 +36,7 @@ struct Edit {
 }
 
 final class App: NSObject, NSApplicationDelegate {
+    let preferences = CorrectionPreferences()
     var settingsWindow: SettingsWindow?
     var acceptance: NativeAcceptance?
     var status: NSStatusItem!
@@ -75,7 +76,7 @@ final class App: NSObject, NSApplicationDelegate {
         if CommandLine.arguments.contains("--native-acceptance") {
             acceptance = NativeAcceptance(app: self)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.acceptance?.start() }
-        } else {
+        } else if !CommandLine.arguments.contains("--background") && NSAppleEventManager.shared().currentAppleEvent?.paramDescriptor(forKeyword: AEKeyword(keyAELaunchedAsLogInItem))?.booleanValue != true {
             showSettings()
         }
     }
@@ -133,7 +134,8 @@ final class App: NSObject, NSApplicationDelegate {
         } else if type == .keyDown {
             detector.otherKey(); autoGeneration += 1
             guard autoEnabled, modifiers.isEmpty, code == 49,
-                  let bundle = NSWorkspace.shared.frontmostApplication?.bundleIdentifier, !excluded.contains(bundle),
+                  let bundle = NSWorkspace.shared.frontmostApplication?.bundleIdentifier,
+                  preferences.mode(for: bundle, defaultExclusions: excluded) == .automatic,
                   let field = field() else { return }
             let generation = autoGeneration
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.035) {
@@ -160,6 +162,11 @@ final class App: NSObject, NSApplicationDelegate {
         guard !paused, let field = field() else {
             if !automatic { report("Поле недоступно. Проверьте Универсальный доступ", failure: true) }; return
         }
+        guard let bundle = NSWorkspace.shared.frontmostApplication?.bundleIdentifier else { return }
+        let mode = preferences.mode(for: bundle, defaultExclusions: excluded)
+        guard mode != .disabled, !automatic || mode == .automatic else {
+            if !automatic { report("Для этого приложения исправление отключено", failure: true) }; return
+        }
         let ns = field.value as NSString
         let range: NSRange
         if field.range.length > 0 {
@@ -173,6 +180,7 @@ final class App: NSObject, NSApplicationDelegate {
         let before = ns.substring(with: range), after = Layout.convert(before)
         guard before != after else { return }
         if automatic {
+            guard !preferences.ignores(before), !preferences.ignores(after) else { return }
             guard before.count >= 4, before.allSatisfy({ $0.isLetter }), after.allSatisfy({ $0.isLetter }) else { return }
             let currentLanguage = before.contains(where: Layout.isRussian) ? "ru" : "en"
             let targetLanguage = currentLanguage == "ru" ? "en" : "ru"
@@ -193,9 +201,13 @@ final class App: NSObject, NSApplicationDelegate {
         report(automatic ? "Автоматически исправлено · отмена в меню ⇧⇧" : "Раскладка исправлена · ⇧⇧ для обратной замены")
     }
     func replace(field: Field, range: NSRange, text: String) -> Bool {
+        guard let current = self.field(), current.pid == field.pid,
+              CFEqual(current.element, field.element), current.value == field.value, current.range == field.range else { return false }
         var settable = DarwinBoolean(false)
         guard AXUIElementIsAttributeSettable(field.element, kAXSelectedTextAttribute as CFString, &settable) == .success,
               settable.boolValue, setSelection(field.element, range) else { return false }
+        guard let selected = self.field(), selected.pid == field.pid,
+              CFEqual(selected.element, field.element), selected.value == field.value, selected.range == range else { return false }
         guard AXUIElementSetAttributeValue(field.element, kAXSelectedTextAttribute as CFString, text as CFString) == .success else {
             setSelection(field.element, field.range); return false
         }
@@ -252,7 +264,7 @@ final class App: NSObject, NSApplicationDelegate {
     }
     @objc func quit() { NSApp.terminate(nil) }
 }
-if NSRunningApplication.runningApplications(withBundleIdentifier: "local.viktor.ShiftSwitcher").contains(where: { $0.processIdentifier != getpid() }) { exit(0) }
+if NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "local.viktor.ShiftSwitcher").contains(where: { $0.processIdentifier != getpid() }) { exit(0) }
 let app = NSApplication.shared
 let delegate = App()
 app.delegate = delegate
