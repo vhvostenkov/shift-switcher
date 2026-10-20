@@ -77,14 +77,14 @@ class Commerce:
             db.execute('BEGIN IMMEDIATE')
             row=db.execute('SELECT * FROM sessions WHERE request_id=?',(digest(request_id),)).fetchone()
             if row:
-                if row['email']!=email: raise ValueError('request_conflict')
+                if self.cipher.decrypt(row['email'].encode()).decode()!=email: raise ValueError('request_conflict')
                 return request_id, self.checkout_status(request_id)
             import uuid
             order='ss_'+uuid.uuid4().hex
             key=secrets.token_urlsafe(32)
             db.execute("INSERT INTO orders VALUES(?,?,?,NULL,'NEW',?)",(order,PRODUCT,49900,digest(key)))
             db.execute('INSERT INTO sessions VALUES(?,?,?,?,?,?,?)',
-                (digest(request_id),digest(request_id),order,self.cipher.encrypt(key.encode()).decode(),email,None,int(time.time())))
+                (digest(request_id),digest(request_id),order,self.cipher.encrypt(key.encode()).decode(),self.cipher.encrypt(email.encode()).decode(),None,int(time.time())))
             db.commit()
         self.event(order,'created','DEMO; 49900 kopecks')
         return request_id, self.checkout_status(request_id)
