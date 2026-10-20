@@ -84,7 +84,10 @@ final class NativeAcceptance {
             self.doubleShift {
                 let field = self.field()
                 self.record("double_shift_selection", field?.value == "привет" && field?.range == NSRange(location: 0, length: 6), "value=\(field?.value ?? "<unavailable>"), range=\(String(describing: field?.range))")
-                self.unselected()
+                self.doubleShift {
+                    self.record("double_shift_selection_reverse", self.field()?.value == "ghbdtn", "Repeated double Shift returns selected text")
+                    self.unselected()
+                }
             }
         }
     }
@@ -93,7 +96,10 @@ final class NativeAcceptance {
         doubleShift {
             let field = self.field()
             self.record("double_shift_last_word", field?.value == "test привет" && field?.range == NSRange(location: 11, length: 0), "value=\(field?.value ?? "<unavailable>"), range=\(String(describing: field?.range))")
-            self.automatic()
+            self.doubleShift {
+                self.record("double_shift_last_word_reverse", self.field()?.value == "test ghbdtn", "Repeated double Shift returns last word")
+                self.automatic()
+            }
         }
     }
     func automatic() {
@@ -103,7 +109,10 @@ final class NativeAcceptance {
         later(0.8) {
             let field = self.field()
             self.record("automatic_en_to_ru", field?.value == "привет ", "value=\(field?.value ?? "<unavailable>")")
-            self.automaticReverse()
+            self.doubleShift {
+                self.record("automatic_undo_double_shift", self.field()?.value == "ghbdtn ", "Automatic correction reversed; trailing space preserved")
+                self.automaticReverse()
+            }
         }
     }
     func automaticReverse() {
@@ -112,7 +121,15 @@ final class NativeAcceptance {
         later(0.8) {
             let field = self.field()
             self.record("automatic_ru_to_en", field?.value == "hello ", "value=\(field?.value ?? "<unavailable>")")
-            self.validWord()
+            guard self.app.shortcuts.setUndo(true) else {
+                self.record("automatic_undo_registration", false, "Undo shortcut occupied"); self.finish(); return
+            }
+            self.app.shortcutPreferences.keyboardUndo = true
+            self.postChord(6)
+            self.later(0.6) {
+                self.record("automatic_undo_hotkey", self.field()?.value == "руддщ ", "Control+Option+Z restores automatic correction and space")
+                self.validWord()
+            }
         }
     }
     func validWord() {

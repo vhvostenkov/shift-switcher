@@ -322,7 +322,7 @@ private struct RulesView: View {
                 }
                 Button("Освободить этот Mac") { model.app?.license.release { model.refresh() } }
                 if !model.licenseMessage.isEmpty { Text(model.licenseMessage).font(.system(size: 12)).foregroundColor(accent) }
-                Text("Ключ и случайный ID установки хранятся в Связке ключей. При активации отправляются ключ и хеш ID; набираемый текст не передаётся.").font(.system(size: 11)).foregroundColor(.secondary)
+                Text("Лицензия хранится в закрытой папке вашего пользователя на этом Mac. При активации отправляются ключ и хеш случайного ID установки; набираемый текст не передаётся.").font(.system(size: 11)).foregroundColor(.secondary)
             }
             Spacer(minLength: 0)
             Text("Правила и словарь хранятся только на этом Mac. Парольные поля и Secure Input всегда пропускаются.").font(.system(size: 10)).foregroundColor(.secondary)

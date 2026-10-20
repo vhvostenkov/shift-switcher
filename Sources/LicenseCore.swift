@@ -1,6 +1,30 @@
 import Foundation
 import CryptoKit
 
+// Private per-user storage survives ad-hoc rebuilds without password dialogs.
+// Paid access requires a server-signed, device-bound certificate.
+final class LicenseStore {
+    private let folder: URL
+    private let file: URL
+    private var values: [String: String] = [:]
+    init(folder: URL) {
+        self.folder = folder; file = folder.appendingPathComponent("license-state.json")
+        if let data = try? Data(contentsOf: file), data.count <= 65536,
+           let decoded = try? JSONDecoder().decode([String: String].self, from: data) { values = decoded }
+    }
+    func read(_ key: String) -> String? { values[key] }
+    @discardableResult func write(_ key: String, _ value: String) -> Bool {
+        var updated = values; updated[key] = value
+        do {
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+            try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: folder.path)
+            try JSONEncoder().encode(updated).write(to: file, options: .atomic)
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: file.path)
+            values = updated; return true
+        } catch { return false }
+    }
+}
+
 struct LicensePayload: Decodable {
     let schema: Int
     let product: String

@@ -4,6 +4,8 @@ import Security
 
 final class LicenseManager {
     private let service = (Bundle.main.bundleIdentifier ?? "local.viktor.ShiftSwitcher") + ".licensing.v1"
+    private let store = LicenseStore(folder: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent(Bundle.main.bundleIdentifier ?? "local.viktor.ShiftSwitcher", isDirectory: true))
     private var keys: [String: String] = [:]
     private var trial: TrialState?
     private var certificateCache: String?
@@ -22,8 +24,14 @@ final class LicenseManager {
     init() {
         if let url = Bundle.main.url(forResource: "license-public-keys", withExtension: "json"), let raw = try? Data(contentsOf: url),
            let decoded = try? JSONDecoder().decode([String: String].self, from: raw) { keys = decoded }
+        // Legacy migration must never trigger an authentication dialog.
+        if store.read("installation") == nil {
+            for account in ["installation", "trial", "license_key", "certificate"] {
+                if let value = legacyRead(account) { _ = store.write(account, value) }
+            }
+        }
         let id = read("installation") ?? UUID().uuidString
-        guard write("installation", id) else { message = "Не удалось сохранить данные в Связке ключей"; return }
+        guard write("installation", id) else { message = "Не удалось сохранить локальные данные лицензии"; return }
         device = SHA256.hash(data: Data(id.utf8)).map { String(format: "%02x", $0) }.joined()
         let now = Int64(Date().timeIntervalSince1970)
         if let raw = read("trial"), let data = raw.data(using: .utf8), let state = try? JSONDecoder().decode(TrialState.self, from: data) { trial = state }
@@ -32,24 +40,15 @@ final class LicenseManager {
         storageReady = true
         refresh()
     }
-    func read(_ account: String) -> String? {
+    func read(_ account: String) -> String? { store.read(account) }
+    private func legacyRead(_ account: String) -> String? {
         var result: CFTypeRef?
         let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
-            kSecAttrAccount as String: account, kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne]
+            kSecAttrAccount as String: account, kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne, kSecUseAuthenticationUI as String: kSecUseAuthenticationUIFail]
         guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess, let data = result as? Data else { return nil }
         return String(data: data, encoding: .utf8)
     }
-    @discardableResult func write(_ account: String, _ text: String) -> Bool {
-        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: account]
-        let fields: [String: Any] = [kSecValueData as String: Data(text.utf8)]
-        let result = SecItemUpdate(query as CFDictionary, fields as CFDictionary)
-        if result == errSecItemNotFound {
-            var item = query.merging(fields) { _, new in new }
-            item[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-            return SecItemAdd(item as CFDictionary, nil) == errSecSuccess
-        }
-        return result == errSecSuccess
-    }
+    @discardableResult func write(_ account: String, _ text: String) -> Bool { store.write(account, text) }
     func refresh() {
         let now = Int64(Date().timeIntervalSince1970)
         if var trial = trial {
@@ -83,7 +82,7 @@ final class LicenseManager {
                     self.message = "Активация не выполнена. Проверьте ключ, соединение и лимит двух Mac."; return
                 }
                 guard self.write("license_key", key), self.write("certificate", certificate) else {
-                    self.message = "Не удалось сохранить лицензию в Связке ключей"; return
+                    self.message = "Не удалось сохранить лицензию на этом Mac"; return
                 }
                 self.certificateCache = certificate
                 self.refresh(); self.message = "Лицензия активирована"
