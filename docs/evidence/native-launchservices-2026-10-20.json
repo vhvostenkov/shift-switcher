@@ -1,9 +1,11 @@
 {
-  "scope": "LaunchServices; scoped CGEvent synthetic input, not physical keyboard",
+  "binary_sha256": "e73f1813543eeb74f113fa06f1b5d3241ee897a2db5f5529cac563f8070ca9f5",
+  "scope": "LaunchServices with CGEvent synthetic input in isolated fixtures; not physical keyboard",
+  "competing_original_lang_switcher_running": false,
   "reports": {
     "TextEdit": {
       "accessibility": true,
-      "fixture": "/Users/max/Documents/ChatGPT/REV/shift-switcher/build/ShiftSwitcher-native-test-1792492092.txt",
+      "fixture": "/Users/max/Documents/ChatGPT/REV/shift-switcher/build/ShiftSwitcher-native-test-1792495619.txt",
       "input": "CGEvent synthetic keyboard events; not physical keyboard",
       "postEventAccess": true,
       "results": [
@@ -63,12 +65,12 @@
           "scenario": "hotkey_undo"
         },
         {
-          "detail": "Multi-event text replacement with intact emoji",
+          "detail": "Multi-event text replacement with intact emoji; value=привет привет привет привет привет привет привет привет 😀 ",
           "passed": true,
           "scenario": "long_selection_with_emoji"
         },
         {
-          "detail": "Restore complete selection without truncation",
+          "detail": "Restore complete selection without truncation; status=Исправление отменено",
           "passed": true,
           "scenario": "long_selection_undo"
         },
@@ -78,10 +80,10 @@
           "scenario": "undo_after_user_edit_is_refused"
         }
       ],
-      "testedAt": "2026-10-20T10:28:23Z",
+      "testedAt": "2026-10-20T11:27:10Z",
       "launch_method": "LaunchServices",
-      "binary_sha256": "9d76770297003817971f26d979a1c176c48ee765ba54b88879802aa4b2033b66",
-      "source_commit": "ffba611be44c01f9f0d2df3f89adde3b756c209d",
+      "binary_sha256": "e73f1813543eeb74f113fa06f1b5d3241ee897a2db5f5529cac563f8070ca9f5",
+      "source_commit": "c78c3134960372073624efeb4db3790e51591109",
       "source_dirty": false
     },
     "Safari": {
@@ -146,12 +148,12 @@
           "scenario": "hotkey_undo"
         },
         {
-          "detail": "Multi-event text replacement with intact emoji",
+          "detail": "Multi-event text replacement with intact emoji; value=привет привет привет привет привет привет привет привет 😀 ",
           "passed": true,
           "scenario": "long_selection_with_emoji"
         },
         {
-          "detail": "Restore complete selection without truncation",
+          "detail": "Restore complete selection without truncation; status=Исправление отменено",
           "passed": true,
           "scenario": "long_selection_undo"
         },
@@ -161,10 +163,93 @@
           "scenario": "undo_after_user_edit_is_refused"
         }
       ],
-      "testedAt": "2026-10-20T10:31:06Z",
+      "testedAt": "2026-10-20T11:26:22Z",
       "launch_method": "LaunchServices",
-      "binary_sha256": "9d76770297003817971f26d979a1c176c48ee765ba54b88879802aa4b2033b66",
-      "source_commit": "ffba611be44c01f9f0d2df3f89adde3b756c209d",
+      "binary_sha256": "e73f1813543eeb74f113fa06f1b5d3241ee897a2db5f5529cac563f8070ca9f5",
+      "source_commit": "c78c3134960372073624efeb4db3790e51591109",
+      "source_dirty": false
+    },
+    "Chrome": {
+      "accessibility": true,
+      "fixture": "isolated fixture: com.google.Chrome",
+      "input": "CGEvent synthetic keyboard events; not physical keyboard",
+      "postEventAccess": true,
+      "results": [
+        {
+          "detail": "value=привет, range=Optional({0, 6})",
+          "passed": true,
+          "scenario": "double_shift_selection"
+        },
+        {
+          "detail": "Repeated double Shift returns selected text",
+          "passed": true,
+          "scenario": "double_shift_selection_reverse"
+        },
+        {
+          "detail": "value=test привет, range=Optional({11, 0})",
+          "passed": true,
+          "scenario": "double_shift_last_word"
+        },
+        {
+          "detail": "Repeated double Shift returns last word",
+          "passed": true,
+          "scenario": "double_shift_last_word_reverse"
+        },
+        {
+          "detail": "value=привет ",
+          "passed": true,
+          "scenario": "automatic_en_to_ru"
+        },
+        {
+          "detail": "Automatic correction reversed; trailing space preserved",
+          "passed": true,
+          "scenario": "automatic_undo_double_shift"
+        },
+        {
+          "detail": "value=hello ",
+          "passed": true,
+          "scenario": "automatic_ru_to_en"
+        },
+        {
+          "detail": "Control+Option+Z restores automatic correction and space",
+          "passed": true,
+          "scenario": "automatic_undo_hotkey"
+        },
+        {
+          "detail": "value=hello ",
+          "passed": true,
+          "scenario": "valid_word_unchanged"
+        },
+        {
+          "detail": "Control+Option+Space in test fixture",
+          "passed": true,
+          "scenario": "hotkey_selection"
+        },
+        {
+          "detail": "Control+Option+Z in same unchanged fixture",
+          "passed": true,
+          "scenario": "hotkey_undo"
+        },
+        {
+          "detail": "Multi-event text replacement with intact emoji; value=привет привет привет привет привет привет привет привет 😀 ",
+          "passed": true,
+          "scenario": "long_selection_with_emoji"
+        },
+        {
+          "detail": "Restore complete selection without truncation; status=Исправление отменено",
+          "passed": true,
+          "scenario": "long_selection_undo"
+        },
+        {
+          "detail": "New user text is preserved",
+          "passed": true,
+          "scenario": "undo_after_user_edit_is_refused"
+        }
+      ],
+      "testedAt": "2026-10-20T11:27:53Z",
+      "launch_method": "LaunchServices",
+      "binary_sha256": "e73f1813543eeb74f113fa06f1b5d3241ee897a2db5f5529cac563f8070ca9f5",
+      "source_commit": "c78c3134960372073624efeb4db3790e51591109",
       "source_dirty": false
     },
     "Notes": {
@@ -229,12 +314,12 @@
           "scenario": "hotkey_undo"
         },
         {
-          "detail": "Multi-event text replacement with intact emoji",
+          "detail": "Multi-event text replacement with intact emoji; value=привет привет привет привет привет привет привет привет 😀 ",
           "passed": true,
           "scenario": "long_selection_with_emoji"
         },
         {
-          "detail": "Restore complete selection without truncation",
+          "detail": "Restore complete selection without truncation; status=Исправление отменено",
           "passed": true,
           "scenario": "long_selection_undo"
         },
@@ -244,42 +329,14 @@
           "scenario": "undo_after_user_edit_is_refused"
         }
       ],
-      "testedAt": "2026-10-20T10:34:56Z",
-      "launch_method": "LaunchServices",
-      "binary_sha256": "9d76770297003817971f26d979a1c176c48ee765ba54b88879802aa4b2033b66",
-      "source_commit": "ffba611be44c01f9f0d2df3f89adde3b756c209d",
-      "source_dirty": false
-    },
-    "Chrome": {
-      "accessibility": false,
-      "fixture": "isolated fixture: com.google.Chrome",
-      "input": "CGEvent synthetic keyboard events; not physical keyboard",
-      "postEventAccess": false,
-      "results": [
-        {
-          "detail": "AX=false, post=false, tap=true",
-          "passed": false,
-          "scenario": "permissions"
-        }
-      ],
-      "testedAt": "2026-10-20T10:50:24Z",
+      "testedAt": "2026-10-20T11:26:49Z",
       "launch_method": "LaunchServices",
       "binary_sha256": "e73f1813543eeb74f113fa06f1b5d3241ee897a2db5f5529cac563f8070ca9f5",
-      "source_commit": "b98c13f38efdb7d95c709f284b6f50bf1ed7f9e5",
-      "source_dirty": true
+      "source_commit": "c78c3134960372073624efeb4db3790e51591109",
+      "source_dirty": false
     }
   },
-  "chrome_long_isolated_probe": {
-    "binary_sha256": "5e517409ff79acaca6d8d7fa3d41fadeded465ed20c97945c33c8f7885cfcb20",
-    "before": "ghbdtn ghbdtn ghbdtn ghbdtn ghbdtn ghbdtn ghbdtn ghbdtn 😀 ",
-    "corrected": "привет привет привет привет привет привет привет привет 😀 ",
-    "undo": "ghbdtn ghbdtn ghbdtn ghbdtn ghbdtn ghbdtn ghbdtn ghbdtn 😀 ",
-    "selection_utf16": [
-      0,
-      59
-    ],
-    "passed": true
-  },
-  "final_candidate_status": "Pending permission rebind: System Settings UI times out",
-  "final_binary_sha256": "e73f1813543eeb74f113fa06f1b5d3241ee897a2db5f5529cac563f8070ca9f5"
+  "total_passed": 56,
+  "total_scenarios": 56,
+  "interrupted_attempts": "Earlier attempts aborted on fixture preparation or focus loss; these are completed final runs with the original Lang Switcher stopped"
 }

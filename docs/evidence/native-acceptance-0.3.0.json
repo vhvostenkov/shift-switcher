@@ -1,6 +1,6 @@
 {
   "accessibility": true,
-  "fixture": "/Users/max/Documents/ChatGPT/REV/shift-switcher/build/ShiftSwitcher-native-test-1792488774.txt",
+  "fixture": "/Users/max/Documents/ChatGPT/REV/shift-switcher/build/ShiftSwitcher-native-test-1792495619.txt",
   "input": "CGEvent synthetic keyboard events; not physical keyboard",
   "postEventAccess": true,
   "results": [
@@ -60,12 +60,12 @@
       "scenario": "hotkey_undo"
     },
     {
-      "detail": "Multi-event text replacement with intact emoji",
+      "detail": "Multi-event text replacement with intact emoji; value=привет привет привет привет привет привет привет привет 😀 ",
       "passed": true,
       "scenario": "long_selection_with_emoji"
     },
     {
-      "detail": "Restore complete selection without truncation",
+      "detail": "Restore complete selection without truncation; status=Исправление отменено",
       "passed": true,
       "scenario": "long_selection_undo"
     },
@@ -75,9 +75,10 @@
       "scenario": "undo_after_user_edit_is_refused"
     }
   ],
-  "testedAt": "2026-10-20T09:33:05Z",
-  "binary_sha256": "9d76770297003817971f26d979a1c176c48ee765ba54b88879802aa4b2033b66",
-  "source_commit": "6fc5d7932a3e890b2c72fdae23f42b59e7d18d53",
+  "testedAt": "2026-10-20T11:27:10Z",
+  "launch_method": "LaunchServices",
+  "binary_sha256": "e73f1813543eeb74f113fa06f1b5d3241ee897a2db5f5529cac563f8070ca9f5",
+  "source_commit": "c78c3134960372073624efeb4db3790e51591109",
   "source_dirty": false,
   "swift_checks": 64
 }
