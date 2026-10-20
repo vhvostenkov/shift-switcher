@@ -7,6 +7,8 @@ final class NativeAcceptance {
     let output: URL
     let fixture: URL
     let originalAuto: Bool
+    let originalShortcut: CorrectionShortcut
+    let originalKeyboardUndo: Bool
     var results: [[String: Any]] = []
     var editor: NSRunningApplication?
     var originalInput: TISInputSource?
@@ -17,6 +19,8 @@ final class NativeAcceptance {
         output = folder.appendingPathComponent("native-acceptance.json")
         fixture = folder.appendingPathComponent("ShiftSwitcher-native-test-\(Int(Date().timeIntervalSince1970)).txt")
         originalAuto = app.autoEnabled
+        originalShortcut = app.shortcutPreferences.correction
+        originalKeyboardUndo = app.shortcutPreferences.keyboardUndo
     }
     func start() {
         guard AXIsProcessTrusted(), CGPreflightPostEventAccess(), app.tap != nil else {
@@ -24,6 +28,8 @@ final class NativeAcceptance {
             finish(); return
         }
         originalInput = TISCopyCurrentKeyboardInputSource().takeRetainedValue()
+        _ = app.shortcuts.setCorrection(.doubleShift)
+        app.shortcutPreferences.correction = .doubleShift
         do { try "Shift Switcher native acceptance\n".write(to: fixture, atomically: true, encoding: .utf8) }
         catch { record("fixture", false, error.localizedDescription); finish(); return }
         app.autoEnabled = false
@@ -114,7 +120,35 @@ final class NativeAcceptance {
         postSpace()
         later(0.8) {
             self.record("valid_word_unchanged", self.field()?.value == "hello ", "value=\(self.field()?.value ?? "<unavailable>")")
-            self.finish()
+            self.manualShortcut()
+        }
+    }
+    func manualShortcut() {
+        app.autoEnabled = false
+        guard app.shortcuts.setCorrection(.controlOptionSpace), app.shortcuts.setUndo(true) else {
+            record("hotkey_registration", false, "Test shortcuts occupied"); finish(); return
+        }
+        app.shortcutPreferences.correction = .controlOptionSpace
+        app.shortcutPreferences.keyboardUndo = true
+        guard prepare("ghbdtn", range: NSRange(location: 0, length: 6)) else { finish(); return }
+        postChord(49)
+        later(0.6) {
+            self.record("hotkey_selection", self.field()?.value == "привет", "Control+Option+Space in test fixture")
+            self.postChord(6)
+            self.later(0.6) {
+                self.record("hotkey_undo", self.field()?.value == "ghbdtn" && self.field()?.range == NSRange(location: 0, length: 6), "Control+Option+Z in same unchanged fixture")
+                self.finish()
+            }
+        }
+    }
+    func postChord(_ key: CGKeyCode) {
+        guard field() != nil else { record("focus", false, "Aborted shortcut outside fixture"); finish(); return }
+        let down = CGEvent(keyboardEventSource: nil, virtualKey: key, keyDown: true)!
+        down.flags = [.maskControl, .maskAlternate]; down.post(tap: .cghidEventTap)
+        later(0.03) {
+            guard self.field() != nil else { return }
+            let up = CGEvent(keyboardEventSource: nil, virtualKey: key, keyDown: false)!
+            up.flags = [.maskControl, .maskAlternate]; up.post(tap: .cghidEventTap)
         }
     }
     func postSpace() {
@@ -130,6 +164,8 @@ final class NativeAcceptance {
         results.append(["scenario": name, "passed": passed, "detail": detail])
     }
     func finish() {
+        if app.shortcuts.setCorrection(originalShortcut) { app.shortcutPreferences.correction = originalShortcut }
+        if app.shortcuts.setUndo(originalKeyboardUndo) { app.shortcutPreferences.keyboardUndo = originalKeyboardUndo }
         app.autoEnabled = originalAuto
         app.autoItem.state = originalAuto ? .on : .off
         app.detector.reset(); app.autoGeneration += 1
