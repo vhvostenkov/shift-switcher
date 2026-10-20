@@ -11,7 +11,7 @@ enum Layout {
     }
     static func permitsAutomaticConversion(_ before: String, to after: String) -> Bool {
         // Punctuation keys can be letters in the other layout (comma → б).
-        before.count >= 4 && !after.isEmpty && after.allSatisfy { $0.isLetter }
+        before.count >= 2 && !after.isEmpty && after.allSatisfy { $0.isLetter }
     }
     static func convert(_ text: String) -> String {
         // Choose direction per token so mixed Russian/English selections are reversible.

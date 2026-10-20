@@ -20,6 +20,9 @@ for word in ["ghj,tkf", "chf,jnfkj", "yf;fnbb", "[jhjij"] {
 check(!Layout.permitsAutomaticConversion("hello!", to: Layout.convert("hello!")), "punctuation in converted word blocks automation")
 check(!Layout.permitsAutomaticConversion("foo.bar", to: "foo.bar"), "literal punctuation is not a word")
 check(!Layout.permitsAutomaticConversion("b", to: "и"), "short word remains excluded")
+for word in ["yf", "yt", "lf"] {
+    check(Layout.permitsAutomaticConversion(word, to: Layout.convert(word)), "two-letter word is eligible: \(word)")
+}
 var detector = DoubleShift()
 check(!detector.shift(code: 56, down: true, time: 0, otherModifiers: false), "first down")
 check(!detector.shift(code: 56, down: false, time: 0.05, otherModifiers: false), "first tap")
