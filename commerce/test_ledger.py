@@ -144,6 +144,19 @@ class LedgerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             Ledger(Path(self.temp.name) / 'bad.sqlite', terminal='testDEMO', password='test-only-password', signing_key=self.signer, key_id='test-only-key', sandbox=False)
 
+    def test_demo_database_cannot_be_opened_as_live(self):
+        with self.assertRaises(ValueError):
+            Ledger(Path(self.ledger.path), terminal='testLIVE', password='test-only-password', signing_key=self.signer, key_id='test-only-key', sandbox=False)
+
+    def test_untagged_nonempty_database_cannot_be_adopted_as_live(self):
+        import sqlite3
+        path=Path(self.temp.name)/'legacy.sqlite'
+        with sqlite3.connect(path) as db:
+            db.execute('CREATE TABLE orders(id TEXT)')
+            db.execute("INSERT INTO orders VALUES('test-legacy-order')")
+        with self.assertRaises(ValueError):
+            Ledger(path, terminal='testLIVE', password='test-only-password', signing_key=self.signer, key_id='test-only-key', sandbox=False)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -79,7 +79,7 @@ class ServiceTests(unittest.TestCase):
         products=deepcopy(DEFAULT_CATALOG)
         p=products['shift-switcher-pro-v1']; p.update(terms_version='test-published-1',privacy_version='test-published-1')
         self.config['products']=products
-        service=Commerce(self.folder.name,self.config,bank=self.bank)
+        service=Commerce(Path(self.folder.name)/'live',self.config,bank=self.bank)
         with self.assertRaises(ValueError): service.create_checkout(self.token,'buyer@example.test')
         consent=dict(accepted=True,terms_version='test-published-1',privacy_version='test-published-1')
         service.create_checkout(self.token,'buyer@example.test',consent=consent)

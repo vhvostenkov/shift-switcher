@@ -60,7 +60,19 @@ class Ledger:
                     order_id TEXT NOT NULL REFERENCES orders(id), device TEXT NOT NULL,
                     PRIMARY KEY(order_id, device)
                 );
+                CREATE TABLE IF NOT EXISTS ledger_metadata (
+                    key TEXT PRIMARY KEY, value TEXT NOT NULL
+                );
             """)
+            db.execute('BEGIN IMMEDIATE')
+            environment = 'DEMO' if sandbox else 'LIVE'
+            recorded = db.execute("SELECT value FROM ledger_metadata WHERE key='environment'").fetchone()
+            if recorded and recorded[0] != environment:
+                raise ValueError('database environment mismatch')
+            if not recorded and not sandbox and db.execute('SELECT COUNT(*) FROM orders').fetchone()[0]:
+                raise ValueError('LIVE requires a new or explicitly tagged LIVE database')
+            db.execute("INSERT OR IGNORE INTO ledger_metadata VALUES('environment',?)",(environment,))
+            db.commit()
 
     def connect(self):
         db = sqlite3.connect(self.path, timeout=10, isolation_level=None)

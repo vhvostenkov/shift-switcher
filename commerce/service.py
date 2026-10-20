@@ -213,7 +213,7 @@ def handler_for(service):
                 service.limit(ip,'general',120)
                 if method=='GET':
                     if path=='/api/health': self.send(200,{'ok':True,'environment':service.environment,'revision':service.config.get('revision','local')}); return
-                    if path=='/api/catalog': self.send(200,{'products':service.products,'environment':service.environment}); return
+                    if path=='/api/catalog': self.send(200,{'products':service.products,'environment':service.environment,'checkout_enabled':service.config.get('checkout_enabled') is True}); return
                     if path=='/api/order': self.send(200,service.checkout_status(self.token())); return
                     if path=='/api/license': self.send(200,service.license_file(self.token())); return
                     self.send(404,{'error':'not_found'}); return
