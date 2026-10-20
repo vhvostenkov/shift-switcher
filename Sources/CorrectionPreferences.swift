@@ -12,6 +12,7 @@ enum AppCorrectionMode: String, Codable, CaseIterable {
 }
 
 final class CorrectionPreferences {
+    static let protectedApps: Set<String> = ["com.agilebits.onepassword7", "com.1password.1password", "com.apple.Passwords"]
     private struct State: Codable {
         var appModes: [String: AppCorrectionMode] = [:]
         var ignoredWords: [String] = []
@@ -28,9 +29,11 @@ final class CorrectionPreferences {
     var appModes: [String: AppCorrectionMode] { state.appModes }
     var ignoredWords: [String] { state.ignoredWords.sorted() }
     func mode(for bundle: String, defaultExclusions: Set<String>) -> AppCorrectionMode {
-        state.appModes[bundle] ?? (defaultExclusions.contains(bundle) ? .manual : .automatic)
+        if Self.protectedApps.contains(bundle) { return .disabled }
+        return state.appModes[bundle] ?? (defaultExclusions.contains(bundle) ? .manual : .automatic)
     }
     @discardableResult func setMode(_ mode: AppCorrectionMode?, for bundle: String) -> Bool {
+        guard mode == nil || !Self.protectedApps.contains(bundle) else { return false }
         guard !bundle.isEmpty, bundle.count <= 255,
               bundle.unicodeScalars.allSatisfy({ CharacterSet.alphanumerics.contains($0) || ".-_".unicodeScalars.contains($0) }) else { return false }
         state.appModes[bundle] = mode; persist(); return true

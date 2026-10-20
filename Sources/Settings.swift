@@ -244,7 +244,9 @@ private struct RulesView: View {
                     Text("Выберите программу").tag("")
                     ForEach(runningApps, id: \.id) { item in Text(item.name).tag(item.id) }
                 }
-                if !selectedBundle.isEmpty {
+                if CorrectionPreferences.protectedApps.contains(selectedBundle) {
+                    Text("В этом менеджере паролей исправление всегда отключено, включая ручное.").font(.system(size: 12)).foregroundColor(.secondary)
+                } else if !selectedBundle.isEmpty {
                     Picker("Режим", selection: Binding(get: { model.appModes[selectedBundle]?.rawValue ?? "default" }, set: { model.setMode($0, bundle: selectedBundle) })) {
                         Text("По умолчанию").tag("default")
                         ForEach(AppCorrectionMode.allCases, id: \.rawValue) { Text($0.title).tag($0.rawValue) }

@@ -169,7 +169,8 @@ final class App: NSObject, NSApplicationDelegate {
     }
     func field() -> Field? {
         guard AXIsProcessTrusted(), !IsSecureEventInputEnabled(),
-              let app = NSWorkspace.shared.frontmostApplication, app.processIdentifier != getpid() else { return nil }
+              let app = NSWorkspace.shared.frontmostApplication, app.processIdentifier != getpid(),
+              !CorrectionPreferences.protectedApps.contains(app.bundleIdentifier ?? "") else { return nil }
         let root = AXUIElementCreateApplication(app.processIdentifier)
         guard let raw = attribute(root, kAXFocusedUIElementAttribute), CFGetTypeID(raw) == AXUIElementGetTypeID() else { return nil }
         let element = unsafeBitCast(raw, to: AXUIElement.self)
