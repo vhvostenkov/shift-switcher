@@ -59,7 +59,8 @@ final class App: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         status = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        status.button?.title = "⇧⇧"
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(updateIndicator), name: NSNotification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String), object: nil)
+        updateIndicator()
         let menu = NSMenu()
         info = NSMenuItem(title: "Исправление: выделение / последнее слово", action: nil, keyEquivalent: "")
         menu.addItem(info)
@@ -120,8 +121,24 @@ final class App: NSObject, NSApplicationDelegate {
     func report(_ message: String, failure: Bool = false) {
         fputs("[Shift Switcher] \(message)\n", stderr)
         info.title = message
-        status.button?.toolTip = message
+        updateIndicator()
+        status.button?.toolTip = (status.button?.toolTip ?? "") + "\n" + message
         if failure { NSSound.beep() }
+    }
+    @objc func updateIndicator() {
+        let input = TISCopyCurrentKeyboardInputSource().takeRetainedValue()
+        var layout = "—"
+        if let property = TISGetInputSourceProperty(input, kTISPropertyInputSourceLanguages) {
+            let languages = Unmanaged<CFArray>.fromOpaque(property).takeUnretainedValue() as! [String]
+            layout = languages.first?.uppercased() ?? "—"
+        }
+        let permitted = AXIsProcessTrusted() && CGPreflightListenEventAccess()
+        let state = !permitted ? "Нужны разрешения macOS" : (paused ? "Пауза" : (autoEnabled ? "Автоисправление включено" : "Ручное исправление"))
+        status.button?.title = "⇧⇧ \(layout)"
+        status.button?.image = NSImage(systemSymbolName: !permitted ? "exclamationmark.circle" : (paused ? "pause.circle" : (autoEnabled ? "bolt.circle.fill" : "hand.point.up")), accessibilityDescription: state)
+        status.button?.imagePosition = .imageLeading
+        status.button?.toolTip = "Shift Switcher · \(layout) · \(state)\nНажмите, чтобы открыть настройки и отмену"
+        status.button?.setAccessibilityLabel("Shift Switcher, \(layout), \(state)")
     }
     @objc func connect() {
         guard tap == nil else { return }
@@ -215,7 +232,7 @@ final class App: NSObject, NSApplicationDelegate {
         if automatic {
             guard license.hasPro else { return }
             guard !preferences.ignores(before), !preferences.ignores(after) else { return }
-            guard before.count >= 4, before.allSatisfy({ $0.isLetter }), after.allSatisfy({ $0.isLetter }) else { return }
+            guard Layout.permitsAutomaticConversion(before, to: after) else { return }
             let currentLanguage = before.contains(where: Layout.isRussian) ? "ru" : "en"
             let targetLanguage = currentLanguage == "ru" ? "en" : "ru"
             guard !validWord(before, language: currentLanguage), validWord(after, language: targetLanguage) else { return }
@@ -321,7 +338,8 @@ final class App: NSObject, NSApplicationDelegate {
     }
     @objc func togglePause() {
         paused.toggle(); detector.reset(); autoGeneration += 1
-        pauseItem.state = paused ? .on : .off; status.button?.title = paused ? "⇧⇧ ·" : "⇧⇧"
+        pauseItem.state = paused ? .on : .off
+        updateIndicator()
     }
     @objc func permissions() {
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary

@@ -9,6 +9,10 @@ enum Layout {
     static func isRussian(_ c: Character) -> Bool {
         c.unicodeScalars.contains { (0x0400...0x04ff).contains($0.value) }
     }
+    static func permitsAutomaticConversion(_ before: String, to after: String) -> Bool {
+        // Punctuation keys can be letters in the other layout (comma → б).
+        before.count >= 4 && !after.isEmpty && after.allSatisfy { $0.isLetter }
+    }
     static func convert(_ text: String) -> String {
         // Choose direction per token so mixed Russian/English selections are reversible.
         var output = "", token = ""

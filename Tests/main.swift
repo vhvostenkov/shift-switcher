@@ -14,6 +14,12 @@ check(Layout.convert(Layout.convert("Hello Мир")) == "Hello Мир", "roundtr
 check(Layout.lastWord(in: "🙂 ghbdtn ", caret: 10, skipWhitespace: true) == NSRange(location: 3, length: 6), "utf16 trailing space")
 check(Layout.lastWord(in: "one two", caret: 3, skipWhitespace: false) == NSRange(location: 0, length: 3), "caret inside line")
 check(Layout.lastWord(in: "", caret: 0, skipWhitespace: true) == nil, "empty")
+for word in ["ghj,tkf", "chf,jnfkj", "yf;fnbb", "[jhjij"] {
+    check(Layout.permitsAutomaticConversion(word, to: Layout.convert(word)), "punctuation key becomes a Russian letter: \(word)")
+}
+check(!Layout.permitsAutomaticConversion("hello!", to: Layout.convert("hello!")), "punctuation in converted word blocks automation")
+check(!Layout.permitsAutomaticConversion("foo.bar", to: "foo.bar"), "literal punctuation is not a word")
+check(!Layout.permitsAutomaticConversion("b", to: "и"), "short word remains excluded")
 var detector = DoubleShift()
 check(!detector.shift(code: 56, down: true, time: 0, otherModifiers: false), "first down")
 check(!detector.shift(code: 56, down: false, time: 0.05, otherModifiers: false), "first tap")
