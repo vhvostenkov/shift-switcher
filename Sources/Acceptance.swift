@@ -159,6 +159,11 @@ final class NativeAcceptance {
     }
     func selected() {
         editor?.activate(options: [.activateIgnoringOtherApps])
+        if let editor = editor, target != nil, target != "com.apple.Notes",
+           let windows = attribute(AXUIElementCreateApplication(editor.processIdentifier), kAXWindowsAttribute) as? [AXUIElement],
+           let fixtureWindow = windows.first(where: { (attribute($0, kAXTitleAttribute) as? String ?? "").contains("Shift Switcher — isolated compatibility fixture") }) {
+            AXUIElementPerformAction(fixtureWindow, kAXRaiseAction as CFString)
+        }
         later { self.selectedWhenReady(40) }
     }
     func selectedWhenReady(_ attempts: Int) {
@@ -244,9 +249,14 @@ final class NativeAcceptance {
             self.postChord(6)
             self.later(0.6) {
                 self.record("hotkey_undo", changed && self.field()?.value == "ghbdtn" && self.field()?.range == NSRange(location: 0, length: 6), "Control+Option+Z in same unchanged fixture")
-                self.longSelection()
+                self.later(0.3) { self.longSelection() }
             }
         }
+    }
+    func awaitFixtureValue(_ expected: String, attempts: Int = 40, done: @escaping (Bool) -> Void) {
+        if let current = field(), current.value == expected { done(true); return }
+        guard attempts > 0 else { done(false); return }
+        later(0.05) { self.awaitFixtureValue(expected, attempts: attempts - 1, done: done) }
     }
     func longSelection() {
         app.autoEnabled = false
@@ -255,12 +265,14 @@ final class NativeAcceptance {
         let input = String(repeating: "ghbdtn ", count: 8) + "😀 "
         guard prepare(input, range: NSRange(location: 0, length: input.utf16.count)) else { finish(); return }
         doubleShift {
-            let changed = self.field()?.value == Layout.convert(input)
-            self.record("long_selection_with_emoji", changed, "Multi-event text replacement with intact emoji")
-            self.postChord(6)
-            self.later(0.6) {
-                self.record("long_selection_undo", changed && self.field()?.value == input, "Restore complete selection without truncation")
-                self.changedTextUndo()
+            self.awaitFixtureValue(Layout.convert(input)) { changed in
+                self.record("long_selection_with_emoji", changed, "Multi-event text replacement with intact emoji; value=" + (self.field()?.value ?? "<unavailable>"))
+                guard changed else { self.finish(); return }
+                self.postChord(6)
+                self.awaitFixtureValue(input) { restored in
+                    self.record("long_selection_undo", restored, "Restore complete selection without truncation; status=" + self.app.info.title)
+                    self.changedTextUndo()
+                }
             }
         }
     }

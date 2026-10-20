@@ -12,7 +12,6 @@ from pathlib import Path
 root=Path(__file__).resolve().parent.parent
 parser=argparse.ArgumentParser()
 parser.add_argument('--target',choices=['TextEdit','Safari','Chrome','Notes'],default='TextEdit')
-parser.add_argument('--diagnostics',action='store_true')
 args=parser.parse_args()
 target={'Safari':'com.apple.Safari','Chrome':'com.google.Chrome','Notes':'com.apple.Notes'}.get(args.target)
 app=root/'build/Shift Switcher Candidate.app/Contents/MacOS/Shift Switcher'
@@ -30,9 +29,7 @@ for pid in owned:
 # LaunchServices can briefly retain the old bundle after its PID exits.
 time.sleep(1)
 report=root/'build'/('compatibility-'+target+'.json' if target else 'native-acceptance.json')
-logpath=root/'build'/('qa-'+args.target+'.log')
-command=['open','-n','-g',str(app.parents[2]),'--stdout',str(logpath),'--stderr',str(logpath)]
-if args.diagnostics:command+=['--env','SHIFT_SWITCHER_DIAGNOSTICS=1']
+command=['open','-a',str(app.parents[2])]
 command+=['--args','--compatibility-acceptance='+target if target else '--native-acceptance']
 started=time.time()
 if subprocess.run(command).returncode:
