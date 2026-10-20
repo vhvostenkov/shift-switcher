@@ -165,6 +165,7 @@ final class NativeAcceptance {
         if field() == nil, attempts > 0 {
             later(0.15) { self.selectedWhenReady(attempts - 1) }; return
         }
+        postShift(false)
         guard prepare("ghbdtn", range: NSRange(location: 0, length: 6)) else { finish(); return }
         doubleShift {
             let field = self.field()
