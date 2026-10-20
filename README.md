@@ -72,7 +72,9 @@ Accessibility должен предоставлять значение, диап
 Код и словари стороннего Lang Switcher не включены. Проект не связан с его разработчиками.
 Автоматические GitHub Actions workflows в репозитории не настроены.
 
-## Коммерческий кандидат — отдельная ветка
+## Проверенный preview 0.3.0
+
+[Скачать 0.3 Preview](https://github.com/vhvostenkov/shift-switcher/releases/tag/v0.3.0-preview.3). Реальные продажи закрыты.
 
 Ветка `codex/commercial-launch` и [PR #1](https://github.com/vhvostenkov/shift-switcher/pull/1)
 содержат кандидат 0.3.0: режимы приложений, личный словарь, автозапуск,

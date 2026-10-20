@@ -1,6 +1,6 @@
 {
   "version": "0.3.0-preview.3",
-  "status": "VERIFIED_PREVIEW_PENDING_UPLOAD",
+  "status": "PUBLISHED_PRERELEASE",
   "binary_sha256": "e73f1813543eeb74f113fa06f1b5d3241ee897a2db5f5529cac563f8070ca9f5",
   "archive_sha256": "93a448361d8c86ea792112e874d51953673cbf9a00c9705d88132a510dcc9811",
   "swift_checks": 64,
@@ -10,5 +10,6 @@
   "native_launchservices_total": 56,
   "apple_signing": "ad-hoc; no notarization",
   "license_environment": "DEMO",
-  "live_sales": false
+  "live_sales": false,
+  "url": "https://github.com/vhvostenkov/shift-switcher/releases/tag/v0.3.0-preview.3"
 }
