@@ -5,6 +5,7 @@ import sqlite3
 import time
 from pathlib import Path
 from urllib.parse import urlsplit
+from .delivery import ensure_tables, enqueue
 
 
 def main():
@@ -31,6 +32,7 @@ def main():
                 raise SystemExit('Not a confirmed LIVE order awaiting a fiscal receipt.')
             db.execute("UPDATE receipt_tasks SET status='ISSUED',url=?,updated=? WHERE order_id=?",(args.url,int(time.time()),args.order))
             db.execute("INSERT INTO events(at,order_id,kind,detail) VALUES(?,?,'receipt_attached','owner verified')",(int(time.time()),args.order))
+            ensure_tables(db);enqueue(db,args.order,'receipt')
         print('Receipt attached. Email delivery is a separate verified operation.')
     finally:db.close()
 

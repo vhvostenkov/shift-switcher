@@ -12,7 +12,7 @@ from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from threading import Lock
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import serialization
@@ -20,6 +20,7 @@ from cryptography.hazmat.primitives import serialization
 from .ledger import Ledger, PRODUCT
 from .tbank import TBankDemo, TBankLive
 from .catalog import catalog_from
+from .delivery import ensure_tables, enqueue
 
 
 def digest(text):
@@ -37,10 +38,12 @@ class Commerce:
         self.environment = config.get('environment','DEMO')
         if self.environment not in {'DEMO','LIVE'}: raise ValueError('invalid_environment')
         self.sandbox = self.environment == 'DEMO'
-        if not self.sandbox and not all(config.get(k) is True for k in ['bank_approved','fresh_credentials_verified','receipt_delivery_verified','legal_terms_approved','live_checkout_approved']):
+        required=['bank_approved','fresh_credentials_verified']
+        if config.get('checkout_enabled'): required += ['receipt_delivery_verified','legal_terms_approved','live_checkout_approved']
+        if not self.sandbox and not all(config.get(k) is True for k in required):
             raise ValueError('LIVE readiness is incomplete')
         self.products = catalog_from(config)
-        if not self.sandbox and any(not p.get(k) or p[k].endswith('-draft') for p in self.products.values() for k in ['terms_version','privacy_version']):
+        if not self.sandbox and config.get('checkout_enabled') and any(not p.get(k) or p[k].endswith('-draft') for p in self.products.values() for k in ['terms_version','privacy_version']):
             raise ValueError('LIVE legal versions are not published')
         self.cipher = Fernet(config['encryption_key'].encode())
         signer = serialization.load_pem_private_key(config['signing_key'].encode(), password=None)
@@ -69,6 +72,7 @@ class Commerce:
                     accepted_at INTEGER NOT NULL
                 );
             ''')
+        with closing(self.ledger.connect()) as db: ensure_tables(db)
         self.limits, self.lock = {}, Lock()
 
     def limit(self, ip, group, maximum=30):
@@ -133,7 +137,11 @@ class Commerce:
             self.event(row['order_id'],'init_started')
             origin=self.config['origin'].rstrip('/')
             checkout=self.config.get('checkout_url',origin+'/checkout')
-            callbacks=dict(notification_url=origin+'/api/notification',success_url=checkout+'?result=success',fail_url=checkout+'?result=fail')
+            parts=urlsplit(checkout)
+            def return_url(result):
+                query=dict(parse_qsl(parts.query));query.update(product=row['product'],result=result)
+                return urlunsplit((parts.scheme,parts.netloc,parts.path,urlencode(query),parts.fragment))
+            callbacks=dict(notification_url=origin+'/api/notification',success_url=return_url('success'),fail_url=return_url('fail'))
             if self.sandbox:
                 result=self.bank.init_connectivity_probe(row['order_id'],price=row['amount'],**callbacks)
             else:
@@ -166,8 +174,10 @@ class Commerce:
             state=db.execute('SELECT status FROM orders WHERE id=?',(order,)).fetchone()
             if state and state[0]=='CONFIRMED':
                 db.execute("INSERT OR IGNORE INTO receipt_tasks VALUES(?,?,NULL,?)",(order,'DEMO_NO_FISCAL_RECEIPT' if self.sandbox else 'PENDING_OWNER',int(time.time())))
+                if not self.sandbox: enqueue(db,order,'license')
             elif state and state[0] in {'REFUNDED','PARTIAL_REFUNDED','REVERSED','PARTIAL_REVERSED'}:
                 db.execute("UPDATE receipt_tasks SET status=?,updated=? WHERE order_id=?",('DEMO_REFUNDED' if self.sandbox else 'REFUND_REVIEW',int(time.time()),order))
+                db.execute("UPDATE mail_jobs SET status='CANCELED',updated=? WHERE order_id=? AND status='PENDING'",(int(time.time()),order))
         self.event(order,'notification_verified',state[0] if state else 'unknown')
         return result
 

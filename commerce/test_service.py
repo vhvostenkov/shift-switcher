@@ -17,7 +17,7 @@ from commerce.service import Commerce, handler_for, ThreadingHTTPServer
 class FakeBank:
     def __init__(self): self.calls=0; self.status='CONFIRMED'
     def init_connectivity_probe(self,order,**kw):
-        self.calls+=1
+        self.calls+=1; self.callbacks=kw
         return {'PaymentId':'123','PaymentURL':'https://pay.tbank-online.com/test-only'}
     def get_state(self,payment):
         return {'TerminalKey':'testDEMO','Success':True,'ErrorCode':'0','PaymentId':payment,'Amount':49900,'Status':self.status}
@@ -71,6 +71,11 @@ class ServiceTests(unittest.TestCase):
         self.config.update(environment='LIVE',terminal='testLIVE')
         with self.assertRaises(ValueError): Commerce(self.folder.name,self.config,bank=self.bank)
 
+    def test_closed_live_can_receive_control_payment_without_opening_public_checkout(self):
+        self.config.update(environment='LIVE',terminal='testLIVE',checkout_enabled=False,bank_approved=True,fresh_credentials_verified=True)
+        service=Commerce(Path(self.folder.name)/'closed-live',self.config,bank=self.bank)
+        with self.assertRaises(ValueError): service.create_checkout(self.token,'buyer@example.test')
+
     def test_live_rejects_draft_terms_and_missing_consent(self):
         from copy import deepcopy
         from commerce.catalog import DEFAULT_CATALOG
@@ -121,6 +126,11 @@ class ServiceTests(unittest.TestCase):
         _, order=service.create_checkout(self.token,'buyer@example.test','test-second-product')
         self.assertEqual(order['amount'],9900)
         self.assertEqual(order['product'],'test-second-product')
+        service.start_payment(self.token)
+        from urllib.parse import urlsplit,parse_qs
+        query=parse_qs(urlsplit(self.bank.callbacks['success_url']).query)
+        self.assertEqual(query['product'],['test-second-product'])
+        self.assertEqual(query['result'],['success'])
         with self.assertRaises(ValueError): service.create_checkout(self.token,'buyer@example.test','shift-switcher-pro-v1')
         with self.assertRaises(ValueError): service.create_checkout('c'*64,'buyer@example.test','unknown-product')
 
