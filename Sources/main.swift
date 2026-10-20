@@ -37,6 +37,7 @@ struct Edit {
 
 final class App: NSObject, NSApplicationDelegate {
     let preferences = CorrectionPreferences()
+    let license = LicenseManager()
     let shortcutPreferences = ShortcutPreferences(defaults: .standard)
     let shortcuts = GlobalShortcuts()
     private var lastShortcutTime: TimeInterval = 0
@@ -74,6 +75,7 @@ final class App: NSObject, NSApplicationDelegate {
         menu.addItem(.separator())
         _ = item("Завершить Shift Switcher", #selector(quit), menu)
         status.menu = menu
+        license.renewIfNeeded()
         shortcuts.perform = { [weak self] action in
             guard let self = self, !self.paused else { return }
             let now = ProcessInfo.processInfo.systemUptime
@@ -153,7 +155,7 @@ final class App: NSObject, NSApplicationDelegate {
             } else { detector.otherKey() }
         } else if type == .keyDown {
             detector.otherKey(); autoGeneration += 1
-            guard autoEnabled, modifiers.isEmpty, code == 49,
+            guard autoEnabled, license.hasPro, modifiers.isEmpty, code == 49,
                   let bundle = NSWorkspace.shared.frontmostApplication?.bundleIdentifier,
                   preferences.mode(for: bundle, defaultExclusions: excluded) == .automatic,
                   let field = field() else { return }
@@ -201,6 +203,7 @@ final class App: NSObject, NSApplicationDelegate {
         let before = ns.substring(with: range), after = Layout.convert(before)
         guard before != after else { return }
         if automatic {
+            guard license.hasPro else { return }
             guard !preferences.ignores(before), !preferences.ignores(after) else { return }
             guard before.count >= 4, before.allSatisfy({ $0.isLetter }), after.allSatisfy({ $0.isLetter }) else { return }
             let currentLanguage = before.contains(where: Layout.isRussian) ? "ru" : "en"

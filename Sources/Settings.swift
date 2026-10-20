@@ -16,6 +16,9 @@ final class SettingsModel: ObservableObject {
     @Published var correctionShortcut = CorrectionShortcut.doubleShift
     @Published var keyboardUndo = false
     @Published var shortcutError = ""
+    @Published var proAvailable = false
+    @Published var licenseStatus = ""
+    @Published var licenseMessage = ""
     private var timer: Timer?
     init(app: App) {
         self.app = app
@@ -32,8 +35,12 @@ final class SettingsModel: ObservableObject {
         loginNeedsApproval = SMAppService.mainApp.status == .requiresApproval
         correctionShortcut = app.shortcutPreferences.correction
         keyboardUndo = app.shortcutPreferences.keyboardUndo
+        app.license.refresh(); proAvailable = app.license.hasPro
+        automatic = app.autoEnabled && proAvailable
+        licenseStatus = app.license.licensed ? "Pro активирован" : app.license.days > 0 ? "Pro: осталось \(app.license.days) дн. из 14" : "Free · пробный Pro завершён"
+        licenseMessage = app.license.message
     }
-    func setAutomatic(_ value: Bool) { if app?.autoEnabled != value { app?.toggleAuto() }; refresh() }
+    func setAutomatic(_ value: Bool) { guard !value || proAvailable else { return }; if app?.autoEnabled != value { app?.toggleAuto() }; refresh() }
     func setPaused(_ value: Bool) { if app?.paused != value { app?.togglePause() }; refresh() }
     func setMode(_ raw: String, bundle: String) {
         _ = app?.preferences.setMode(AppCorrectionMode(rawValue: raw), for: bundle)
@@ -105,14 +112,14 @@ struct SettingsView: View {
                     Text("Без отправки текста\nи истории ввода.").font(.system(size: 11)).foregroundColor(.secondary).lineSpacing(3)
                 }
                 Divider().padding(.vertical, 20)
-                Text("\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "") · PREVIEW").font(.system(size: 9, weight: .medium, design: .monospaced)).tracking(1.4).foregroundColor(.secondary)
+                Text("\(model.licenseStatus)\n\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "") · PREVIEW").font(.system(size: 9, weight: .medium, design: .monospaced)).tracking(1.4).foregroundColor(.secondary)
             }.padding(.horizontal, 22).padding(.top, 38).padding(.bottom, 26).frame(width: 188)
                 .background(Color.black.opacity(0.18))
             VStack(alignment: .leading, spacing: 19) {
                 HStack {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Раскладка под контролем.").font(.system(size: 25, weight: .semibold)).tracking(-0.7)
-                        Text("Исправление по \(model.correctionShortcut.title).").font(.system(size: 12)).foregroundColor(.secondary)
+                        Text("Исправление: \(model.correctionShortcut.title).").font(.system(size: 12)).foregroundColor(.secondary)
                     }
                     Spacer()
                     HStack(spacing: 6) {
@@ -217,6 +224,8 @@ private struct RulesView: View {
     @State private var selectedBundle = ""
     @State private var word = ""
     @State private var wordError = false
+    @State private var licenseKey = ""
+    @State private var activating = false
     private var runningApps: [(id: String, name: String)] {
         var unique: [String: String] = [:]
         for app in NSWorkspace.shared.runningApplications where app.activationPolicy == .regular {
@@ -236,7 +245,7 @@ private struct RulesView: View {
                 Button("Готово", action: close).keyboardShortcut(.defaultAction)
             }
             Picker("Раздел", selection: $page) {
-                Text("Программы").tag(0); Text("Слова").tag(1); Text("Запуск").tag(2); Text("Клавиши").tag(3)
+                Text("Программы").tag(0); Text("Слова").tag(1); Text("Запуск").tag(2); Text("Клавиши").tag(3); Text("Лицензия").tag(4)
             }.pickerStyle(.segmented)
             if page == 0 {
                 Text("Выберите запущенную программу и задайте её режим. Глобальный переключатель автоматики всё равно должен быть включён.").font(.system(size: 12)).foregroundColor(.secondary)
@@ -288,7 +297,7 @@ private struct RulesView: View {
                 if model.loginNeedsApproval {
                     Text("Подтвердите автозапуск в настройках macOS → Основные → Объекты входа.").font(.system(size: 12)).foregroundColor(.orange)
                 }
-            } else {
+            } else if page == 3 {
                 Picker("Исправить выделение или последнее слово", selection: Binding(get: { model.correctionShortcut }, set: model.setShortcut)) {
                     ForEach(CorrectionShortcut.allCases, id: \.rawValue) { Text($0.title).tag($0) }
                 }
@@ -296,6 +305,24 @@ private struct RulesView: View {
                 Toggle("Отменять последнее исправление по ⌃⌥Z", isOn: Binding(get: { model.keyboardUndo }, set: model.setKeyboardUndo)).toggleStyle(.switch).tint(accent)
                 Text("Отмена работает, пока текст поля не изменился. Она также доступна в меню ⇧⇧.").font(.system(size: 12)).foregroundColor(.secondary)
                 if !model.shortcutError.isEmpty { Text(model.shortcutError).font(.system(size: 12)).foregroundColor(.orange) }
+            }
+            if page == 4 {
+                Text(model.licenseStatus).font(.system(size: 20, weight: .semibold))
+                Text("Пробный Pro — 14 дней. После него двойной Shift и ручная отмена остаются бесплатными. Лицензия Pro 1.x — 499 ₽ на два Mac.").font(.system(size: 12)).foregroundColor(.secondary)
+                Text("Сборка без нотариализации Apple. До покупки проверьте установку и работу на своём Mac. Купленная лицензия проверяется онлайн не реже одного раза в 30 дней.").font(.system(size: 12)).foregroundColor(.secondary)
+                SecureField("Ключ лицензии", text: $licenseKey).textFieldStyle(.roundedBorder)
+                HStack {
+                    Button(activating ? "Проверка…" : "Активировать") {
+                        activating = true
+                        model.app?.license.activate(licenseKey.trimmingCharacters(in: .whitespacesAndNewlines)) { activating = false; licenseKey = ""; model.refresh() }
+                    }.disabled(activating || licenseKey.isEmpty)
+                    Button("Открыть файл") { model.app?.license.importFile { model.refresh() } }
+                    Button("Обновить лицензию") { model.app?.license.renew { model.refresh() } }
+                    Button("Перейти на сайт") { model.app?.license.buy() }
+                }
+                Button("Освободить этот Mac") { model.app?.license.release { model.refresh() } }
+                if !model.licenseMessage.isEmpty { Text(model.licenseMessage).font(.system(size: 12)).foregroundColor(accent) }
+                Text("Ключ и случайный ID установки хранятся в Связке ключей. При активации отправляются ключ и хеш ID; набираемый текст не передаётся.").font(.system(size: 11)).foregroundColor(.secondary)
             }
             Spacer(minLength: 0)
             Text("Правила и словарь хранятся только на этом Mac. Парольные поля и Secure Input всегда пропускаются.").font(.system(size: 10)).foregroundColor(.secondary)

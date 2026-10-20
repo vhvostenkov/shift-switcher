@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 var count = 0
 func check(_ condition: @autoclosure () -> Bool, _ label: String) {
     count += 1
@@ -77,4 +78,29 @@ shortcutPrefs.correction = .doubleShift
 shortcutPrefs.keyboardUndo = false
 check(loadedShortcuts.correction == .doubleShift && !loadedShortcuts.keyboardUndo, "shortcut reset survives reload")
 isolatedDefaults.removePersistentDomain(forName: suiteName)
+
+let testSigner = Curve25519.Signing.PrivateKey()
+let testDevice = String(repeating: "a", count: 64)
+let testNow: Int64 = 1_800_000_000
+func encoded(_ data: Data) -> String { data.base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "") }
+func certificate(_ changes: [String: Any] = [:]) -> String {
+    var body: [String: Any] = ["schema": 1, "product": "shift-switcher-pro-v1", "license": "test-order", "device": testDevice, "issued_at": testNow, "valid_until": testNow + 30 * 86400, "key_id": "test", "environment": "DEMO"]
+    for (key, value) in changes { body[key] = value }
+    let message = "ss1." + encoded(try! JSONSerialization.data(withJSONObject: body, options: [.sortedKeys]))
+    return message + "." + encoded(try! testSigner.signature(for: Data(message.utf8)))
+}
+let testKeys = ["DEMO:test": testSigner.publicKey.rawRepresentation.base64EncodedString()]
+check(LicenseCheck.verify(certificate(), device: testDevice, keys: testKeys, environment: "DEMO", now: testNow) != nil, "valid Ed25519 certificate")
+check(LicenseCheck.verify(certificate(), device: String(repeating: "b", count: 64), keys: testKeys, environment: "DEMO", now: testNow) == nil, "certificate bound to device")
+check(LicenseCheck.verify(certificate(), device: testDevice, keys: testKeys, environment: "LIVE", now: testNow) == nil, "demo certificate cannot activate live app")
+check(LicenseCheck.verify(certificate(["environment": "LIVE"]), device: testDevice, keys: testKeys, environment: "LIVE", now: testNow) == nil, "demo signing key cannot mint live certificate")
+check(LicenseCheck.verify(certificate(["valid_until": testNow]), device: testDevice, keys: testKeys, environment: "DEMO", now: testNow) == nil, "expired certificate")
+check(LicenseCheck.verify(certificate(["issued_at": testNow + 86400]), device: testDevice, keys: testKeys, environment: "DEMO", now: testNow) == nil, "future certificate rejected")
+check(LicenseCheck.verify(certificate() + "tampered", device: testDevice, keys: testKeys, environment: "DEMO", now: testNow) == nil, "tampered signature rejected")
+var trialTest = TrialState(started: testNow, latest: testNow)
+check(trialTest.daysRemaining(now: testNow) == 14, "full 14 day trial")
+check(trialTest.daysRemaining(now: testNow + 13 * 86400) == 1, "trial last day")
+check(trialTest.daysRemaining(now: testNow) == 0, "trial rollback rejected")
+check(trialTest.daysRemaining(now: testNow + 15 * 86400) == 0, "trial expired")
+
 print("PASS: \(count) checks")
