@@ -3,7 +3,7 @@ Description=Shift Switcher independent commerce service (RF)
 After=network-online.target
 Wants=network-online.target
 [Service]
-User=vhvost
+User=shift-switcher
 WorkingDirectory=/opt/shift-switcher/app
 ExecStart=/opt/shift-switcher/venv/bin/python -m commerce.service --config /opt/shift-switcher/config/service-demo.json --data /opt/shift-switcher/data
 Restart=on-failure

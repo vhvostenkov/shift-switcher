@@ -8,7 +8,7 @@ from urllib.parse import urlsplit
 
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--data',required=True)
+    parser=argparse.ArgumentParser();parser.add_argument('--data',required=True);parser.add_argument('--config',required=True)
     sub=parser.add_subparsers(dest='action',required=True)
     sub.add_parser('receipts')
     attach=sub.add_parser('attach-receipt');attach.add_argument('--order',required=True);attach.add_argument('--url',required=True)
@@ -17,7 +17,11 @@ def main():
     try:
         if args.action=='receipts':
             rows=db.execute("SELECT orders.id,orders.amount,orders.status,sessions.email,receipt_tasks.status receipt_status,receipt_tasks.url FROM receipt_tasks JOIN orders ON orders.id=receipt_tasks.order_id JOIN sessions ON sessions.order_id=orders.id ORDER BY receipt_tasks.updated").fetchall()
-            print(json.dumps([dict(r) for r in rows],ensure_ascii=False,indent=2));return
+            from cryptography.fernet import Fernet
+            cipher=Fernet(json.loads(Path(args.config).read_text())['encryption_key'].encode())
+            result=[dict(r) for r in rows]
+            for row in result:row['email']=cipher.decrypt(row['email'].encode()).decode()
+            print(json.dumps(result,ensure_ascii=False,indent=2));return
         url=urlsplit(args.url)
         if url.scheme!='https' or url.hostname!='lknpd.nalog.ru' or not url.path.startswith('/api/v1/receipt/') or url.username or url.password or url.query or url.fragment:
             raise SystemExit('Only a receipt link from My Tax is accepted. Operator must verify its actual contents.')

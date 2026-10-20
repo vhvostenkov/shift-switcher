@@ -1,0 +1,12 @@
+[Unit]
+Description=Encrypted Shift Switcher database backup
+[Service]
+Type=oneshot
+User=shift-switcher
+WorkingDirectory=/opt/shift-switcher/app
+ExecStart=/opt/shift-switcher/venv/bin/python -m commerce.backup --config /opt/shift-switcher/config/service-demo.json --data /opt/shift-switcher/data --output /opt/shift-switcher/backups
+UMask=0077
+NoNewPrivileges=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/shift-switcher/backups

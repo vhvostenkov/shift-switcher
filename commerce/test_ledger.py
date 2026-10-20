@@ -76,6 +76,18 @@ class LedgerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.ledger.activate(self.key, self.device)
 
+    def test_failed_notification_is_acknowledged_only_after_bank_verification(self):
+        for status in ['REJECTED', 'DEADLINE_EXPIRED', 'CANCELED']:
+            self.assertEqual(self.ledger.notification(self.event(Status=status, Success=False, ErrorCode='100'), self.state(Status=status)), 'OK')
+            with self.assertRaises(ValueError): self.ledger.activate(self.key, self.device)
+        with self.assertRaises(ValueError):
+            self.ledger.notification(self.event(Status='REJECTED', Success=False), self.state(Status='CONFIRMED'))
+
+    def test_late_failed_event_cannot_revoke_paid_order(self):
+        self.paid()
+        self.ledger.notification(self.event(Status='REJECTED', Success=False), self.state(Status='REJECTED'))
+        self.ledger.activate(self.key, self.device)
+
     def test_bank_state_must_agree(self):
         for override in [{'PaymentId': '999'}, {'Amount': 1}, {'TerminalKey': 'otherDEMO'}, {'Status': 'AUTHORIZED'}, {'Success': False}]:
             with self.assertRaises(ValueError):

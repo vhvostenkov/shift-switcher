@@ -96,14 +96,15 @@ class Ledger:
         supplied = payload.get("Token")
         if payload.get("TerminalKey") != self.terminal or not isinstance(supplied, str) or not hmac.compare_digest(supplied, bank_token(payload, self.password)):
             raise ValueError("untrusted notification")
-        if payload.get("Success") is not True or str(payload.get("ErrorCode")) != "0":
+        failed = payload.get("Status") in {"REJECTED", "DEADLINE_EXPIRED", "CANCELED"}
+        if not failed and (payload.get("Success") is not True or str(payload.get("ErrorCode")) != "0"):
             raise ValueError("unsuccessful notification")
         order, payment = payload.get("OrderId"), str(payload.get("PaymentId", ""))
         with closing(self.connect()) as db:
             row = db.execute("SELECT * FROM orders WHERE id=?", (order,)).fetchone()
         if not row or not row["payment_id"] or payment != row["payment_id"]:
             raise ValueError("unknown or mismatched payment")
-        if payload.get("Status") not in {"CONFIRMED", "REFUNDED", "PARTIAL_REFUNDED", "REVERSED", "PARTIAL_REVERSED"}:
+        if not failed and payload.get("Status") not in {"CONFIRMED", "REFUNDED", "PARTIAL_REFUNDED", "REVERSED", "PARTIAL_REVERSED"}:
             return "OK"  # AUTHORIZED is not paid.
         state = get_state(payment)
         if state.get("Success") is not True or str(state.get("PaymentId")) != payment or state.get("TerminalKey") != self.terminal or str(state.get("ErrorCode")) != "0":
@@ -112,13 +113,16 @@ class Ledger:
         if status == "CONFIRMED":
             if payload.get("Status") != "CONFIRMED" or amount(payload.get("Amount")) != row["amount"] or amount(state.get("Amount")) != row["amount"]:
                 raise ValueError("paid amount/status mismatch")
+        elif status in {"REJECTED", "DEADLINE_EXPIRED", "CANCELED"}:
+            if status != payload.get("Status"):
+                raise ValueError("failed status mismatch")
         elif status not in {"REFUNDED", "PARTIAL_REFUNDED", "REVERSED", "PARTIAL_REVERSED"}:
             raise ValueError("bank state not final")
         with closing(self.connect()) as db:
             db.execute("BEGIN IMMEDIATE")
             current = db.execute("SELECT status FROM orders WHERE id=?", (order,)).fetchone()[0]
             # Refund is terminal locally: a late CONFIRMED cannot resurrect a license.
-            if current == "NEW" or status != "CONFIRMED":
+            if current == "NEW" or status in {"REFUNDED", "PARTIAL_REFUNDED", "REVERSED", "PARTIAL_REVERSED"}:
                 db.execute("UPDATE orders SET status=? WHERE id=?", (status, order))
             db.commit()
         return "OK"

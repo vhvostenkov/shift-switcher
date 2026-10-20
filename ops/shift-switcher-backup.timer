@@ -1,0 +1,7 @@
+[Unit]
+Description=Daily Shift Switcher encrypted backup
+[Timer]
+OnCalendar=daily
+Persistent=true
+[Install]
+WantedBy=timers.target

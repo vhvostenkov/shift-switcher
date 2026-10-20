@@ -71,7 +71,12 @@ final class LicenseManager {
         URLSession.shared.dataTask(with: request) { data, response, _ in
             DispatchQueue.main.async {
                 defer { completion() }
-                guard (response as? HTTPURLResponse)?.statusCode == 200, let data = data,
+                if (response as? HTTPURLResponse)?.statusCode == 403, let data = data,
+                   let body = try? JSONSerialization.jsonObject(with: data) as? [String: Any], body["error"] as? String == "license_revoked" {
+                    _ = self.write("certificate", ""); self.certificateCache = nil; self.refresh()
+                    self.message = "Лицензия отозвана. Доступен Free и оставшийся пробный период."; return
+                }
+                guard (response as? HTTPURLResponse)?.statusCode == 200, let data = data, data.count <= 16384,
                       let body = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                       let certificate = body["certificate"] as? String,
                       LicenseCheck.verify(certificate, device: self.device, keys: self.keys, environment: self.environment, now: Int64(Date().timeIntervalSince1970)) != nil else {

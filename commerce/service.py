@@ -25,6 +25,10 @@ def digest(text):
     return hashlib.sha256(text.encode()).hexdigest()
 
 
+class EntitlementError(ValueError):
+    pass
+
+
 class Commerce:
     def __init__(self, folder, config, *, bank=None):
         self.folder, self.config = Path(folder), config
@@ -149,7 +153,12 @@ class Commerce:
 
     def activate(self, key, device):
         if not isinstance(key,str) or not 30<=len(key)<=100: raise ValueError('invalid_license')
-        cert=self.ledger.activate(key,device)
+        try:
+            cert=self.ledger.activate(key,device)
+        except ValueError as error:
+            if str(error)=='license not paid or revoked': raise EntitlementError('license_revoked') from None
+            if str(error)=='device limit reached': raise EntitlementError('device_limit') from None
+            raise
         return {'certificate':cert,'environment':'DEMO'}
 
 
@@ -206,6 +215,8 @@ def handler_for(service):
                     service.ledger.release_device(data['key'],data.get('device'))
                     self.send(200,{'released':True}); return
                 self.send(404,{'error':'not_found'})
+            except EntitlementError as error:
+                self.send(403 if str(error)=='license_revoked' else 409,{'error':str(error)})
             except (ValueError,TypeError,KeyError,json.JSONDecodeError):
                 self.send(400,{'error':'request_rejected'})
             except Exception:

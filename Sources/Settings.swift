@@ -37,7 +37,7 @@ final class SettingsModel: ObservableObject {
         keyboardUndo = app.shortcutPreferences.keyboardUndo
         app.license.refresh(); proAvailable = app.license.hasPro
         automatic = app.autoEnabled && proAvailable
-        licenseStatus = app.license.licensed ? "Pro активирован" : app.license.days > 0 ? "Pro: осталось \(app.license.days) дн. из 14" : "Free · пробный Pro завершён"
+        licenseStatus = app.license.licensed ? (app.license.environment == "DEMO" ? "DEMO · Pro активирован" : "Pro активирован") : app.license.days > 0 ? "Pro: осталось \(app.license.days) дн. из 14" : "Free · пробный Pro завершён"
         licenseMessage = app.license.message
     }
     func setAutomatic(_ value: Bool) { guard !value || proAvailable else { return }; if app?.autoEnabled != value { app?.toggleAuto() }; refresh() }
