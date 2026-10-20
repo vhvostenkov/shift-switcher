@@ -45,6 +45,7 @@ class Ledger:
         if sandbox != terminal.endswith("DEMO"):
             raise ValueError("terminal environment mismatch")
         self.path, self.terminal, self.password = str(path), terminal, password
+        self.sandbox = sandbox
         self.signing_key, self.key_id = signing_key, key_id
         with closing(self.connect()) as db:
             db.executescript("""
@@ -137,7 +138,8 @@ class Ledger:
             db.execute("INSERT OR IGNORE INTO activations VALUES(?,?)", (row["id"], device))
             db.commit()
         payload = {"schema": 1, "product": PRODUCT, "license": row["id"], "device": device,
-                   "issued_at": now, "valid_until": now + 30 * 86400, "key_id": self.key_id}
+                   "issued_at": now, "valid_until": now + 30 * 86400, "key_id": self.key_id,
+                   "environment": "DEMO" if self.sandbox else "LIVE"}
         encoded = b64(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode())
         message = "ss1." + encoded
         return message + "." + b64(self.signing_key.sign(message.encode()))
