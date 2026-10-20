@@ -1,0 +1,35 @@
+import Foundation
+var count = 0
+func check(_ condition: @autoclosure () -> Bool, _ label: String) {
+    count += 1
+    if !condition() { fatalError(label) }
+}
+check(Layout.convert("ghbdtn") == "привет", "en to ru")
+check(Layout.convert("руддщ") == "hello", "ru to en")
+check(Layout.convert("Ghbdtn Vbh") == "Привет Мир", "case")
+check(Layout.convert("hello привет") == "руддщ ghbdtn", "mixed selection")
+check(Layout.convert("123\n🙂") == "123\n🙂", "unicode and digits")
+check(Layout.convert(Layout.convert("Hello Мир")) == "Hello Мир", "roundtrip")
+check(Layout.lastWord(in: "🙂 ghbdtn ", caret: 10, skipWhitespace: true) == NSRange(location: 3, length: 6), "utf16 trailing space")
+check(Layout.lastWord(in: "one two", caret: 3, skipWhitespace: false) == NSRange(location: 0, length: 3), "caret inside line")
+check(Layout.lastWord(in: "", caret: 0, skipWhitespace: true) == nil, "empty")
+var detector = DoubleShift()
+check(!detector.shift(code: 56, down: true, time: 0, otherModifiers: false), "first down")
+check(!detector.shift(code: 56, down: false, time: 0.05, otherModifiers: false), "first tap")
+check(!detector.shift(code: 56, down: true, time: 0.1, otherModifiers: false), "second down")
+check(detector.shift(code: 56, down: false, time: 0.15, otherModifiers: false), "double tap")
+detector.reset()
+_ = detector.shift(code: 56, down: true, time: 0, otherModifiers: false)
+detector.otherKey()
+check(!detector.shift(code: 56, down: false, time: 0.05, otherModifiers: false), "shift letter")
+_ = detector.shift(code: 56, down: true, time: 0.1, otherModifiers: false)
+check(!detector.shift(code: 56, down: false, time: 0.15, otherModifiers: false), "no false double after chord")
+detector.reset()
+_ = detector.shift(code: 56, down: true, time: 0, otherModifiers: false)
+check(!detector.shift(code: 56, down: false, time: 0.5, otherModifiers: false), "hold")
+detector.reset()
+_ = detector.shift(code: 56, down: true, time: 0, otherModifiers: false)
+_ = detector.shift(code: 60, down: true, time: 0.01, otherModifiers: false)
+_ = detector.shift(code: 56, down: false, time: 0.04, otherModifiers: false)
+check(!detector.shift(code: 60, down: false, time: 0.06, otherModifiers: false), "both shifts")
+print("PASS: \(count) core checks")
