@@ -59,5 +59,18 @@ check(loaded.mode(for: "com.apple.Terminal", defaultExclusions: terminalExclusio
 isolatedDefaults.set(Data("invalid JSON".utf8), forKey: "correctionPreferences.v1")
 let recovered = CorrectionPreferences(defaults: isolatedDefaults)
 check(recovered.ignoredWords.isEmpty && recovered.appModes.isEmpty, "corrupt settings fallback")
+let shortcutPrefs = ShortcutPreferences(defaults: isolatedDefaults)
+check(shortcutPrefs.correction == .doubleShift, "double shift remains default")
+check(!shortcutPrefs.keyboardUndo, "keyboard undo opt in")
+shortcutPrefs.correction = .controlOptionSpace
+shortcutPrefs.keyboardUndo = true
+let loadedShortcuts = ShortcutPreferences(defaults: isolatedDefaults)
+check(loadedShortcuts.correction == .controlOptionSpace, "shortcut persists")
+check(loadedShortcuts.keyboardUndo, "undo shortcut persists")
+isolatedDefaults.set("unknownShortcut", forKey: "correctionShortcut.v1")
+check(shortcutPrefs.correction == .doubleShift, "unknown shortcut falls back safely")
+shortcutPrefs.correction = .doubleShift
+shortcutPrefs.keyboardUndo = false
+check(loadedShortcuts.correction == .doubleShift && !loadedShortcuts.keyboardUndo, "shortcut reset survives reload")
 isolatedDefaults.removePersistentDomain(forName: suiteName)
 print("PASS: \(count) checks")

@@ -5,7 +5,7 @@ enum AppCorrectionMode: String, Codable, CaseIterable {
     var title: String {
         switch self {
         case .automatic: return "Автоматика разрешена"
-        case .manual: return "Только двойной Shift"
+        case .manual: return "Только вручную"
         case .disabled: return "Не исправлять"
         }
     }

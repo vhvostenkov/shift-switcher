@@ -37,6 +37,9 @@ struct Edit {
 
 final class App: NSObject, NSApplicationDelegate {
     let preferences = CorrectionPreferences()
+    let shortcutPreferences = ShortcutPreferences(defaults: .standard)
+    let shortcuts = GlobalShortcuts()
+    private var lastShortcutTime: TimeInterval = 0
     var settingsWindow: SettingsWindow?
     var acceptance: NativeAcceptance?
     var status: NSStatusItem!
@@ -56,7 +59,7 @@ final class App: NSObject, NSApplicationDelegate {
         status = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         status.button?.title = "⇧⇧"
         let menu = NSMenu()
-        info = NSMenuItem(title: "Двойной Shift: выделение / последнее слово", action: nil, keyEquivalent: "")
+        info = NSMenuItem(title: "Исправление: выделение / последнее слово", action: nil, keyEquivalent: "")
         menu.addItem(info)
         menu.addItem(.separator())
         _ = item("Открыть Shift Switcher…", #selector(showSettings), menu)
@@ -71,6 +74,23 @@ final class App: NSObject, NSApplicationDelegate {
         menu.addItem(.separator())
         _ = item("Завершить Shift Switcher", #selector(quit), menu)
         status.menu = menu
+        shortcuts.perform = { [weak self] action in
+            guard let self = self, !self.paused else { return }
+            let now = ProcessInfo.processInfo.systemUptime
+            guard now - self.lastShortcutTime >= 0.3 else { return }
+            self.lastShortcutTime = now
+            self.detector.reset(); self.autoGeneration += 1
+            if action == 1 { self.correct(automatic: false) }
+            else if action == 2 { self.undo() }
+        }
+        if !shortcuts.setCorrection(shortcutPreferences.correction) {
+            shortcutPreferences.correction = .doubleShift
+            report("Горячая клавиша занята — используйте двойной Shift")
+        }
+        if !shortcuts.setUndo(shortcutPreferences.keyboardUndo) {
+            shortcutPreferences.keyboardUndo = false
+            report("Клавиша отмены занята — отмена доступна в меню")
+        }
         fputs("accessibility=\(AXIsProcessTrusted()) inputMonitoring=\(CGPreflightListenEventAccess())\n", stderr)
         connect()
         if CommandLine.arguments.contains("--native-acceptance") {
@@ -109,7 +129,7 @@ final class App: NSObject, NSApplicationDelegate {
         source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
         CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
         CGEvent.tapEnable(tap: tap, enable: true)
-        report(AXIsProcessTrusted() ? "Готово — двойной Shift" : "Нужен доступ: Универсальный доступ")
+        report(AXIsProcessTrusted() ? "Готово — \(shortcutPreferences.correction.title)" : "Нужен доступ: Универсальный доступ")
     }
     func handle(_ type: CGEventType, _ event: CGEvent) {
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
@@ -126,7 +146,7 @@ final class App: NSObject, NSApplicationDelegate {
                 // Device-specific flags distinguish left/right releases when both are held.
                 let deviceMask: UInt64 = code == 56 ? 0x00000002 : 0x00000004
                 let down = event.flags.rawValue & deviceMask != 0
-                if detector.shift(code: code, down: down, time: time, otherModifiers: !modifiers.isEmpty) {
+                if detector.shift(code: code, down: down, time: time, otherModifiers: !modifiers.isEmpty), shortcutPreferences.correction == .doubleShift {
                     autoGeneration += 1
                     DispatchQueue.main.async { self.correct(automatic: false) }
                 }
@@ -198,7 +218,7 @@ final class App: NSObject, NSApplicationDelegate {
         }
         lastEdit = Edit(element: field.element, pid: field.pid, before: before, after: after, range: newRange, originalSelection: field.range, expectedValue: expected)
         switchInput(for: after)
-        report(automatic ? "Автоматически исправлено · отмена в меню ⇧⇧" : "Раскладка исправлена · ⇧⇧ для обратной замены")
+        report(automatic ? "Автоматически исправлено · отмена в меню ⇧⇧" : "Раскладка исправлена · повторите \(shortcutPreferences.correction.title) для обратной замены")
     }
     func replace(field: Field, range: NSRange, text: String) -> Bool {
         guard let current = self.field(), current.pid == field.pid,
@@ -259,7 +279,7 @@ final class App: NSObject, NSApplicationDelegate {
     @objc func help() {
         let alert = NSAlert()
         alert.messageText = "Shift Switcher"
-        alert.informativeText = "Выделите текст и дважды быстро нажмите и отпустите Shift. Без выделения исправится последнее слово перед курсором. Повторное ⇧⇧ возвращает раскладку.\n\nАвтоматика включается в меню и срабатывает по пробелу при наличии словарей RU/EN macOS. Для терминалов, редакторов кода и менеджеров паролей она по умолчанию отключена.\n\nНужны разрешения «Универсальный доступ» и «Мониторинг ввода». После выдачи доступа перезапустите приложение.\n\nТекст обрабатывается в памяти, не отправляется в сеть и не записывается в файлы. Поля без поддержки Accessibility пропускаются. Используйте один переключатель раскладки одновременно."
+        alert.informativeText = "Выделите текст и используйте \(shortcutPreferences.correction.title). Без выделения исправится последнее слово перед курсором. Повторное сочетание возвращает раскладку. Настройка клавиш — в «Личные правила → Клавиши».\n\nАвтоматика включается в меню и срабатывает по пробелу при наличии словарей RU/EN macOS. Для терминалов, редакторов кода и менеджеров паролей она по умолчанию отключена.\n\nНужны разрешения «Универсальный доступ» и «Мониторинг ввода». После выдачи доступа перезапустите приложение.\n\nТекст обрабатывается в памяти, не отправляется в сеть и не записывается в файлы. Поля без поддержки Accessibility пропускаются. Используйте один переключатель раскладки одновременно."
         alert.runModal()
     }
     @objc func quit() { NSApp.terminate(nil) }

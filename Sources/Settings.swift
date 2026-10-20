@@ -13,6 +13,9 @@ final class SettingsModel: ObservableObject {
     @Published var ignoredWords: [String] = []
     @Published var launchAtLogin = false
     @Published var loginNeedsApproval = false
+    @Published var correctionShortcut = CorrectionShortcut.doubleShift
+    @Published var keyboardUndo = false
+    @Published var shortcutError = ""
     private var timer: Timer?
     init(app: App) {
         self.app = app
@@ -27,6 +30,8 @@ final class SettingsModel: ObservableObject {
         appModes = app.preferences.appModes; ignoredWords = app.preferences.ignoredWords
         launchAtLogin = SMAppService.mainApp.status == .enabled
         loginNeedsApproval = SMAppService.mainApp.status == .requiresApproval
+        correctionShortcut = app.shortcutPreferences.correction
+        keyboardUndo = app.shortcutPreferences.keyboardUndo
     }
     func setAutomatic(_ value: Bool) { if app?.autoEnabled != value { app?.toggleAuto() }; refresh() }
     func setPaused(_ value: Bool) { if app?.paused != value { app?.togglePause() }; refresh() }
@@ -40,6 +45,21 @@ final class SettingsModel: ObservableObject {
         refresh(); return result
     }
     func removeWord(_ word: String) { app?.preferences.removeIgnoredWord(word); refresh() }
+    func setShortcut(_ value: CorrectionShortcut) {
+        guard let app = app else { return }
+        if app.shortcuts.setCorrection(value) {
+            app.shortcutPreferences.correction = value
+            app.detector.reset(); app.autoGeneration += 1; shortcutError = ""
+        } else { shortcutError = "⌃⌥Пробел занят другой программой. Выберите другое сочетание или освободите его." }
+        refresh()
+    }
+    func setKeyboardUndo(_ value: Bool) {
+        guard let app = app else { return }
+        if app.shortcuts.setUndo(value) {
+            app.shortcutPreferences.keyboardUndo = value; shortcutError = ""
+        } else { shortcutError = "⌃⌥Z занят другой программой. Отмена остаётся доступной в меню ⇧⇧." }
+        refresh()
+    }
     func setLogin(_ enabled: Bool) {
         do {
             if enabled { try SMAppService.mainApp.register() }
@@ -92,7 +112,7 @@ struct SettingsView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Раскладка под контролем.").font(.system(size: 25, weight: .semibold)).tracking(-0.7)
-                        Text("Пишите. Двойной Shift исправит остальное.").font(.system(size: 12)).foregroundColor(.secondary)
+                        Text("Исправление по \(model.correctionShortcut.title).").font(.system(size: 12)).foregroundColor(.secondary)
                     }
                     Spacer()
                     HStack(spacing: 6) {
@@ -126,7 +146,7 @@ struct SettingsView: View {
                 VStack(spacing: 0) {
                     setting("Автоисправление", subtitle: "RU ↔ EN после пробела. Можно выключить в любой момент.", icon: "sparkles", value: Binding(get: { model.automatic }, set: model.setAutomatic))
                     Divider().padding(.leading, 54)
-                    setting("Поставить на паузу", subtitle: "Временно отключить исправление и двойной Shift.", icon: "pause.circle", value: Binding(get: { model.paused }, set: model.setPaused))
+                    setting("Поставить на паузу", subtitle: "Временно отключить исправление и горячие клавиши.", icon: "pause.circle", value: Binding(get: { model.paused }, set: model.setPaused))
                 }.background(Color.white.opacity(0.035)).cornerRadius(14)
                 HStack {
                     Text("РАЗРЕШЕНИЯ MACOS").font(.system(size: 9, weight: .medium, design: .monospaced)).tracking(1.3).foregroundColor(.secondary)
@@ -216,7 +236,7 @@ private struct RulesView: View {
                 Button("Готово", action: close).keyboardShortcut(.defaultAction)
             }
             Picker("Раздел", selection: $page) {
-                Text("Программы").tag(0); Text("Слова").tag(1); Text("Запуск").tag(2)
+                Text("Программы").tag(0); Text("Слова").tag(1); Text("Запуск").tag(2); Text("Клавиши").tag(3)
             }.pickerStyle(.segmented)
             if page == 0 {
                 Text("Выберите запущенную программу и задайте её режим. Глобальный переключатель автоматики всё равно должен быть включён.").font(.system(size: 12)).foregroundColor(.secondary)
@@ -246,7 +266,7 @@ private struct RulesView: View {
                     }
                 }
             } else if page == 1 {
-                Text("Автоматика не будет менять эти слова. Ручное исправление двойным Shift остаётся доступным.").font(.system(size: 12)).foregroundColor(.secondary)
+                Text("Автоматика не будет менять эти слова. Ручное исправление остаётся доступным.").font(.system(size: 12)).foregroundColor(.secondary)
                 HStack {
                     TextField("Например, название компании", text: $word).textFieldStyle(.roundedBorder).onSubmit(addWord)
                     Button("Добавить", action: addWord)
@@ -260,12 +280,20 @@ private struct RulesView: View {
                         if model.ignoredWords.isEmpty { Text("Личный словарь пока пуст.").font(.system(size: 12)).foregroundColor(.secondary) }
                     }
                 }
-            } else {
+            } else if page == 2 {
                 Toggle("Запускать вместе с Mac", isOn: Binding(get: { model.launchAtLogin }, set: model.setLogin)).toggleStyle(.switch).tint(accent)
                 Text("При входе приложение останется в строке меню.").font(.system(size: 12)).foregroundColor(.secondary)
                 if model.loginNeedsApproval {
                     Text("Подтвердите автозапуск в настройках macOS → Основные → Объекты входа.").font(.system(size: 12)).foregroundColor(.orange)
                 }
+            } else {
+                Picker("Исправить выделение или последнее слово", selection: Binding(get: { model.correctionShortcut }, set: model.setShortcut)) {
+                    ForEach(CorrectionShortcut.allCases, id: \.rawValue) { Text($0.title).tag($0) }
+                }
+                Text("⌃ — Control, ⌥ — Option. Используется только выбранное сочетание.").font(.system(size: 12)).foregroundColor(.secondary)
+                Toggle("Отменять последнее исправление по ⌃⌥Z", isOn: Binding(get: { model.keyboardUndo }, set: model.setKeyboardUndo)).toggleStyle(.switch).tint(accent)
+                Text("Отмена работает, пока текст поля не изменился. Она также доступна в меню ⇧⇧.").font(.system(size: 12)).foregroundColor(.secondary)
+                if !model.shortcutError.isEmpty { Text(model.shortcutError).font(.system(size: 12)).foregroundColor(.orange) }
             }
             Spacer(minLength: 0)
             Text("Правила и словарь хранятся только на этом Mac. Парольные поля и Secure Input всегда пропускаются.").font(.system(size: 10)).foregroundColor(.secondary)
