@@ -5,7 +5,8 @@ DEFAULT_PRODUCT = 'shift-switcher-pro-v1'
 DEFAULT_CATALOG = {
     DEFAULT_PRODUCT: dict(name='Shift Switcher Pro 1.x', amount=49900, currency='RUB',
         fulfillment='device_license', devices=2, terms='/shift-switcher/terms.html',
-        privacy='/shift-switcher/privacy.html', download='/shift-switcher/')
+        privacy='/shift-switcher/privacy.html', download='/shift-switcher/',
+        terms_version='2026-10-20-draft', privacy_version='2026-10-20-draft')
 }
 
 

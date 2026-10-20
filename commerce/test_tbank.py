@@ -2,7 +2,7 @@ import ssl
 import unittest
 
 from commerce.ledger import bank_token
-from commerce.tbank import TBankDemo, BankError
+from commerce.tbank import TBankDemo, TBankLive, BankError
 
 
 class DemoTransportTests(unittest.TestCase):
@@ -16,6 +16,20 @@ class DemoTransportTests(unittest.TestCase):
     def test_live_credentials_rejected(self):
         with self.assertRaises(ValueError):
             TBankDemo('live-terminal', 'test-only-password')
+
+    def test_live_requires_explicit_readiness_and_rejects_demo(self):
+        for terminal, approved in [('testLIVE',False),('testDEMO',True)]:
+            with self.assertRaises(ValueError): TBankLive(terminal,'test-only-password',approved=approved)
+
+    def test_live_init_uses_server_product_and_no_fabricated_receipt(self):
+        def transport(method,payload):
+            self.assertEqual(payload['Description'],'Test fixture app')
+            self.assertEqual(payload['Amount'],9900)
+            self.assertNotIn('Receipt',payload)
+            return dict(TerminalKey='testLIVE',Success=True,ErrorCode='0',PaymentId='123',OrderId='ss_test',Amount=9900,PaymentURL='https://pay.tbank-online.com/test-only')
+        client=TBankLive('testLIVE','test-only-password',approved=True,transport=transport)
+        client.init_product('ss_test',9900,description='Test fixture app',notification_url='https://example.test/api/notification',success_url='https://example.test/pay/',fail_url='https://example.test/pay/')
+        with self.assertRaises(ValueError): client.init_connectivity_probe('ss_test')
 
     def test_tls_checks_are_enabled(self):
         client = self.client()

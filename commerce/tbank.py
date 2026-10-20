@@ -61,7 +61,7 @@ class TBankDemo:
         if type(price) is not int or not 0 < price <= 10000000: raise ValueError("invalid probe price")
         return self._init(order, price, notification_url, success_url, fail_url, None)
 
-    def _init(self, order, price, notification_url, success_url, fail_url, receipt):
+    def _init(self, order, price, notification_url, success_url, fail_url, receipt, *, description=None):
         urls = [urlparse(u) for u in (notification_url, success_url, fail_url)]
         if any(u.scheme != 'https' or not u.hostname or u.username or u.password for u in urls) or len({u.netloc for u in urls}) != 1:
             raise ValueError('same-origin HTTPS callback URLs required')
@@ -70,8 +70,9 @@ class TBankDemo:
             'SuccessURL': success_url, 'FailURL': fail_url}
         if receipt is not None:
             data['Receipt'] = receipt
-        else:
-            data['Description'] = 'Shift Switcher DEMO connectivity probe; no license'
+        elif description is None:
+            data['Description'] = 'VHVost DEMO payment; test license only'
+        if description is not None: data['Description'] = description
         result = self._request('Init', data)
         payment = str(result.get('PaymentId', ''))
         target = urlparse(result.get('PaymentURL', ''))
@@ -82,3 +83,25 @@ class TBankDemo:
         if target.scheme != 'https' or target.hostname not in {'securepay.tinkoff.ru', 'securepay.tbank.ru', 'pay.tbank-online.com'} or target.port not in (None, 443) or target.username or target.password:
             raise BankError('unexpected bank payment URL')
         return result
+
+
+class TBankLive(TBankDemo):
+    """LIVE initialization is explicitly gated; never used by the deployed DEMO config."""
+    def __init__(self, terminal, password, *, approved=False, ca_file=None, transport=None):
+        if not approved or not terminal or terminal.endswith('DEMO') or not password:
+            raise ValueError('explicit LIVE readiness approval and LIVE credentials required')
+        self.terminal, self.password = terminal, password
+        self.context = ssl.create_default_context()
+        if ca_file: self.context.load_verify_locations(cafile=ca_file)
+        self.transport = transport or self._http
+
+    def init_connectivity_probe(self, *args, **kwargs):
+        raise ValueError('DEMO probes are forbidden on a LIVE terminal')
+
+    def init_product(self, order, price, *, description, notification_url, success_url, fail_url):
+        if not isinstance(order,str) or not order.startswith('ss_') or len(order)>36:
+            raise ValueError('invalid order')
+        if type(price) is not int or not 0 < price <= 10000000: raise ValueError('invalid price')
+        if not isinstance(description,str) or not 1<=len(description)<=120: raise ValueError('invalid description')
+        # NPD receipts are issued through My Tax, not invented as a bank fiscal receipt.
+        return self._init(order,price,notification_url,success_url,fail_url,None,description=description)

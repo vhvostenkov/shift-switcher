@@ -66,6 +66,30 @@ class ServiceTests(unittest.TestCase):
     def test_closed_checkout(self):
         self.config['checkout_enabled']=False
         with self.assertRaises(ValueError):self.create()
+
+    def test_live_is_closed_without_verified_readiness(self):
+        self.config.update(environment='LIVE',terminal='testLIVE')
+        with self.assertRaises(ValueError): Commerce(self.folder.name,self.config,bank=self.bank)
+
+    def test_live_rejects_draft_terms_and_missing_consent(self):
+        from copy import deepcopy
+        from commerce.catalog import DEFAULT_CATALOG
+        self.config.update(environment='LIVE',terminal='testLIVE',bank_approved=True,fresh_credentials_verified=True,receipt_delivery_verified=True,legal_terms_approved=True,live_checkout_approved=True)
+        with self.assertRaises(ValueError): Commerce(self.folder.name,self.config,bank=self.bank)
+        products=deepcopy(DEFAULT_CATALOG)
+        p=products['shift-switcher-pro-v1']; p.update(terms_version='test-published-1',privacy_version='test-published-1')
+        self.config['products']=products
+        service=Commerce(self.folder.name,self.config,bank=self.bank)
+        with self.assertRaises(ValueError): service.create_checkout(self.token,'buyer@example.test')
+        consent=dict(accepted=True,terms_version='test-published-1',privacy_version='test-published-1')
+        service.create_checkout(self.token,'buyer@example.test',consent=consent)
+        with service.ledger.connect() as db:
+            self.assertEqual(db.execute('SELECT terms_version FROM consents').fetchone()[0],'test-published-1')
+
+    def test_checkout_switch_also_blocks_an_existing_unpaid_session(self):
+        self.create(); self.config['checkout_enabled']=False
+        with self.assertRaises(ValueError): self.service.start_payment(self.token)
+        self.assertEqual(self.bank.calls,0)
     def test_email_and_id_validation(self):
         for token,email in [('short','buyer@example.test'),(self.token,'bad\naddress')]:
             with self.assertRaises(ValueError):self.service.create_checkout(token,email)
