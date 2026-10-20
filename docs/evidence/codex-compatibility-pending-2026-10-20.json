@@ -1,0 +1,19 @@
+{
+  "accessibility": true,
+  "fixture": "/Users/max/Documents/ChatGPT/REV/shift-switcher/build/ShiftSwitcher-native-test-1792526071.txt",
+  "input": "CGEvent synthetic keyboard events; not physical keyboard",
+  "postEventAccess": true,
+  "results": [
+    {
+      "detail": "Fixture focus did not settle after input-source change",
+      "passed": false,
+      "scenario": "focus"
+    }
+  ],
+  "testedAt": "2026-10-20T19:54:35Z",
+  "launch_method": "LaunchServices",
+  "binary_sha256": "5881af8d257b27a6636b5bb365e2c8db376e937b24d8218fb1d8613d23460a65",
+  "source_commit": "469391ad4362bbfeb2d1c954f2dd07810eb31da6",
+  "source_dirty": false,
+  "interpretation": "Aborted due to fixture focus loss. Not a completed acceptance run. Codex editor was not accessed by the agent."
+}
