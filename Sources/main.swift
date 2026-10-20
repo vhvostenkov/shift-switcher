@@ -186,14 +186,25 @@ final class App: NSObject, NSApplicationDelegate {
                   preferences.mode(for: bundle, defaultExclusions: excluded) == .automatic,
                   let field = field() else { return }
             let generation = autoGeneration
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.035) {
-                if self.diagnostics { fputs("[diagnostic] delayed generation=\(self.autoGeneration == generation) field=\(self.field() != nil)\n", stderr) }
-                guard self.autoGeneration == generation, self.autoEnabled, !self.paused,
-                      let current = self.field(), current.pid == field.pid, CFEqual(current.element, field.element),
-                      current.range.length == 0, current.range.location == field.range.location + 1,
-                      current.value == (field.value as NSString).replacingCharacters(in: field.range, with: " ") else { return }
-                self.correct(automatic: true)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.015) {
+                self.correctAfterSpace(field, generation: generation, attempts: 20)
             }
+        }
+    }
+    private func correctAfterSpace(_ field: Field, generation: Int, attempts: Int) {
+        guard autoGeneration == generation, autoEnabled, !paused,
+              let current = sameField(field) else { return }
+        let expected = (field.value as NSString).replacingCharacters(in: field.range, with: " ")
+        let caret = NSRange(location: field.range.location + 1, length: 0)
+        if current.value == expected, current.range == caret {
+            correct(automatic: true); return
+        }
+        // AX value and caret can settle separately after the key event. Only wait
+        // for this exact insertion; any other input or field state cancels it.
+        guard attempts > 0, current.value == field.value || current.value == expected,
+              current.range == field.range || current.range == caret else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+            self.correctAfterSpace(field, generation: generation, attempts: attempts - 1)
         }
     }
     func field() -> Field? {
