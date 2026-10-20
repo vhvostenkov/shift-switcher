@@ -151,15 +151,20 @@ final class NativeAcceptance {
     }
     func selected() {
         editor?.activate(options: [.activateIgnoringOtherApps])
-        later { guard self.prepare("ghbdtn", range: NSRange(location: 0, length: 6)) else { self.finish(); return }
+        later { self.selectedWhenReady(40) }
+    }
+    func selectedWhenReady(_ attempts: Int) {
+        if field() == nil, attempts > 0 {
+            later(0.15) { self.selectedWhenReady(attempts - 1) }; return
+        }
+        guard prepare("ghbdtn", range: NSRange(location: 0, length: 6)) else { finish(); return }
+        doubleShift {
+            let field = self.field()
+            let changed = field?.value == "привет" && field?.range == NSRange(location: 0, length: 6)
+            self.record("double_shift_selection", changed, "value=\(field?.value ?? "<unavailable>"), range=\(String(describing: field?.range))")
             self.doubleShift {
-                let field = self.field()
-                let changed = field?.value == "привет" && field?.range == NSRange(location: 0, length: 6)
-                self.record("double_shift_selection", changed, "value=\(field?.value ?? "<unavailable>"), range=\(String(describing: field?.range))")
-                self.doubleShift {
-                    self.record("double_shift_selection_reverse", changed && self.field()?.value == "ghbdtn", "Repeated double Shift returns selected text")
-                    self.unselected()
-                }
+                self.record("double_shift_selection_reverse", changed && self.field()?.value == "ghbdtn", "Repeated double Shift returns selected text")
+                self.unselected()
             }
         }
     }
