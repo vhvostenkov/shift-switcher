@@ -7,7 +7,7 @@
   "process_observed_after_close": 98812,
   "close_window_keeps_process": true,
   "normal_reopen_same_process": true,
-  "autostart": "off; explicit owner approval requested",
-  "permissions": "both missing; system owner authentication pending",
+  "autostart": "enabled; survived app restart; actual Mac reboot not tested",
+  "permissions": "Accessibility and Input Monitoring enabled and observed in installed app after normal restart",
   "crash_reports": "No matching Shift Switcher report found in user or system DiagnosticReports directories; not proof of no historical crashes"
 }

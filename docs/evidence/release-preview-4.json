@@ -1,0 +1,53 @@
+{
+  "assets": [
+    {
+      "apiUrl": "https://api.github.com/repos/vhvostenkov/shift-switcher/releases/assets/660361024",
+      "contentType": "text/plain; charset=utf-8",
+      "createdAt": "2026-10-20T20:10:39Z",
+      "digest": "sha256:5664baf60ecfc24b70e0e841c8b4c64217bd6ba9aa26d833f0af5ab5730edbdd",
+      "downloadCount": 0,
+      "id": "RA_kwDOVQd1R84nXE9A",
+      "label": "",
+      "name": "SHA256SUMS.txt",
+      "size": 103,
+      "state": "uploaded",
+      "updatedAt": "2026-10-20T20:10:40Z",
+      "url": "https://github.com/vhvostenkov/shift-switcher/releases/download/v0.3.0-preview.4/SHA256SUMS.txt"
+    },
+    {
+      "apiUrl": "https://api.github.com/repos/vhvostenkov/shift-switcher/releases/assets/660361025",
+      "contentType": "application/zip",
+      "createdAt": "2026-10-20T20:10:39Z",
+      "digest": "sha256:0984485dc1dd28e9ef043536d2a6aa075119094aa8e943753eaf0e52bfb35483",
+      "downloadCount": 0,
+      "id": "RA_kwDOVQd1R84nXE9B",
+      "label": "",
+      "name": "Shift-Switcher-0.3.0-macOS-arm64.zip",
+      "size": 1930636,
+      "state": "uploaded",
+      "updatedAt": "2026-10-20T20:10:40Z",
+      "url": "https://github.com/vhvostenkov/shift-switcher/releases/download/v0.3.0-preview.4/Shift-Switcher-0.3.0-macOS-arm64.zip"
+    }
+  ],
+  "isDraft": false,
+  "isPrerelease": true,
+  "tagName": "v0.3.0-preview.4",
+  "targetCommitish": "0a3dbdf66288515a2b6871241a5c2c0e3755138a",
+  "url": "https://github.com/vhvostenkov/shift-switcher/releases/tag/v0.3.0-preview.4",
+  "zip_sha256": "0984485dc1dd28e9ef043536d2a6aa075119094aa8e943753eaf0e52bfb35483",
+  "binary_sha256": "ed7bc0142715c99be933bb0c90c2cb49414583755104e271a518f573d7f201d9",
+  "public_download": {
+    "http": 200,
+    "bytes": 1930636,
+    "checksum_verified": true
+  },
+  "site": {
+    "url": "https://vhvost.com/shift-switcher/",
+    "http": 200,
+    "index_sha256": "1c121dbf64fc1d95d5db164b58041655d78921796b2bb10f05c6b1ee8610b6e4",
+    "all_four_download_buttons": "v0.3.0-preview.4",
+    "sitemap_verified": true,
+    "caddy_changed": false,
+    "checkout_enabled": false
+  }
+}
