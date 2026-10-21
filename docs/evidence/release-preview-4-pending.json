@@ -1,0 +1,49 @@
+{
+  "assets": [
+    {
+      "apiUrl": "https://api.github.com/repos/vhvostenkov/shift-switcher/releases/assets/660361024",
+      "contentType": "text/plain; charset=utf-8",
+      "createdAt": "2026-10-20T20:10:39Z",
+      "digest": "sha256:5664baf60ecfc24b70e0e841c8b4c64217bd6ba9aa26d833f0af5ab5730edbdd",
+      "downloadCount": 0,
+      "id": "RA_kwDOVQd1R84nXE9A",
+      "label": "",
+      "name": "SHA256SUMS.txt",
+      "size": 103,
+      "state": "uploaded",
+      "updatedAt": "2026-10-20T20:10:40Z",
+      "url": "https://github.com/vhvostenkov/shift-switcher/releases/download/untagged-1aa01489ab3da525c18d/SHA256SUMS.txt"
+    },
+    {
+      "apiUrl": "https://api.github.com/repos/vhvostenkov/shift-switcher/releases/assets/660361025",
+      "contentType": "application/zip",
+      "createdAt": "2026-10-20T20:10:39Z",
+      "digest": "sha256:0984485dc1dd28e9ef043536d2a6aa075119094aa8e943753eaf0e52bfb35483",
+      "downloadCount": 0,
+      "id": "RA_kwDOVQd1R84nXE9B",
+      "label": "",
+      "name": "Shift-Switcher-0.3.0-macOS-arm64.zip",
+      "size": 1930636,
+      "state": "uploaded",
+      "updatedAt": "2026-10-20T20:10:40Z",
+      "url": "https://github.com/vhvostenkov/shift-switcher/releases/download/untagged-1aa01489ab3da525c18d/Shift-Switcher-0.3.0-macOS-arm64.zip"
+    }
+  ],
+  "isDraft": true,
+  "tagName": "v0.3.0-preview.4",
+  "targetCommitish": "1b4fe709a79b5bde5e3132ff1aeb3327c46f81b5",
+  "url": "https://github.com/vhvostenkov/shift-switcher/releases/tag/untagged-1aa01489ab3da525c18d",
+  "binary_sha256": "ed7bc0142715c99be933bb0c90c2cb49414583755104e271a518f573d7f201d9",
+  "zip_sha256": "0984485dc1dd28e9ef043536d2a6aa075119094aa8e943753eaf0e52bfb35483",
+  "validation": {
+    "swift_checks": 74,
+    "commerce_tests": 61,
+    "unpacked_signature_verified": true,
+    "native_final": "pending macOS owner authentication; previous intermediate runs incomplete"
+  },
+  "publication": {
+    "site_deployed": false,
+    "default_branch_updated": false,
+    "public_release": false
+  }
+}

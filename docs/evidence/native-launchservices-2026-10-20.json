@@ -1,0 +1,342 @@
+{
+  "binary_sha256": "e73f1813543eeb74f113fa06f1b5d3241ee897a2db5f5529cac563f8070ca9f5",
+  "scope": "LaunchServices with CGEvent synthetic input in isolated fixtures; not physical keyboard",
+  "competing_original_lang_switcher_running": false,
+  "reports": {
+    "TextEdit": {
+      "accessibility": true,
+      "fixture": "/Users/max/Documents/ChatGPT/REV/shift-switcher/build/ShiftSwitcher-native-test-1792495619.txt",
+      "input": "CGEvent synthetic keyboard events; not physical keyboard",
+      "postEventAccess": true,
+      "results": [
+        {
+          "detail": "value=привет, range=Optional({0, 6})",
+          "passed": true,
+          "scenario": "double_shift_selection"
+        },
+        {
+          "detail": "Repeated double Shift returns selected text",
+          "passed": true,
+          "scenario": "double_shift_selection_reverse"
+        },
+        {
+          "detail": "value=test привет, range=Optional({11, 0})",
+          "passed": true,
+          "scenario": "double_shift_last_word"
+        },
+        {
+          "detail": "Repeated double Shift returns last word",
+          "passed": true,
+          "scenario": "double_shift_last_word_reverse"
+        },
+        {
+          "detail": "value=привет ",
+          "passed": true,
+          "scenario": "automatic_en_to_ru"
+        },
+        {
+          "detail": "Automatic correction reversed; trailing space preserved",
+          "passed": true,
+          "scenario": "automatic_undo_double_shift"
+        },
+        {
+          "detail": "value=hello ",
+          "passed": true,
+          "scenario": "automatic_ru_to_en"
+        },
+        {
+          "detail": "Control+Option+Z restores automatic correction and space",
+          "passed": true,
+          "scenario": "automatic_undo_hotkey"
+        },
+        {
+          "detail": "value=hello ",
+          "passed": true,
+          "scenario": "valid_word_unchanged"
+        },
+        {
+          "detail": "Control+Option+Space in test fixture",
+          "passed": true,
+          "scenario": "hotkey_selection"
+        },
+        {
+          "detail": "Control+Option+Z in same unchanged fixture",
+          "passed": true,
+          "scenario": "hotkey_undo"
+        },
+        {
+          "detail": "Multi-event text replacement with intact emoji; value=привет привет привет привет привет привет привет привет 😀 ",
+          "passed": true,
+          "scenario": "long_selection_with_emoji"
+        },
+        {
+          "detail": "Restore complete selection without truncation; status=Исправление отменено",
+          "passed": true,
+          "scenario": "long_selection_undo"
+        },
+        {
+          "detail": "New user text is preserved",
+          "passed": true,
+          "scenario": "undo_after_user_edit_is_refused"
+        }
+      ],
+      "testedAt": "2026-10-20T11:27:10Z",
+      "launch_method": "LaunchServices",
+      "binary_sha256": "e73f1813543eeb74f113fa06f1b5d3241ee897a2db5f5529cac563f8070ca9f5",
+      "source_commit": "c78c3134960372073624efeb4db3790e51591109",
+      "source_dirty": false
+    },
+    "Safari": {
+      "accessibility": true,
+      "fixture": "isolated fixture: com.apple.Safari",
+      "input": "CGEvent synthetic keyboard events; not physical keyboard",
+      "postEventAccess": true,
+      "results": [
+        {
+          "detail": "value=привет, range=Optional({0, 6})",
+          "passed": true,
+          "scenario": "double_shift_selection"
+        },
+        {
+          "detail": "Repeated double Shift returns selected text",
+          "passed": true,
+          "scenario": "double_shift_selection_reverse"
+        },
+        {
+          "detail": "value=test привет, range=Optional({11, 0})",
+          "passed": true,
+          "scenario": "double_shift_last_word"
+        },
+        {
+          "detail": "Repeated double Shift returns last word",
+          "passed": true,
+          "scenario": "double_shift_last_word_reverse"
+        },
+        {
+          "detail": "value=привет ",
+          "passed": true,
+          "scenario": "automatic_en_to_ru"
+        },
+        {
+          "detail": "Automatic correction reversed; trailing space preserved",
+          "passed": true,
+          "scenario": "automatic_undo_double_shift"
+        },
+        {
+          "detail": "value=hello ",
+          "passed": true,
+          "scenario": "automatic_ru_to_en"
+        },
+        {
+          "detail": "Control+Option+Z restores automatic correction and space",
+          "passed": true,
+          "scenario": "automatic_undo_hotkey"
+        },
+        {
+          "detail": "value=hello ",
+          "passed": true,
+          "scenario": "valid_word_unchanged"
+        },
+        {
+          "detail": "Control+Option+Space in test fixture",
+          "passed": true,
+          "scenario": "hotkey_selection"
+        },
+        {
+          "detail": "Control+Option+Z in same unchanged fixture",
+          "passed": true,
+          "scenario": "hotkey_undo"
+        },
+        {
+          "detail": "Multi-event text replacement with intact emoji; value=привет привет привет привет привет привет привет привет 😀 ",
+          "passed": true,
+          "scenario": "long_selection_with_emoji"
+        },
+        {
+          "detail": "Restore complete selection without truncation; status=Исправление отменено",
+          "passed": true,
+          "scenario": "long_selection_undo"
+        },
+        {
+          "detail": "New user text is preserved",
+          "passed": true,
+          "scenario": "undo_after_user_edit_is_refused"
+        }
+      ],
+      "testedAt": "2026-10-20T11:26:22Z",
+      "launch_method": "LaunchServices",
+      "binary_sha256": "e73f1813543eeb74f113fa06f1b5d3241ee897a2db5f5529cac563f8070ca9f5",
+      "source_commit": "c78c3134960372073624efeb4db3790e51591109",
+      "source_dirty": false
+    },
+    "Chrome": {
+      "accessibility": true,
+      "fixture": "isolated fixture: com.google.Chrome",
+      "input": "CGEvent synthetic keyboard events; not physical keyboard",
+      "postEventAccess": true,
+      "results": [
+        {
+          "detail": "value=привет, range=Optional({0, 6})",
+          "passed": true,
+          "scenario": "double_shift_selection"
+        },
+        {
+          "detail": "Repeated double Shift returns selected text",
+          "passed": true,
+          "scenario": "double_shift_selection_reverse"
+        },
+        {
+          "detail": "value=test привет, range=Optional({11, 0})",
+          "passed": true,
+          "scenario": "double_shift_last_word"
+        },
+        {
+          "detail": "Repeated double Shift returns last word",
+          "passed": true,
+          "scenario": "double_shift_last_word_reverse"
+        },
+        {
+          "detail": "value=привет ",
+          "passed": true,
+          "scenario": "automatic_en_to_ru"
+        },
+        {
+          "detail": "Automatic correction reversed; trailing space preserved",
+          "passed": true,
+          "scenario": "automatic_undo_double_shift"
+        },
+        {
+          "detail": "value=hello ",
+          "passed": true,
+          "scenario": "automatic_ru_to_en"
+        },
+        {
+          "detail": "Control+Option+Z restores automatic correction and space",
+          "passed": true,
+          "scenario": "automatic_undo_hotkey"
+        },
+        {
+          "detail": "value=hello ",
+          "passed": true,
+          "scenario": "valid_word_unchanged"
+        },
+        {
+          "detail": "Control+Option+Space in test fixture",
+          "passed": true,
+          "scenario": "hotkey_selection"
+        },
+        {
+          "detail": "Control+Option+Z in same unchanged fixture",
+          "passed": true,
+          "scenario": "hotkey_undo"
+        },
+        {
+          "detail": "Multi-event text replacement with intact emoji; value=привет привет привет привет привет привет привет привет 😀 ",
+          "passed": true,
+          "scenario": "long_selection_with_emoji"
+        },
+        {
+          "detail": "Restore complete selection without truncation; status=Исправление отменено",
+          "passed": true,
+          "scenario": "long_selection_undo"
+        },
+        {
+          "detail": "New user text is preserved",
+          "passed": true,
+          "scenario": "undo_after_user_edit_is_refused"
+        }
+      ],
+      "testedAt": "2026-10-20T11:27:53Z",
+      "launch_method": "LaunchServices",
+      "binary_sha256": "e73f1813543eeb74f113fa06f1b5d3241ee897a2db5f5529cac563f8070ca9f5",
+      "source_commit": "c78c3134960372073624efeb4db3790e51591109",
+      "source_dirty": false
+    },
+    "Notes": {
+      "accessibility": true,
+      "fixture": "isolated fixture: com.apple.Notes",
+      "input": "CGEvent synthetic keyboard events; not physical keyboard",
+      "postEventAccess": true,
+      "results": [
+        {
+          "detail": "value=привет, range=Optional({0, 6})",
+          "passed": true,
+          "scenario": "double_shift_selection"
+        },
+        {
+          "detail": "Repeated double Shift returns selected text",
+          "passed": true,
+          "scenario": "double_shift_selection_reverse"
+        },
+        {
+          "detail": "value=test привет, range=Optional({11, 0})",
+          "passed": true,
+          "scenario": "double_shift_last_word"
+        },
+        {
+          "detail": "Repeated double Shift returns last word",
+          "passed": true,
+          "scenario": "double_shift_last_word_reverse"
+        },
+        {
+          "detail": "value=привет ",
+          "passed": true,
+          "scenario": "automatic_en_to_ru"
+        },
+        {
+          "detail": "Automatic correction reversed; trailing space preserved",
+          "passed": true,
+          "scenario": "automatic_undo_double_shift"
+        },
+        {
+          "detail": "value=hello ",
+          "passed": true,
+          "scenario": "automatic_ru_to_en"
+        },
+        {
+          "detail": "Control+Option+Z restores automatic correction and space",
+          "passed": true,
+          "scenario": "automatic_undo_hotkey"
+        },
+        {
+          "detail": "value=hello ",
+          "passed": true,
+          "scenario": "valid_word_unchanged"
+        },
+        {
+          "detail": "Control+Option+Space in test fixture",
+          "passed": true,
+          "scenario": "hotkey_selection"
+        },
+        {
+          "detail": "Control+Option+Z in same unchanged fixture",
+          "passed": true,
+          "scenario": "hotkey_undo"
+        },
+        {
+          "detail": "Multi-event text replacement with intact emoji; value=привет привет привет привет привет привет привет привет 😀 ",
+          "passed": true,
+          "scenario": "long_selection_with_emoji"
+        },
+        {
+          "detail": "Restore complete selection without truncation; status=Исправление отменено",
+          "passed": true,
+          "scenario": "long_selection_undo"
+        },
+        {
+          "detail": "New user text is preserved",
+          "passed": true,
+          "scenario": "undo_after_user_edit_is_refused"
+        }
+      ],
+      "testedAt": "2026-10-20T11:26:49Z",
+      "launch_method": "LaunchServices",
+      "binary_sha256": "e73f1813543eeb74f113fa06f1b5d3241ee897a2db5f5529cac563f8070ca9f5",
+      "source_commit": "c78c3134960372073624efeb4db3790e51591109",
+      "source_dirty": false
+    }
+  },
+  "total_passed": 56,
+  "total_scenarios": 56,
+  "interrupted_attempts": "Earlier attempts aborted on fixture preparation or focus loss; these are completed final runs with the original Lang Switcher stopped"
+}

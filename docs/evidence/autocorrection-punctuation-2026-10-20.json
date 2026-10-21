@@ -1,0 +1,116 @@
+{
+  "binary_sha256": "532180f8c2730e24c54ee1f224acf5aa0077f92184cfd8864d050991a17d7d77",
+  "scope": "Synthetic CGEvent in isolated TextEdit documents only. No Codex field verification. Original Lang Switcher not running. Clipboard contents not read.",
+  "native_acceptance": {
+    "accessibility": true,
+    "fixture": "/Users/max/Documents/ChatGPT/REV/shift-switcher/build/ShiftSwitcher-native-test-1792525667.txt",
+    "input": "CGEvent synthetic keyboard events; not physical keyboard",
+    "postEventAccess": true,
+    "results": [
+      {
+        "detail": "value=привет, range=Optional({0, 6})",
+        "passed": true,
+        "scenario": "double_shift_selection"
+      },
+      {
+        "detail": "Repeated double Shift returns selected text",
+        "passed": true,
+        "scenario": "double_shift_selection_reverse"
+      },
+      {
+        "detail": "value=test привет, range=Optional({11, 0})",
+        "passed": true,
+        "scenario": "double_shift_last_word"
+      },
+      {
+        "detail": "Repeated double Shift returns last word",
+        "passed": true,
+        "scenario": "double_shift_last_word_reverse"
+      },
+      {
+        "detail": "value=привет ",
+        "passed": true,
+        "scenario": "automatic_en_to_ru"
+      },
+      {
+        "detail": "Automatic correction reversed; trailing space preserved",
+        "passed": true,
+        "scenario": "automatic_undo_double_shift"
+      },
+      {
+        "detail": "value=hello ",
+        "passed": true,
+        "scenario": "automatic_ru_to_en"
+      },
+      {
+        "detail": "Control+Option+Z restores automatic correction and space",
+        "passed": true,
+        "scenario": "automatic_undo_hotkey"
+      },
+      {
+        "detail": "value=hello ",
+        "passed": true,
+        "scenario": "valid_word_unchanged"
+      },
+      {
+        "detail": "Control+Option+Space in test fixture",
+        "passed": true,
+        "scenario": "hotkey_selection"
+      },
+      {
+        "detail": "Control+Option+Z in same unchanged fixture",
+        "passed": true,
+        "scenario": "hotkey_undo"
+      },
+      {
+        "detail": "Multi-event text replacement with intact emoji; value=привет привет привет привет привет привет привет привет 😀 ",
+        "passed": true,
+        "scenario": "long_selection_with_emoji"
+      },
+      {
+        "detail": "Restore complete selection without truncation; status=Исправление отменено",
+        "passed": true,
+        "scenario": "long_selection_undo"
+      },
+      {
+        "detail": "New user text is preserved",
+        "passed": true,
+        "scenario": "undo_after_user_edit_is_refused"
+      }
+    ],
+    "testedAt": "2026-10-20T19:47:58Z",
+    "launch_method": "LaunchServices",
+    "binary_sha256": "532180f8c2730e24c54ee1f224acf5aa0077f92184cfd8864d050991a17d7d77",
+    "source_commit": "e768e914a601d97d688f31697c90bf5cd8685de4",
+    "source_dirty": false
+  },
+  "punctuation_regression": {
+    "clipboardUnchanged": true,
+    "input": "CGEvent, new isolated TextEdit fixture",
+    "results": [
+      {
+        "before": "ghj,tkf",
+        "caret": [
+          7,
+          0
+        ],
+        "corrected": "пробела ",
+        "expected": "пробела ",
+        "pass": true,
+        "undo": "ghj,tkf "
+      },
+      {
+        "before": "yf;fnbb",
+        "caret": [
+          7,
+          0
+        ],
+        "corrected": "нажатии ",
+        "expected": "нажатии ",
+        "pass": true,
+        "undo": "yf;fnbb "
+      }
+    ],
+    "timestamp": "2026-10-20T19:49:40Z"
+  }
+}

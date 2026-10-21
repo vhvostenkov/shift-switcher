@@ -9,6 +9,10 @@ enum Layout {
     static func isRussian(_ c: Character) -> Bool {
         c.unicodeScalars.contains { (0x0400...0x04ff).contains($0.value) }
     }
+    static func permitsAutomaticConversion(_ before: String, to after: String) -> Bool {
+        // Punctuation keys can be letters in the other layout (comma → б).
+        before.count >= 2 && !after.isEmpty && after.allSatisfy { $0.isLetter }
+    }
     static func convert(_ text: String) -> String {
         // Choose direction per token so mixed Russian/English selections are reversible.
         var output = "", token = ""
@@ -65,5 +69,20 @@ struct DoubleShift {
             lastTap = nil; return true
         }
         lastTap = time; return false
+    }
+}
+
+// Quartz input chunks keep composed characters and UTF-16 surrogate pairs intact.
+enum TextEvents {
+    static func chunks(_ text: String, limit: Int = 16) -> [String]? {
+        var result: [String] = [], current = ""
+        for character in text {
+            let part = String(character)
+            guard part.utf16.count <= limit else { return nil }
+            if current.utf16.count + part.utf16.count > limit { result.append(current); current = "" }
+            current += part
+        }
+        if !current.isEmpty { result.append(current) }
+        return result
     }
 }

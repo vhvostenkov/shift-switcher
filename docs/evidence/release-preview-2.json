@@ -1,0 +1,13 @@
+{
+  "version": "0.3.0-preview.2",
+  "status": "DRAFT_NOT_PUBLIC",
+  "binary_sha256": "9d76770297003817971f26d979a1c176c48ee765ba54b88879802aa4b2033b66",
+  "archive_sha256": "d1f8a6f0f0b88f12307e12f6b52639ea5f089f32f9552960acd2e26f47e39e08",
+  "apple_signing": "ad-hoc; no notarization",
+  "swift_checks": 64,
+  "commerce_checks_mac": 60,
+  "commerce_checks_rf": 60,
+  "native_synthetic_direct_launch": 56,
+  "native_launchservices": "pending unlock and rerun",
+  "production_checkout": false
+}

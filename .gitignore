@@ -4,3 +4,8 @@ release/
 *.log
 .env
 .env.*
+
+__pycache__/
+*.pyc
+*.sqlite
+*.pem

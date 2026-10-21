@@ -1,0 +1,17 @@
+{
+  "sender": "vhvostenkov@gmail.com",
+  "recipient": "vhvostenkov@gmail.com",
+  "subject": "VHVost — проверка доставки",
+  "smtp_source": "RF commerce host",
+  "smtp_accepted": true,
+  "gmail_inbox_verified": true,
+  "gmail_message_id": "1a158dbfcb342cae",
+  "message_id": "<vhvost-delivery-89863f60469644e482c4d95eda00d728@vhvost.com>",
+  "secret_location": "/opt/shift-switcher/config/mail.json",
+  "secret_mode": "0600",
+  "real_order": false,
+  "real_receipt": false,
+  "automatic_delivery_enabled": false,
+  "commerce_tests_mac": 61,
+  "commerce_tests_rf": 61
+}
