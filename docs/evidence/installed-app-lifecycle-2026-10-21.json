@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-21",
+  "installed_bundle": "/Users/max/Applications/Shift Switcher Candidate.app",
+  "binary_sha256": "ed7bc0142715c99be933bb0c90c2cb49414583755104e271a518f573d7f201d9",
+  "same_as_packaged_preview4": true,
+  "process_observed_before_close": 98812,
+  "process_observed_after_close": 98812,
+  "close_window_keeps_process": true,
+  "normal_reopen_same_process": true,
+  "autostart": "off; explicit owner approval requested",
+  "permissions": "both missing; system owner authentication pending",
+  "crash_reports": "No matching Shift Switcher report found in user or system DiagnosticReports directories; not proof of no historical crashes"
+}
