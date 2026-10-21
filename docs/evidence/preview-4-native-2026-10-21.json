@@ -1,0 +1,173 @@
+{
+  "date": "2026-10-21",
+  "binary_sha256": "ed7bc0142715c99be933bb0c90c2cb49414583755104e271a518f573d7f201d9",
+  "zip_sha256": "0984485dc1dd28e9ef043536d2a6aa075119094aa8e943753eaf0e52bfb35483",
+  "swift_checks": 74,
+  "commerce_tests": 61,
+  "native_acceptance": {
+    "accessibility": true,
+    "fixture": "/Users/max/Applications/ShiftSwitcher-native-test-1792575640.txt",
+    "input": "CGEvent synthetic keyboard events; not physical keyboard",
+    "postEventAccess": true,
+    "results": [
+      {
+        "detail": "value=привет, range=Optional({0, 6})",
+        "passed": true,
+        "scenario": "double_shift_selection"
+      },
+      {
+        "detail": "Repeated double Shift returns selected text",
+        "passed": true,
+        "scenario": "double_shift_selection_reverse"
+      },
+      {
+        "detail": "value=test привет, range=Optional({11, 0})",
+        "passed": true,
+        "scenario": "double_shift_last_word"
+      },
+      {
+        "detail": "Repeated double Shift returns last word",
+        "passed": true,
+        "scenario": "double_shift_last_word_reverse"
+      },
+      {
+        "detail": "value=привет ",
+        "passed": true,
+        "scenario": "automatic_en_to_ru"
+      },
+      {
+        "detail": "Automatic correction reversed; trailing space preserved",
+        "passed": true,
+        "scenario": "automatic_undo_double_shift"
+      },
+      {
+        "detail": "value=hello ",
+        "passed": true,
+        "scenario": "automatic_ru_to_en"
+      },
+      {
+        "detail": "Control+Option+Z restores automatic correction and space",
+        "passed": true,
+        "scenario": "automatic_undo_hotkey"
+      },
+      {
+        "detail": "value=hello ",
+        "passed": true,
+        "scenario": "valid_word_unchanged"
+      },
+      {
+        "detail": "Control+Option+Space in test fixture",
+        "passed": true,
+        "scenario": "hotkey_selection"
+      },
+      {
+        "detail": "Control+Option+Z in same unchanged fixture",
+        "passed": true,
+        "scenario": "hotkey_undo"
+      },
+      {
+        "detail": "Multi-event text replacement with intact emoji; value=привет привет привет привет привет привет привет привет 😀 ",
+        "passed": true,
+        "scenario": "long_selection_with_emoji"
+      },
+      {
+        "detail": "Restore complete selection without truncation; status=Исправление отменено",
+        "passed": true,
+        "scenario": "long_selection_undo"
+      },
+      {
+        "detail": "New user text is preserved",
+        "passed": true,
+        "scenario": "undo_after_user_edit_is_refused"
+      }
+    ],
+    "testedAt": "2026-10-21T09:40:51Z",
+    "launch_method": "LaunchServices",
+    "binary_sha256": "ed7bc0142715c99be933bb0c90c2cb49414583755104e271a518f573d7f201d9",
+    "source_commit": "29f81d3e3acb5e16d8d10c08063b61001755595e",
+    "source_dirty": false
+  },
+  "short_words": {
+    "clipboardUnchanged": true,
+    "input": "CGEvent, new isolated TextEdit fixture",
+    "results": [
+      {
+        "before": "yf",
+        "caret": [
+          2,
+          0
+        ],
+        "corrected": "на ",
+        "expected": "на ",
+        "pass": true,
+        "undo": "yf "
+      },
+      {
+        "before": "yt",
+        "caret": [
+          2,
+          0
+        ],
+        "corrected": "не ",
+        "expected": "не ",
+        "pass": true,
+        "undo": "yt "
+      },
+      {
+        "before": "lf",
+        "caret": [
+          2,
+          0
+        ],
+        "corrected": "да ",
+        "expected": "да ",
+        "pass": true,
+        "undo": "lf "
+      },
+      {
+        "before": "on",
+        "caret": [
+          2,
+          0
+        ],
+        "corrected": "on ",
+        "expected": "on ",
+        "pass": true,
+        "undo": "on "
+      },
+      {
+        "before": "in",
+        "caret": [
+          2,
+          0
+        ],
+        "corrected": "in ",
+        "expected": "in ",
+        "pass": true,
+        "undo": "in "
+      },
+      {
+        "before": "ghj,tkf",
+        "caret": [
+          7,
+          0
+        ],
+        "corrected": "пробела ",
+        "expected": "пробела ",
+        "pass": true,
+        "undo": "ghj,tkf "
+      }
+    ],
+    "timestamp": "2026-10-21T09:42:23Z"
+  },
+  "normal_launch": {
+    "installed_bundle": "/Users/max/Applications/Shift Switcher Candidate.app",
+    "no_test_arguments": true,
+    "accessibility": true,
+    "input_monitoring": true,
+    "automatic_enabled": true,
+    "paused": false,
+    "launch_at_login": "enabled; survived app restart; actual Mac reboot not tested"
+  },
+  "limits": "Synthetic CGEvent in owned TextEdit documents. Codex field not accessed by agent. Other applications not rerun on this binary."
+}

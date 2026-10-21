@@ -5,7 +5,7 @@
 включить автоматическое исправление RU ↔ EN после пробела.
 
 **[Страница приложения](https://vhvost.com/shift-switcher/)** ·
-**[Скачать beta 0.2.0](https://github.com/vhvostenkov/shift-switcher/releases/tag/v0.2.0)**
+**[Скачать Preview 4](https://github.com/vhvostenkov/shift-switcher/releases/tag/v0.3.0-preview.4)**
 
 ## Возможности
 
@@ -42,7 +42,7 @@ macOS может не разрешить первый запуск автома�
 open 'build/Shift Switcher.app'
 ```
 
-Скрипт запускает 64 проверки ядра, лицензии, личных правил и настроек клавиш, собирает приложение и подписывает его локально.
+Скрипт запускает 74 проверки ядра, лицензии, личных правил и настроек клавиш, собирает приложение и подписывает его локально.
 Сборщик отказывается перезаписывать запущенную копию: сначала завершите её или выберите другой `APP_NAME`.
 После пересборки macOS может потребовать повторного добавления приложения
 в оба раздела разрешений.
@@ -73,9 +73,11 @@ Accessibility должен предоставлять значение, диап
 Код и словари стороннего Lang Switcher не включены. Проект не связан с его разработчиками.
 Автоматические GitHub Actions workflows в репозитории не настроены.
 
-## Проверенный preview 0.3.0
+## Preview 0.3.0 и границы проверки
 
-[Скачать 0.3 Preview](https://github.com/vhvostenkov/shift-switcher/releases/tag/v0.3.0-preview.3). Реальные продажи закрыты.
+Preview 4: индикатор RU/EN, слова от двух букв, ожидание обновления AX после пробела и резервный ввод для Codex. 74 Swift checks, 61 commerce test; текущий бинарник прошёл 14/14 сценариев TextEdit и 6/6 проверок коротких слов/отмены. Буфер обмена не изменился. Автозапуск установленной копии включён; фактическая перезагрузка Mac не проверялась. [Доказательства](docs/evidence/preview-4-native-2026-10-21.json).
+
+[Скачать 0.3 Preview](https://github.com/vhvostenkov/shift-switcher/releases/tag/v0.3.0-preview.4). Реальные продажи закрыты.
 
 Ветка `codex/commercial-launch` и [PR #1](https://github.com/vhvostenkov/shift-switcher/pull/1)
 содержат кандидат 0.3.0: режимы приложений, личный словарь, автозапуск,
@@ -88,7 +90,7 @@ APP_NAME='Shift Switcher Candidate' CANDIDATE_BUILD=1 ./build.sh
 python3 -m unittest discover -s commerce -p 'test_*.py'
 ```
 
-Проверки: 64 Swift, 61 commerce. В TextEdit, Safari, Chrome и Notes — по 14/14 сценариев:
+Исторический Preview 3: 64 Swift, 61 commerce. В TextEdit, Safari, Chrome и Notes — по 14/14 сценариев:
 выделение/последнее слово и обратная замена, автоматика RU↔EN после пробела,
 отмена автоматики двойным Shift и ⌃⌥Z, сохранение правильного слова и хоткеи.
 Проверены также длинное выделение с emoji и отказ отмены после ручного изменения.
