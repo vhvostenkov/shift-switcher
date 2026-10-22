@@ -23,6 +23,13 @@ check(!Layout.permitsAutomaticConversion("b", to: "и"), "short word remains exc
 for word in ["yf", "yt", "lf"] {
     check(Layout.permitsAutomaticConversion(word, to: Layout.convert(word)), "two-letter word is eligible: \(word)")
 }
+for (before, after) in [("копbz", "копия"), ("helдщ", "hello"), ("копBZ", "копИЯ"), ("mesh wifi копbz", "ьуыр цшаш копия"), ("🙂 копbz\nhelдщ", "🙂 копия\nhello")] {
+    check(Layout.convert(before) == after, "mixed suffix preserves the other alphabet: \(before)")
+}
+check(Layout.language(in: "копbz") == "en", "mixed source uses final typed alphabet")
+check(Layout.language(in: "helдщ") == "ru", "reverse mixed source uses final alphabet")
+check(Layout.language(in: "копия 🙂") == "ru", "nonletters do not change target language")
+check(Layout.language(in: "123 🙂") == nil, "nonletters have no input language")
 var detector = DoubleShift()
 check(!detector.shift(code: 56, down: true, time: 0, otherModifiers: false), "first down")
 check(!detector.shift(code: 56, down: false, time: 0.05, otherModifiers: false), "first tap")

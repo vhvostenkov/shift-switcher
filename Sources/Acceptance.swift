@@ -284,9 +284,32 @@ final class NativeAcceptance {
             self.postChord(6)
             self.later(0.6) {
                 self.record("undo_after_user_edit_is_refused", changed && self.field()?.value == "user edit", "New user text is preserved")
-                self.finish()
+                self.mixedWords()
             }
         }
+    }
+    func mixedWords() {
+        mixedCase("mesh wifi копbz", expected: "mesh wifi копия", automatic: false) {
+            self.mixedCase("helдщ", expected: "hello", automatic: false) {
+                self.mixedCase("копbz", expected: "копия", automatic: true) { self.finish() }
+            }
+        }
+    }
+    func mixedCase(_ input: String, expected: String, automatic: Bool, done: @escaping () -> Void) {
+        app.autoEnabled = automatic
+        guard prepare(input, range: NSRange(location: input.utf16.count, length: 0)) else { finish(); return }
+        let name = automatic ? "mixed_automatic" : "mixed_manual_" + input
+        let corrected = {
+            let expectedValue = expected + (automatic ? " " : "")
+            self.awaitFixtureValue(expectedValue) { changed in
+                self.record(name, changed, "value=" + (self.field()?.value ?? "<unavailable>"))
+                self.doubleShift {
+                    self.record(name + "_undo", changed && self.field()?.value == input + (automatic ? " " : ""), "Exact mixed source restored")
+                    done()
+                }
+            }
+        }
+        if automatic { postSpace(); later(0.8, corrected) } else { doubleShift(corrected) }
     }
     func postChord(_ key: CGKeyCode) {
         guard field() != nil else { record("focus", false, "Aborted shortcut outside fixture"); finish(); return }
