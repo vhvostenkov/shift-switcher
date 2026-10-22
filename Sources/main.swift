@@ -228,6 +228,14 @@ final class App: NSObject, NSApplicationDelegate {
         guard mode != .disabled, !automatic || mode == .automatic else {
             if !automatic { report("Для этого приложения исправление отключено", failure: true) }; return
         }
+        // A second manual correction restores the exact edit, including a mixed
+        // source word. Re-converting a now-uniform word would change its prefix.
+        if !automatic, let edit = lastEdit, field.pid == edit.pid,
+           CFEqual(field.element, edit.element), field.value == edit.expectedValue {
+            let expectedSelection = edit.originalSelection.length > 0 ? edit.range : NSRange(
+                location: edit.originalSelection.location + edit.after.utf16.count - edit.before.utf16.count, length: 0)
+            if field.range == expectedSelection { undo(); return }
+        }
         let ns = field.value as NSString
         let range: NSRange
         if field.range.length > 0 {
@@ -244,7 +252,7 @@ final class App: NSObject, NSApplicationDelegate {
             guard license.hasPro else { return }
             guard !preferences.ignores(before), !preferences.ignores(after) else { return }
             guard Layout.permitsAutomaticConversion(before, to: after) else { return }
-            let currentLanguage = before.contains(where: Layout.isRussian) ? "ru" : "en"
+            let currentLanguage = Layout.language(in: before) ?? "en"
             let targetLanguage = currentLanguage == "ru" ? "en" : "ru"
             guard !validWord(before, language: currentLanguage), validWord(after, language: targetLanguage) else { return }
         }
@@ -323,7 +331,7 @@ final class App: NSObject, NSApplicationDelegate {
     func switchInput(for text: String) {
         let letters = text.filter { $0.isLetter }
         guard !letters.isEmpty else { return }
-        let language = letters.contains(where: Layout.isRussian) ? "ru" : "en"
+        let language = Layout.language(in: text) ?? "en"
         let filter = [kTISPropertyInputSourceIsSelectCapable as String: true] as CFDictionary
         let sources = TISCreateInputSourceList(filter, false).takeRetainedValue() as! [TISInputSource]
         for input in sources {

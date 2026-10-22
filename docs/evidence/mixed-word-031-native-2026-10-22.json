@@ -1,0 +1,113 @@
+{
+  "accessibility": true,
+  "fixture": "/Users/max/Applications/ShiftSwitcher-native-test-1792673296.txt",
+  "input": "CGEvent synthetic keyboard events; not physical keyboard",
+  "postEventAccess": true,
+  "results": [
+    {
+      "detail": "value=привет, range=Optional({0, 6})",
+      "passed": true,
+      "scenario": "double_shift_selection"
+    },
+    {
+      "detail": "Repeated double Shift returns selected text",
+      "passed": true,
+      "scenario": "double_shift_selection_reverse"
+    },
+    {
+      "detail": "value=test привет, range=Optional({11, 0})",
+      "passed": true,
+      "scenario": "double_shift_last_word"
+    },
+    {
+      "detail": "Repeated double Shift returns last word",
+      "passed": true,
+      "scenario": "double_shift_last_word_reverse"
+    },
+    {
+      "detail": "value=привет ",
+      "passed": true,
+      "scenario": "automatic_en_to_ru"
+    },
+    {
+      "detail": "Automatic correction reversed; trailing space preserved",
+      "passed": true,
+      "scenario": "automatic_undo_double_shift"
+    },
+    {
+      "detail": "value=hello ",
+      "passed": true,
+      "scenario": "automatic_ru_to_en"
+    },
+    {
+      "detail": "Control+Option+Z restores automatic correction and space",
+      "passed": true,
+      "scenario": "automatic_undo_hotkey"
+    },
+    {
+      "detail": "value=hello ",
+      "passed": true,
+      "scenario": "valid_word_unchanged"
+    },
+    {
+      "detail": "Control+Option+Space in test fixture",
+      "passed": true,
+      "scenario": "hotkey_selection"
+    },
+    {
+      "detail": "Control+Option+Z in same unchanged fixture",
+      "passed": true,
+      "scenario": "hotkey_undo"
+    },
+    {
+      "detail": "Multi-event text replacement with intact emoji; value=привет привет привет привет привет привет привет привет 😀 ",
+      "passed": true,
+      "scenario": "long_selection_with_emoji"
+    },
+    {
+      "detail": "Restore complete selection without truncation; status=Исправление отменено",
+      "passed": true,
+      "scenario": "long_selection_undo"
+    },
+    {
+      "detail": "New user text is preserved",
+      "passed": true,
+      "scenario": "undo_after_user_edit_is_refused"
+    },
+    {
+      "detail": "value=mesh wifi копия",
+      "passed": true,
+      "scenario": "mixed_manual_mesh wifi копbz"
+    },
+    {
+      "detail": "Exact mixed source restored",
+      "passed": true,
+      "scenario": "mixed_manual_mesh wifi копbz_undo"
+    },
+    {
+      "detail": "value=hello",
+      "passed": true,
+      "scenario": "mixed_manual_helдщ"
+    },
+    {
+      "detail": "Exact mixed source restored",
+      "passed": true,
+      "scenario": "mixed_manual_helдщ_undo"
+    },
+    {
+      "detail": "value=копия ",
+      "passed": true,
+      "scenario": "mixed_automatic"
+    },
+    {
+      "detail": "Exact mixed source restored",
+      "passed": true,
+      "scenario": "mixed_automatic_undo"
+    }
+  ],
+  "testedAt": "2026-10-22T12:48:31Z",
+  "launch_method": "LaunchServices",
+  "binary_sha256": "2e9027a8c257805bb02c0d7c6880f6812ddaa4bee2b57736f0c25021eaa7ca4b",
+  "source_commit": "2c57dde059f4726b2cd2740f1947b5c394546c93",
+  "source_dirty": false
+}

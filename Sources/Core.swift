@@ -9,15 +9,23 @@ enum Layout {
     static func isRussian(_ c: Character) -> Bool {
         c.unicodeScalars.contains { (0x0400...0x04ff).contains($0.value) }
     }
+    static func language(in text: String) -> String? {
+        for c in text.reversed() {
+            if isRussian(c) { return "ru" }
+            if c.isASCII && c.isLetter { return "en" }
+        }
+        return nil
+    }
     static func permitsAutomaticConversion(_ before: String, to after: String) -> Bool {
         // Punctuation keys can be letters in the other layout (comma → б).
         before.count >= 2 && !after.isEmpty && after.allSatisfy { $0.isLetter }
     }
     static func convert(_ text: String) -> String {
-        // Choose direction per token so mixed Russian/English selections are reversible.
+        // The final typed alphabet sets the direction. In mixed words the other
+        // alphabet is already correct: копbz → копия, helдщ → hello.
         var output = "", token = ""
         func flush() {
-            let map = token.contains(where: isRussian) ? backward : forward
+            let map = language(in: token) == "ru" ? backward : forward
             output += String(token.map { map[$0] ?? $0 }); token = ""
         }
         for c in text {
