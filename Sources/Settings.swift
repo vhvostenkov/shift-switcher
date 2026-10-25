@@ -151,7 +151,7 @@ struct SettingsView: View {
                     .background(LinearGradient(colors: [accent.opacity(0.13), Color.white.opacity(0.025)], startPoint: .topLeading, endPoint: .bottomTrailing))
                     .cornerRadius(17).overlay(RoundedRectangle(cornerRadius: 17).stroke(accent.opacity(0.15), lineWidth: 1))
                 VStack(spacing: 0) {
-                    setting("Автоисправление", subtitle: "RU ↔ EN после пробела. Можно выключить в любой момент.", icon: "sparkles", value: Binding(get: { model.automatic }, set: model.setAutomatic))
+                    setting("Автоисправление", subtitle: "RU ↔ EN по контексту последних слов. Проверка после пробела и короткой паузы.", icon: "sparkles", value: Binding(get: { model.automatic }, set: model.setAutomatic))
                     Divider().padding(.leading, 54)
                     setting("Поставить на паузу", subtitle: "Временно отключить исправление и горячие клавиши.", icon: "pause.circle", value: Binding(get: { model.paused }, set: model.setPaused))
                 }.background(Color.white.opacity(0.035)).cornerRadius(14)

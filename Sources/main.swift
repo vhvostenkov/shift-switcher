@@ -54,6 +54,8 @@ final class App: NSObject, NSApplicationDelegate {
     var paused = false
     var lastEdit: Edit?
     var autoGeneration = 0
+    private var pendingAutomaticField: Field?
+    private var automaticUndoPrefix: Field?
     private let diagnostics = ProcessInfo.processInfo.environment["SHIFT_SWITCHER_DIAGNOSTICS"] == "1"
     let excluded = Set(["com.apple.Terminal", "com.googlecode.iterm2", "com.microsoft.VSCode", "dev.zed.Zed", "com.jetbrains.intellij", "com.jetbrains.pycharm", "com.apple.dt.Xcode", "com.agilebits.onepassword7", "com.1password.1password", "com.apple.Passwords"])
 
@@ -162,7 +164,7 @@ final class App: NSObject, NSApplicationDelegate {
             if let tap = tap { CGEvent.tapEnable(tap: tap, enable: true) }; return
         }
         guard !paused, !IsSecureEventInputEnabled() else { detector.reset(); autoGeneration += 1; return }
-        if type == .leftMouseDown { detector.reset(); autoGeneration += 1; return }
+        if type == .leftMouseDown { detector.reset(); autoGeneration += 1; pendingAutomaticField = nil; return }
         let code = Int(event.getIntegerValueField(.keyboardEventKeycode))
         let modifiers = event.flags.intersection([.maskCommand, .maskControl, .maskAlternate, .maskSecondaryFn])
         let time = ProcessInfo.processInfo.systemUptime
@@ -181,14 +183,27 @@ final class App: NSObject, NSApplicationDelegate {
             if diagnostics && code == 49 {
                 fputs("[diagnostic] space auto=\(autoEnabled) pro=\(license.hasPro) modifiers=\(modifiers.rawValue) field=\(field() != nil) app=\(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "none")\n", stderr)
             }
-            guard autoEnabled, license.hasPro, modifiers.isEmpty, code == 49,
+            guard autoEnabled, license.hasPro, modifiers.isEmpty,
                   let bundle = NSWorkspace.shared.frontmostApplication?.bundleIdentifier,
-                  preferences.mode(for: bundle, defaultExclusions: excluded) == .automatic,
-                  let field = field() else { return }
-            let generation = autoGeneration
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.015) {
-                self.correctAfterSpace(field, generation: generation, attempts: 20)
+                  preferences.mode(for: bundle, defaultExclusions: excluded) == .automatic else {
+                pendingAutomaticField = nil; return
             }
+            let generation = autoGeneration
+            if code == 49 {
+                guard let field = field() else { pendingAutomaticField = nil; return }
+                pendingAutomaticField = field
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.005) {
+                    self.correctAfterSpace(field, generation: generation, attempts: 20)
+                }
+            } else if code <= 50, ![36, 48].contains(code), let field = pendingAutomaticField {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                    guard self.autoGeneration == generation, !self.paused,
+                          self.autoEnabled, let current = self.sameField(field),
+                          current.range.length == 0 else { return }
+                    self.pendingAutomaticField = nil
+                    self.correct(automatic: true)
+                }
+            } else { pendingAutomaticField = nil }
         }
     }
     private func correctAfterSpace(_ field: Field, generation: Int, attempts: Int) {
@@ -197,6 +212,7 @@ final class App: NSObject, NSApplicationDelegate {
         let expected = (field.value as NSString).replacingCharacters(in: field.range, with: " ")
         let caret = NSRange(location: field.range.location + 1, length: 0)
         if current.value == expected, current.range == caret {
+            pendingAutomaticField = nil
             correct(automatic: true); return
         }
         // AX value and caret can settle separately after the key event. Only wait
@@ -220,6 +236,7 @@ final class App: NSObject, NSApplicationDelegate {
         return Field(element: element, value: value, range: range, pid: app.processIdentifier)
     }
     func correct(automatic: Bool) {
+        if !automatic { pendingAutomaticField = nil }
         guard !paused, let field = field() else {
             if !automatic { report("Поле недоступно. Проверьте Универсальный доступ", failure: true) }; return
         }
@@ -238,24 +255,28 @@ final class App: NSObject, NSApplicationDelegate {
         }
         let ns = field.value as NSString
         let range: NSRange
-        if field.range.length > 0 {
-            guard !automatic else { return }; range = field.range
+        let after: String
+        if automatic {
+            var minimumLocation = 0
+            if let undo = automaticUndoPrefix {
+                if undo.pid == field.pid, CFEqual(undo.element, field.element), field.value.hasPrefix(undo.value) {
+                    minimumLocation = undo.range.location
+                } else { automaticUndoPrefix = nil }
+            }
+            guard license.hasPro, field.range.length == 0,
+                  let plan = AutomaticCorrection.plan(in: field.value, caret: field.range.location, minimumLocation: minimumLocation,
+                    valid: { self.validWord($0, language: $1) }, ignored: { self.preferences.ignores($0) }) else { return }
+            range = plan.range; after = plan.text
+        } else if field.range.length > 0 {
+            range = field.range; after = Layout.convert(ns.substring(with: range))
         } else {
             guard let word = Layout.lastWord(in: field.value, caret: field.range.location, skipWhitespace: true) else {
-                if !automatic { report("Нет слова перед курсором", failure: true) }; return
+                report("Нет слова перед курсором", failure: true); return
             }
-            range = word
+            range = word; after = Layout.convert(ns.substring(with: word))
         }
-        let before = ns.substring(with: range), after = Layout.convert(before)
+        let before = ns.substring(with: range)
         guard before != after else { return }
-        if automatic {
-            guard license.hasPro else { return }
-            guard !preferences.ignores(before), !preferences.ignores(after) else { return }
-            guard Layout.permitsAutomaticConversion(before, to: after) else { return }
-            let currentLanguage = Layout.language(in: before) ?? "en"
-            let targetLanguage = currentLanguage == "ru" ? "en" : "ru"
-            guard !validWord(before, language: currentLanguage), validWord(after, language: targetLanguage) else { return }
-        }
         guard replace(field: field, range: range, text: after) else {
             if !automatic { report("Не удалось безопасно заменить текст в этом поле", failure: true) }; return
         }
@@ -347,6 +368,10 @@ final class App: NSObject, NSApplicationDelegate {
         }
         guard replace(field: current, range: edit.range, text: edit.before) else { report("Не удалось отменить", failure: true); return }
         setSelection(current.element, edit.originalSelection)
+        let restored = (current.value as NSString).replacingCharacters(in: edit.range, with: edit.before) as NSString
+        let end = edit.range.location + edit.before.utf16.count
+        automaticUndoPrefix = Field(element: current.element, value: restored.substring(to: end),
+                                    range: NSRange(location: end, length: 0), pid: current.pid)
         switchInput(for: edit.before); lastEdit = nil; report("Исправление отменено")
     }
     @objc func toggleAuto() {
@@ -368,7 +393,7 @@ final class App: NSObject, NSApplicationDelegate {
     @objc func help() {
         let alert = NSAlert()
         alert.messageText = "Shift Switcher"
-        alert.informativeText = "Выделите текст и используйте \(shortcutPreferences.correction.title). Без выделения исправится последнее слово перед курсором. Повторное сочетание возвращает раскладку. Настройка клавиш — в «Личные правила → Клавиши».\n\nАвтоматика включается в меню и срабатывает по пробелу при наличии словарей RU/EN macOS. Для терминалов, редакторов кода и менеджеров паролей она по умолчанию отключена.\n\nНужны разрешения «Универсальный доступ» и «Мониторинг ввода». После выдачи доступа перезапустите приложение.\n\nТекст обрабатывается в памяти, не отправляется в сеть и не записывается в файлы. Поля без поддержки Accessibility пропускаются. Используйте один переключатель раскладки одновременно."
+        alert.informativeText = "Выделите текст и используйте \(shortcutPreferences.correction.title). Без выделения исправится последнее слово перед курсором. Повторное сочетание возвращает раскладку. Настройка клавиш — в «Личные правила → Клавиши».\n\nАвтоматика проверяет до 12 завершённых слов текущей строки по пробелу и после короткой паузы. Соседние слова помогают различить одиночные буквы RU/EN; правильные слова, адреса и числа сохраняются. Анализ локальный, по словарям macOS, без облачного ИИ. Для терминалов, редакторов кода и менеджеров паролей она по умолчанию отключена.\n\nНужны разрешения «Универсальный доступ» и «Мониторинг ввода». После выдачи доступа перезапустите приложение.\n\nТекст обрабатывается в памяти, не отправляется в сеть и не записывается в файлы. Поля без поддержки Accessibility пропускаются. Используйте один переключатель раскладки одновременно."
         alert.runModal()
     }
     @objc func quit() { NSApp.terminate(nil) }

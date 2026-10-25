@@ -291,7 +291,7 @@ final class NativeAcceptance {
     func mixedWords() {
         mixedCase("mesh wifi копbz", expected: "mesh wifi копия", automatic: false) {
             self.mixedCase("helдщ", expected: "hello", automatic: false) {
-                self.mixedCase("копbz", expected: "копия", automatic: true) { self.finish() }
+                self.mixedCase("копbz", expected: "копия", automatic: true) { self.sentenceCases() }
             }
         }
     }
@@ -310,6 +310,57 @@ final class NativeAcceptance {
             }
         }
         if automatic { postSpace(); later(0.8, corrected) } else { doubleShift(corrected) }
+    }
+    func sentenceCases() {
+        let cases = [("ghbdtn rfr ltkf", "привет как дела"),
+                     ("привет как b", "привет как и"),
+                     ("please write ш", "please write i"),
+                     ("ghbdtn, rfr ltkf!", "привет, как дела!")]
+        func run(_ index: Int) {
+            guard index < cases.count else { self.sentencePreservation(); return }
+            let pair = cases[index]
+            mixedCase(pair.0, expected: pair.1, automatic: true) { run(index + 1) }
+        }
+        run(0)
+    }
+    func sentencePreservation() {
+        app.autoEnabled = true
+        guard prepare("привет как hello", range: NSRange(location: "привет как hello".utf16.count, length: 0)) else { finish(); return }
+        postSpace()
+        later(0.5) {
+            self.record("context_preserves_english", self.field()?.value == "привет как hello ", "Valid English stays in a Russian phrase")
+            guard self.prepare("b", range: NSRange(location: 1, length: 0)) else { self.finish(); return }
+            self.postSpace()
+            self.later(0.5) {
+                self.record("context_requires_evidence", self.field()?.value == "b ", "A single letter without context is preserved")
+                self.fastContinuation()
+            }
+        }
+    }
+    func fastContinuation() {
+        guard prepare("ghbdtn", range: NSRange(location: 6, length: 0)) else { finish(); return }
+        // Enqueue the next letter immediately after space, so it cancels the
+        // strict space callback and exercises the completed-word idle retry.
+        postSpace()
+        guard field() != nil else { finish(); return }
+        for down in [true, false] {
+            let event = CGEvent(keyboardEventSource: nil, virtualKey: 9, keyDown: down)!
+            event.flags = []
+            if down { var unit: UniChar = 118; event.keyboardSetUnicodeString(stringLength: 1, unicodeString: &unit) }
+            event.post(tap: .cghidEventTap)
+        }
+        later(0.7) {
+            let changed = self.field()?.value == "привет v"
+            self.record("context_fast_continuation", changed, "Completed word corrected; unfinished next word preserved")
+            self.doubleShift {
+                self.record("context_idle_exact_undo", changed && self.field()?.value == "ghbdtn v", "Undo restores the earlier completed word")
+                self.postSpace()
+                self.later(0.5) {
+                    self.record("context_respects_undo", self.field()?.value == "ghbdtn v ", "The next sentence scan does not reapply an explicitly undone edit")
+                    self.finish()
+                }
+            }
+        }
     }
     func postChord(_ key: CGKeyCode) {
         guard field() != nil else { record("focus", false, "Aborted shortcut outside fixture"); finish(); return }
