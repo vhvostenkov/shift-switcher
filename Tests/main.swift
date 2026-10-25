@@ -30,6 +30,47 @@ check(Layout.language(in: "копbz") == "en", "mixed source uses final typed al
 check(Layout.language(in: "helдщ") == "ru", "reverse mixed source uses final alphabet")
 check(Layout.language(in: "копия 🙂") == "ru", "nonletters do not change target language")
 check(Layout.language(in: "123 🙂") == nil, "nonletters have no input language")
+// Sentence decisions use a fixed bilingual dictionary; native spelling is
+// exercised separately by the macOS acceptance fixture.
+let contextDictionary: [String: Set<String>] = [
+    "ru": ["привет", "как", "дела", "на", "русском", "языке", "и", "я", "а", "в", "к", "с", "копия", "это", "текст"],
+    "en": ["hello", "world", "mesh", "wifi", "please", "write", "in", "english", "i", "a", "b", "f", "z", "c", "r", "d"]
+]
+func automaticValue(_ value: String, ignored: Set<String> = []) -> String {
+    guard let plan = AutomaticCorrection.plan(in: value, caret: value.utf16.count,
+        valid: { contextDictionary[$1]?.contains($0.lowercased()) == true }, ignored: { ignored.contains($0.lowercased()) }) else { return value }
+    return (value as NSString).replacingCharacters(in: plan.range, with: plan.text)
+}
+for (before, after) in [
+    ("ghbdtn rfr ltkf ", "привет как дела "),
+    ("привет как b ", "привет как и "),
+    ("b ghbdtn rfr ", "и привет как "),
+    ("please write ш ", "please write i "),
+    ("hello world ", "hello world "),
+    ("привет как hello ", "привет как hello "),
+    ("mesh wifi копbz ", "mesh wifi копия "),
+    ("ghbdtn, rfr ltkf! ", "привет, как дела! "),
+    ("ghbdtn typing", "привет typing"),
+    ("ghbdtn", "ghbdtn"),
+    ("b ", "b "),
+    ("привет b ", "привет b "),
+    ("hello world b ", "hello world b "),
+    ("привет как\nb ", "привет как\nb "),
+    ("ghbdtn@example.com ", "ghbdtn@example.com "),
+    ("https://ghbdtn.ru ", "https://ghbdtn.ru "),
+    ("ghbdtn123 ", "ghbdtn123 "),
+    ("🙂 ghbdtn ", "🙂 привет ")
+] {
+    check(automaticValue(before) == after, "context conversion: \(before)")
+}
+check(automaticValue("ghbdtn rfr ", ignored: ["ghbdtn"]) == "ghbdtn как ", "ignored words stay unchanged in sentence")
+check(automaticValue("ghbdtn ", ignored: ["привет"]) == "ghbdtn ", "ignored target stays unchanged")
+check(AutomaticCorrection.plan(in: "hello ", caret: 99, valid: { _,_ in false }, ignored: { _ in false }) == nil, "invalid context caret")
+
+let undoProtected = AutomaticCorrection.plan(in: "ghbdtn rfr ", caret: 11, minimumLocation: 6,
+    valid: { contextDictionary[$1]?.contains($0.lowercased()) == true }, ignored: { _ in false })
+check(undoProtected.map { ("ghbdtn rfr " as NSString).replacingCharacters(in: $0.range, with: $0.text) } == "ghbdtn как ", "sentence scan respects the explicitly undone prefix")
+
 var detector = DoubleShift()
 check(!detector.shift(code: 56, down: true, time: 0, otherModifiers: false), "first down")
 check(!detector.shift(code: 56, down: false, time: 0.05, otherModifiers: false), "first tap")
