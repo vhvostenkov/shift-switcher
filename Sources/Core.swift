@@ -3,8 +3,10 @@ import Foundation
 enum Layout {
     private static let en = Array("`qwertyuiop[]asdfghjkl;'zxcvbnm,./~QWERTYUIOP{}ASDFGHJKL:\"ZXCVBNM<>?")
     private static let ru = Array("ёйцукенгшщзхъфывапролджэячсмитьбю.ЁЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ,")
-    private static let forward = Dictionary(uniqueKeysWithValues: zip(en, ru))
-    private static let backward = Dictionary(uniqueKeysWithValues: zip(ru, en))
+    private static let shiftedEN = Array("@#$^&")
+    private static let shiftedRU = Array("\"№;:?")
+    private static let forward = Dictionary(uniqueKeysWithValues: zip(en + shiftedEN, ru + shiftedRU))
+    private static let backward = Dictionary(uniqueKeysWithValues: zip(ru + shiftedRU, en + shiftedEN))
 
     static func isRussian(_ c: Character) -> Bool {
         c.unicodeScalars.contains { (0x0400...0x04ff).contains($0.value) }
@@ -20,18 +22,26 @@ enum Layout {
         // Punctuation keys can be letters in the other layout (comma → б).
         before.count >= 2 && !after.isEmpty && after.allSatisfy { $0.isLetter }
     }
-    static func convert(_ text: String) -> String {
+    static func convert(_ text: String, sourceLanguage: String? = nil) -> String {
         // The final typed alphabet sets the direction. In mixed words the other
         // alphabet is already correct: копbz → копия, helдщ → hello.
         var output = "", token = ""
         func flush() {
-            let map = language(in: token) == "ru" ? backward : forward
+            let map = (language(in: token) ?? sourceLanguage) == "ru" ? backward : forward
             output += String(token.map { map[$0] ?? $0 }); token = ""
         }
         for c in text {
             if c.isWhitespace { flush(); output.append(c) } else { token.append(c) }
         }
         flush(); return output
+    }
+    static func previousCharacter(in value: String, caret: Int) -> NSRange? {
+        let ns = value as NSString
+        guard caret > 0, caret <= ns.length else { return nil }
+        return ns.rangeOfComposedCharacterSequence(at: caret - 1)
+    }
+    static func isIdentifier(_ token: String) -> Bool {
+        token.contains { $0.isNumber || "@#:/\\=_-".contains($0) }
     }
     static func lastWord(in value: String, caret: Int, skipWhitespace: Bool) -> NSRange? {
         let ns = value as NSString
@@ -40,6 +50,10 @@ enum Layout {
         if skipWhitespace {
             while end > 0, CharacterSet.whitespacesAndNewlines.characterIsMember(ns.character(at: end - 1)) { end -= 1 }
         }
+        // Do not convert only a suffix of a model code, URL or address.
+        let prefix = ns.substring(to: end)
+        if let token = prefix.split(whereSeparator: { $0.isWhitespace }).last,
+           isIdentifier(String(token)) { return nil }
         var start = end
         while start > 0 {
             let u = ns.character(at: start - 1)

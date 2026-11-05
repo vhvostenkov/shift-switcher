@@ -357,6 +357,52 @@ final class NativeAcceptance {
                 self.postSpace()
                 self.later(0.5) {
                     self.record("context_respects_undo", self.field()?.value == "ghbdtn v ", "The next sentence scan does not reapply an explicitly undone edit")
+                    self.singleEditCases()
+                }
+            }
+        }
+    }
+    func singleEditCases() {
+        app.autoEnabled = false
+        guard prepare("вф", range: NSRange(location: 2, length: 0)) else { finish(); return }
+        doubleShift {
+            self.record("single_da_no_duplicate", self.field()?.value == "da", "Exactly one da after manual replacement")
+            self.record("single_da_english_layout", self.app.currentInputLanguage() == "en", "Active input source is English after correction")
+            self.doubleShift {
+                self.record("single_da_exact_undo", self.field()?.value == "вф", "Exact undo restores two characters")
+                self.record("single_da_russian_layout", self.app.currentInputLanguage() == "ru", "Undo selects Russian input")
+                self.app.autoEnabled = true
+                self.postSpace()
+                self.later(0.5) {
+                    self.record("single_da_undo_survives_space", self.field()?.value == "вф ", "Space preserves intentional restored spelling")
+                    self.manualOverrideCase()
+                }
+            }
+        }
+    }
+    func manualOverrideCase() {
+        guard prepare("da", range: NSRange(location: 2, length: 0)) else { finish(); return }
+        doubleShift {
+            self.record("manual_override", self.field()?.value == "вф", "Explicit manual conversion wins over dictionary")
+            self.postSpace()
+            self.later(0.5) {
+                self.record("manual_override_survives_space", self.field()?.value == "вф ", "Automation does not reverse manual correction")
+                self.characterCase()
+            }
+        }
+    }
+    func characterCase() {
+        app.autoEnabled = false
+        guard prepare("тестю", range: NSRange(location: 5, length: 0)) else { finish(); return }
+        postChord(47)
+        later(0.6) {
+            self.record("single_character_only", self.field()?.value == "тест.", "Ctrl+Option+period replaces only the final character")
+            self.record("single_character_layout", self.app.currentInputLanguage() == "en", "Punctuation correction selects target layout")
+            self.doubleShift {
+                self.record("single_character_undo", self.field()?.value == "тестю", "Undo restores only that character")
+                guard self.prepare("DA-10", range: NSRange(location: 5, length: 0)) else { self.finish(); return }
+                self.doubleShift {
+                    self.record("manual_identifier_preserved", self.field()?.value == "DA-10", "Unselected model code is not partially converted")
                     self.finish()
                 }
             }

@@ -37,7 +37,7 @@ enum AutomaticCorrection {
             if match.range.location == 0 && line.utf16.count > window.utf16.count { continue }
             var token = text.substring(with: match.range)
             var range = NSRange(location: offset + match.range.location, length: match.range.length)
-            guard !token.contains(where: { $0.isNumber || "@#:/\\=_-".contains($0) }) else { continue }
+            guard !Layout.isIdentifier(token), !(token.count > 1 && token.contains(where: \.isLetter) && token == token.uppercased()) else { continue }
             // Prefer the full keyboard token (e.g. ghj,tkf). If it is not a
             // dictionary candidate, retry without trailing sentence punctuation.
             while !token.isEmpty {

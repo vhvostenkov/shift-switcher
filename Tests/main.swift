@@ -71,6 +71,20 @@ let undoProtected = AutomaticCorrection.plan(in: "ghbdtn rfr ", caret: 11, minim
     valid: { contextDictionary[$1]?.contains($0.lowercased()) == true }, ignored: { _ in false })
 check(undoProtected.map { ("ghbdtn rfr " as NSString).replacingCharacters(in: $0.range, with: $0.text) } == "ghbdtn как ", "sentence scan respects the explicitly undone prefix")
 
+for (source, result) in [("@", "\""), ("#", "№"), ("$", ";"), ("^", ":"), ("&", "?")] {
+    check(Layout.convert(source, sourceLanguage: "en") == result, "shifted number row forward: \(source)")
+    check(Layout.convert(result, sourceLanguage: "ru") == source, "shifted number row reverse: \(result)")
+}
+check(Layout.convert(".", sourceLanguage: "ru") == "/", "punctuation uses active input language")
+check(Layout.convert("123", sourceLanguage: "ru") == "123", "ordinary digits are identical in RU and EN")
+for token in ["DA-10", "X-AB", "AB12", "ghbdtn@example.com"] {
+    check(Layout.lastWord(in: token + " ", caret: token.utf16.count + 1, skipWhitespace: true) == nil, "manual last-word preserves complete identifier: \(token)")
+}
+check(automaticValue("DA АС USB ") == "DA АС USB ", "automation preserves uppercase abbreviations")
+check(Layout.previousCharacter(in: "тестю", caret: 5) == NSRange(location: 4, length: 1), "single-character correction does not select whole word")
+check(Layout.previousCharacter(in: "x🙂", caret: 3) == NSRange(location: 1, length: 2), "single-character range preserves surrogate pair")
+check(Layout.previousCharacter(in: "", caret: 0) == nil, "no character before empty caret")
+
 var detector = DoubleShift()
 check(!detector.shift(code: 56, down: true, time: 0, otherModifiers: false), "first down")
 check(!detector.shift(code: 56, down: false, time: 0.05, otherModifiers: false), "first tap")

@@ -38,7 +38,7 @@ if subprocess.run(command).returncode:
     raise SystemExit('LaunchServices could not start the candidate. Unlock the Mac and check its permission prompts; no previous report is accepted.')
 if args.launch_only:
     print('Verified candidate launched normally without test arguments');raise SystemExit(0)
-for _ in range(90):
+for _ in range(120):
     if report.exists() and report.stat().st_mtime>=started:
         data=json.loads(report.read_text())
         data['launch_method']='LaunchServices'
@@ -49,4 +49,4 @@ for _ in range(90):
         print(json.dumps({'target':args.target,'passed':sum(r['passed'] for r in data['results']),'total':len(data['results']),'report':str(report),'binary_sha256':data['binary_sha256']},ensure_ascii=False))
         raise SystemExit(0 if all(r['passed'] for r in data['results']) else 1)
     time.sleep(.5)
-raise SystemExit('No fresh report within 45 seconds')
+raise SystemExit('No fresh report within 60 seconds')
