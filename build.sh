@@ -8,10 +8,10 @@ if /bin/ps -axo comm= | /usr/bin/grep -Fx -- "$PWD/$app/Contents/MacOS/Shift Swi
   exit 1
 fi
 mkdir -p build
-swiftc Sources/Core.swift Sources/CorrectionPreferences.swift Sources/Shortcuts.swift Sources/LicenseCore.swift Tests/main.swift -o build/core-tests
+swiftc Sources/Core.swift Sources/AutomaticCorrection.swift Sources/CorrectionPreferences.swift Sources/Shortcuts.swift Sources/LicenseCore.swift Tests/main.swift -o build/core-tests
 build/core-tests
 mkdir -p "$app/Contents/MacOS"
-swiftc -O -target arm64-apple-macos13.0 Sources/Core.swift Sources/CorrectionPreferences.swift Sources/Shortcuts.swift Sources/GlobalShortcuts.swift Sources/LicenseCore.swift Sources/Licensing.swift Sources/Acceptance.swift Sources/Settings.swift Sources/main.swift -framework AppKit -framework SwiftUI -framework Carbon -framework ServiceManagement -framework Security -framework CryptoKit -o "$app/Contents/MacOS/Shift Switcher"
+swiftc -O -target arm64-apple-macos13.0 Sources/Core.swift Sources/AutomaticCorrection.swift Sources/CorrectionPreferences.swift Sources/Shortcuts.swift Sources/GlobalShortcuts.swift Sources/LicenseCore.swift Sources/Licensing.swift Sources/Acceptance.swift Sources/Settings.swift Sources/main.swift -framework AppKit -framework SwiftUI -framework Carbon -framework ServiceManagement -framework Security -framework CryptoKit -o "$app/Contents/MacOS/Shift Switcher"
 cp Info.plist "$app/Contents/Info.plist"
 if [ "${CANDIDATE_BUILD:-0}" = "1" ]; then
   /usr/libexec/PlistBuddy -c 'Set :CFBundleIdentifier local.viktor.ShiftSwitcher.Candidate' "$app/Contents/Info.plist"

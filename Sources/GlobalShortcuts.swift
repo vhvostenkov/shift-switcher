@@ -6,6 +6,7 @@ final class GlobalShortcuts {
     private var handler: EventHandlerRef?
     private var correctionRef: EventHotKeyRef?
     private var undoRef: EventHotKeyRef?
+    private var characterRef: EventHotKeyRef?
     var perform: ((UInt32) -> Void)?
 
     init() {
@@ -41,9 +42,15 @@ final class GlobalShortcuts {
         guard handler != nil else { return false }
         return RegisterEventHotKey(UInt32(kVK_ANSI_Z), UInt32(controlKey | optionKey), EventHotKeyID(signature: signature, id: 2), GetApplicationEventTarget(), 0, &undoRef) == noErr
     }
+    func setCharacterCorrection() -> Bool {
+        if characterRef != nil { return true }
+        guard handler != nil else { return false }
+        return RegisterEventHotKey(UInt32(kVK_ANSI_Period), UInt32(controlKey | optionKey), EventHotKeyID(signature: signature, id: 3), GetApplicationEventTarget(), 0, &characterRef) == noErr
+    }
     deinit {
         if let ref = correctionRef { UnregisterEventHotKey(ref) }
         if let ref = undoRef { UnregisterEventHotKey(ref) }
+        if let ref = characterRef { UnregisterEventHotKey(ref) }
         if let handler = handler { RemoveEventHandler(handler) }
     }
 }

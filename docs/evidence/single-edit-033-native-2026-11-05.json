@@ -1,0 +1,233 @@
+{
+  "accessibility": true,
+  "fixture": "/Users/max/Applications/ShiftSwitcher-native-test-1793872877.txt",
+  "input": "CGEvent synthetic keyboard events; not physical keyboard",
+  "postEventAccess": true,
+  "results": [
+    {
+      "detail": "value=привет, range=Optional({0, 6})",
+      "passed": true,
+      "scenario": "double_shift_selection"
+    },
+    {
+      "detail": "Repeated double Shift returns selected text",
+      "passed": true,
+      "scenario": "double_shift_selection_reverse"
+    },
+    {
+      "detail": "value=test привет, range=Optional({11, 0})",
+      "passed": true,
+      "scenario": "double_shift_last_word"
+    },
+    {
+      "detail": "Repeated double Shift returns last word",
+      "passed": true,
+      "scenario": "double_shift_last_word_reverse"
+    },
+    {
+      "detail": "value=привет ",
+      "passed": true,
+      "scenario": "automatic_en_to_ru"
+    },
+    {
+      "detail": "Automatic correction reversed; trailing space preserved",
+      "passed": true,
+      "scenario": "automatic_undo_double_shift"
+    },
+    {
+      "detail": "value=hello ",
+      "passed": true,
+      "scenario": "automatic_ru_to_en"
+    },
+    {
+      "detail": "Control+Option+Z restores automatic correction and space",
+      "passed": true,
+      "scenario": "automatic_undo_hotkey"
+    },
+    {
+      "detail": "value=hello ",
+      "passed": true,
+      "scenario": "valid_word_unchanged"
+    },
+    {
+      "detail": "Control+Option+Space in test fixture",
+      "passed": true,
+      "scenario": "hotkey_selection"
+    },
+    {
+      "detail": "Control+Option+Z in same unchanged fixture",
+      "passed": true,
+      "scenario": "hotkey_undo"
+    },
+    {
+      "detail": "Multi-event text replacement with intact emoji; value=привет привет привет привет привет привет привет привет 😀 ",
+      "passed": true,
+      "scenario": "long_selection_with_emoji"
+    },
+    {
+      "detail": "Restore complete selection without truncation; status=Исправление отменено",
+      "passed": true,
+      "scenario": "long_selection_undo"
+    },
+    {
+      "detail": "New user text is preserved",
+      "passed": true,
+      "scenario": "undo_after_user_edit_is_refused"
+    },
+    {
+      "detail": "value=mesh wifi копия",
+      "passed": true,
+      "scenario": "mixed_manual_mesh wifi копbz"
+    },
+    {
+      "detail": "Exact mixed source restored",
+      "passed": true,
+      "scenario": "mixed_manual_mesh wifi копbz_undo"
+    },
+    {
+      "detail": "value=hello",
+      "passed": true,
+      "scenario": "mixed_manual_helдщ"
+    },
+    {
+      "detail": "Exact mixed source restored",
+      "passed": true,
+      "scenario": "mixed_manual_helдщ_undo"
+    },
+    {
+      "detail": "value=копия ",
+      "passed": true,
+      "scenario": "mixed_automatic"
+    },
+    {
+      "detail": "Exact mixed source restored",
+      "passed": true,
+      "scenario": "mixed_automatic_undo"
+    },
+    {
+      "detail": "value=привет как дела ",
+      "passed": true,
+      "scenario": "mixed_automatic"
+    },
+    {
+      "detail": "Exact mixed source restored",
+      "passed": true,
+      "scenario": "mixed_automatic_undo"
+    },
+    {
+      "detail": "value=привет как и ",
+      "passed": true,
+      "scenario": "mixed_automatic"
+    },
+    {
+      "detail": "Exact mixed source restored",
+      "passed": true,
+      "scenario": "mixed_automatic_undo"
+    },
+    {
+      "detail": "value=please write i ",
+      "passed": true,
+      "scenario": "mixed_automatic"
+    },
+    {
+      "detail": "Exact mixed source restored",
+      "passed": true,
+      "scenario": "mixed_automatic_undo"
+    },
+    {
+      "detail": "value=привет, как дела! ",
+      "passed": true,
+      "scenario": "mixed_automatic"
+    },
+    {
+      "detail": "Exact mixed source restored",
+      "passed": true,
+      "scenario": "mixed_automatic_undo"
+    },
+    {
+      "detail": "Valid English stays in a Russian phrase",
+      "passed": true,
+      "scenario": "context_preserves_english"
+    },
+    {
+      "detail": "A single letter without context is preserved",
+      "passed": true,
+      "scenario": "context_requires_evidence"
+    },
+    {
+      "detail": "Completed word corrected; unfinished next word preserved",
+      "passed": true,
+      "scenario": "context_fast_continuation"
+    },
+    {
+      "detail": "Undo restores the earlier completed word",
+      "passed": true,
+      "scenario": "context_idle_exact_undo"
+    },
+    {
+      "detail": "The next sentence scan does not reapply an explicitly undone edit",
+      "passed": true,
+      "scenario": "context_respects_undo"
+    },
+    {
+      "detail": "Exactly one da after manual replacement",
+      "passed": true,
+      "scenario": "single_da_no_duplicate"
+    },
+    {
+      "detail": "Active input source is English after correction",
+      "passed": true,
+      "scenario": "single_da_english_layout"
+    },
+    {
+      "detail": "Exact undo restores two characters",
+      "passed": true,
+      "scenario": "single_da_exact_undo"
+    },
+    {
+      "detail": "Undo selects Russian input",
+      "passed": true,
+      "scenario": "single_da_russian_layout"
+    },
+    {
+      "detail": "Space preserves intentional restored spelling",
+      "passed": true,
+      "scenario": "single_da_undo_survives_space"
+    },
+    {
+      "detail": "Explicit manual conversion wins over dictionary",
+      "passed": true,
+      "scenario": "manual_override"
+    },
+    {
+      "detail": "Automation does not reverse manual correction",
+      "passed": true,
+      "scenario": "manual_override_survives_space"
+    },
+    {
+      "detail": "Ctrl+Option+period replaces only the final character",
+      "passed": true,
+      "scenario": "single_character_only"
+    },
+    {
+      "detail": "Punctuation correction selects target layout",
+      "passed": true,
+      "scenario": "single_character_layout"
+    },
+    {
+      "detail": "Undo restores only that character",
+      "passed": true,
+      "scenario": "single_character_undo"
+    },
+    {
+      "detail": "Unselected model code is not partially converted",
+      "passed": true,
+      "scenario": "manual_identifier_preserved"
+    }
+  ],
+  "testedAt": "2026-11-05T10:01:44Z",
+  "launch_method": "LaunchServices",
+  "binary_sha256": "953eb5637d9b0a3c4bde45cb1cfb98351b3f3ea5c928016ef23c2cb565c17c46",
+  "source_commit": "b6d1cbc6c96a022d59136fcc7127fb1e2deeb6d8",
+  "source_dirty": false
+}
