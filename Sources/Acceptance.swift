@@ -427,7 +427,12 @@ final class NativeAcceptance {
     func rapidPhraseCase() {
         guard prepare("", range: NSRange(location: 0, length: 0)) else { finish(); return }
         _ = app.switchInput(for: "hello")
-        let letters: [(CGKeyCode, String)] = [(11,"b"),(40,"k"),(11,"b"),(49," "),(9,"v"),(11,"b"),(4,"h"),(49," ")]
+        // TextEdit's own autocorrect turns the physical English typo Bkb
+        // into Bob. Use a non-dictionary source there; Chrome tests the exact
+        // reported bkb -> или case with browser autocorrect disabled.
+        let typedSequence = target == nil ? "ghbdtn vbh " : "bkb vbh "
+        let codes: [Character: CGKeyCode] = ["g":5,"h":4,"b":11,"d":2,"t":17,"n":45,"k":40," ":49,"v":9]
+        let letters = typedSequence.map { (codes[$0]!, String($0)) }
         func type(_ index: Int) {
             guard index < letters.count else {
                 self.later(0.05) {
@@ -436,7 +441,7 @@ final class NativeAcceptance {
                     let typed = self.field()?.value ?? ""
                     self.later(0.7) {
                         let actual = self.field()?.value ?? "<unavailable>"
-                        self.record("rapid_phrase_no_duplicates", typed.lowercased() == "bkb vbh " && actual == Layout.convert(typed), "25 ms key spacing; before=" + typed + "; after=" + actual)
+                        self.record("rapid_phrase_no_duplicates", typed.lowercased() == typedSequence && actual == Layout.convert(typed), "25 ms key spacing; before=" + typed + "; after=" + actual)
                         self.doubleShift {
                             self.record("rapid_phrase_exact_undo", self.field()?.value == typed, "Restore exact input including editor capitalization")
                             self.finish()
