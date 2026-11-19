@@ -326,10 +326,10 @@ final class App: NSObject, NSApplicationDelegate {
         guard let current = self.field(), current.pid == field.pid, CFEqual(current.element, field.element) else { return nil }
         return current
     }
-    private func awaitValue(_ expected: String, field: Field) -> Bool {
+    private func awaitValue(_ expected: String, field: Field, selection expectedSelection: NSRange? = nil) -> Bool {
         for _ in 0..<16 {
             guard let current = sameField(field) else { return false }
-            if current.value == expected { return true }
+            if current.value == expected && (expectedSelection.map { current.range == $0 } ?? true) { return true }
             usleep(5000)
         }
         return false
@@ -375,8 +375,11 @@ final class App: NSObject, NSApplicationDelegate {
                 event.postToPid(field.pid)
             }
             value = (value as NSString).replacingCharacters(in: replacement, with: chunk)
-            guard awaitValue(value, field: field) else { return false }
-            replacement = NSRange(location: replacement.location + units.count, length: 0)
+            let caret = NSRange(location: replacement.location + units.count, length: 0)
+            // Chrome publishes AX value and caret separately. Do not abort the
+            // next chunk merely because its value arrived before its caret.
+            guard awaitValue(value, field: field, selection: caret) else { return false }
+            replacement = caret
         }
         return value == expected
     }
