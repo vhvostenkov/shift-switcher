@@ -13,12 +13,14 @@ final class LicenseManager {
     private var lastPersisted: Int64 = 0
     private var lastRenewal: Int64 = 0
     private var renewing = false
+    private var activationGeneration = 0
     private(set) var device = ""
     private(set) var days = 0
     private(set) var licensed = false
     private(set) var storageReady = false
     private(set) var message = ""
     private(set) var expires: Int64 = 0
+    private(set) var ownerLicense = false
     var hasPro: Bool { storageReady && (licensed || days > 0) }
     var environment: String { (Bundle.main.bundleIdentifier ?? "").hasSuffix(".Candidate") ? "DEMO" : "LIVE" }
     private var api: URL { URL(string: "https://vhvost.com/pay/api/")! }
@@ -58,13 +60,15 @@ final class LicenseManager {
             self.trial = trial
             if now - lastPersisted >= 60, let data = try? JSONEncoder().encode(trial), let text = String(data: data, encoding: .utf8) { storageReady = write("trial", text); lastPersisted = now }
         }
-        licensed = false
+        licensed = false; ownerLicense = false
         if let certificate = certificateCache, let payload = LicenseCheck.verify(certificate, device: device, keys: keys, environment: environment, now: now) {
-            licensed = true; expires = payload.valid_until
+            licensed = true; expires = payload.valid_until; ownerLicense = payload.kind == "owner"
         }
     }
     func activate(_ key: String, completion: @escaping () -> Void) {
         guard storageReady else { return }
+        activationGeneration += 1
+        let generation = activationGeneration
         var request = URLRequest(url: api.appendingPathComponent("activate"))
         request.httpMethod = "POST"; request.timeoutInterval = 20
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -72,6 +76,7 @@ final class LicenseManager {
         URLSession.shared.dataTask(with: request) { data, response, _ in
             DispatchQueue.main.async {
                 defer { completion() }
+                guard self.activationGeneration == generation else { return }
                 if (response as? HTTPURLResponse)?.statusCode == 403, let data = data,
                    let body = try? JSONSerialization.jsonObject(with: data) as? [String: Any], body["error"] as? String == "license_revoked" {
                     _ = self.write("certificate", ""); self.certificateCache = nil; self.refresh()
@@ -93,7 +98,7 @@ final class LicenseManager {
     }
     func renewIfNeeded() {
         let now = Int64(Date().timeIntervalSince1970)
-        guard !renewing, expires < now + 7 * 86400, now - lastRenewal > 86400, read("license_key")?.isEmpty == false else { return }
+        guard !ownerLicense, !renewing, expires < now + 7 * 86400, now - lastRenewal > 86400, read("license_key")?.isEmpty == false else { return }
         renewing = true; lastRenewal = now
         renew { self.renewing = false }
     }
@@ -106,12 +111,33 @@ final class LicenseManager {
         panel.begin { result in
             guard result == .OK, let url = panel.url, let data = try? Data(contentsOf: url), data.count < 16384,
                   let body = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  body["product"] as? String == "shift-switcher-pro-v1", body["environment"] as? String == self.environment,
-                  let key = body["license_key"] as? String else { self.message = "Файл лицензии не подходит этой сборке"; completion(); return }
+                  body["product"] as? String == "shift-switcher-pro-v1", body["environment"] as? String == self.environment else {
+                self.message = "Файл лицензии не подходит этой сборке"; completion(); return
+            }
+            if let certificate = body["certificate"] as? String,
+               let payload = LicenseCheck.verify(certificate, device: self.device, keys: self.keys, environment: self.environment, now: Int64(Date().timeIntervalSince1970)),
+               payload.kind == "owner" {
+                guard self.write("certificate", certificate), self.write("license_key", "") else {
+                    self.message = "Не удалось сохранить лицензию владельца"; completion(); return
+                }
+                self.activationGeneration += 1
+                self.certificateCache = certificate; self.refresh()
+                self.message = "Лицензия владельца активирована на этом Mac"; completion(); return
+            }
+            guard let key = body["license_key"] as? String else {
+                self.message = "Файл лицензии не подходит этой сборке"; completion(); return
+            }
             self.activate(key, completion: completion)
         }
     }
     func release(completion: @escaping () -> Void) {
+        if ownerLicense {
+            guard write("certificate", ""), write("license_key", "") else {
+                message = "Не удалось отключить лицензию владельца"; completion(); return
+            }
+            activationGeneration += 1; certificateCache = nil; refresh()
+            message = "Лицензия владельца на этом Mac отключена"; completion(); return
+        }
         guard let key = read("license_key") else { return }
         var request = URLRequest(url: api.appendingPathComponent("release-device"))
         request.httpMethod = "POST"; request.timeoutInterval = 20

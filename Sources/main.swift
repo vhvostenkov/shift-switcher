@@ -215,39 +215,23 @@ final class App: NSObject, NSApplicationDelegate {
             }
             let generation = autoGeneration
             if code == 49 {
-                guard let field = field() else { pendingAutomaticField = nil; return }
-                pendingAutomaticField = field
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.005) {
-                    self.correctAfterSpace(field, generation: generation, attempts: 20)
-                }
-            } else if code <= 50, ![36, 48].contains(code), let field = pendingAutomaticField {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-                    guard self.autoGeneration == generation, !self.paused,
-                          self.autoEnabled, let current = self.sameField(field),
-                          current.range.length == 0 else { return }
-                    self.pendingAutomaticField = nil
-                    self.correct(automatic: true)
-                }
-            } else { pendingAutomaticField = nil }
+                pendingAutomaticField = field()
+            } else if code > 50 || [36, 48].contains(code) {
+                pendingAutomaticField = nil
+            }
+            guard let field = pendingAutomaticField else { return }
+            // Wait for a real typing pause. Replacing five milliseconds after
+            // space can select old text while the user is already typing ahead.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.30) {
+                guard self.autoGeneration == generation, !self.paused,
+                      self.autoEnabled, let current = self.sameField(field),
+                      current.range.length == 0 else { return }
+                self.pendingAutomaticField = nil
+                self.correct(automatic: true)
+            }
         }
     }
-    private func correctAfterSpace(_ field: Field, generation: Int, attempts: Int) {
-        guard autoGeneration == generation, autoEnabled, !paused,
-              let current = sameField(field) else { return }
-        let expected = (field.value as NSString).replacingCharacters(in: field.range, with: " ")
-        let caret = NSRange(location: field.range.location + 1, length: 0)
-        if current.value == expected, current.range == caret {
-            pendingAutomaticField = nil
-            correct(automatic: true); return
-        }
-        // AX value and caret can settle separately after the key event. Only wait
-        // for this exact insertion; any other input or field state cancels it.
-        guard attempts > 0, current.value == field.value || current.value == expected,
-              current.range == field.range || current.range == caret else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-            self.correctAfterSpace(field, generation: generation, attempts: attempts - 1)
-        }
-    }
+
     func field() -> Field? {
         guard AXIsProcessTrusted(), !IsSecureEventInputEnabled(),
               let app = NSWorkspace.shared.frontmostApplication, app.processIdentifier != getpid(),
@@ -324,7 +308,15 @@ final class App: NSObject, NSApplicationDelegate {
             setSelection(field.element, NSRange(location: caret, length: 0))
         }
         lastEdit = Edit(element: field.element, pid: field.pid, before: before, after: after, range: newRange, originalSelection: field.range, expectedValue: expected, sourceLanguage: sourceLanguage)
-        if !automatic { protectAutomaticPrefix(field, value: expected, end: NSMaxRange(newRange)) }
+        if !automatic {
+            protectAutomaticPrefix(field, value: expected, end: NSMaxRange(newRange))
+            if before.count >= 3, after.count >= 3,
+               before.allSatisfy(\.isLetter), after.allSatisfy(\.isLetter),
+               !validWord(before, language: sourceLanguage ?? "en"),
+               !validWord(after, language: targetLanguage) {
+                _ = preferences.addKnownWord(after)
+            }
+        }
         guard switchInput(for: after, language: targetLanguage) else {
             report("Текст исправлен, но macOS не переключила раскладку", failure: true); return
         }
@@ -389,6 +381,7 @@ final class App: NSObject, NSApplicationDelegate {
         return value == expected
     }
     func validWord(_ word: String, language: String) -> Bool {
+        if preferences.knows(word, language: language) { return true }
         let checker = NSSpellChecker.shared
         guard checker.availableLanguages.contains(language) else { return false }
         return checker.checkSpelling(of: word, startingAt: 0, language: language, wrap: false, inSpellDocumentWithTag: 0, wordCount: nil).location == NSNotFound

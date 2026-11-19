@@ -16,6 +16,7 @@ final class CorrectionPreferences {
     private struct State: Codable {
         var appModes: [String: AppCorrectionMode] = [:]
         var ignoredWords: [String] = []
+        var knownWords: [String: String]? = nil
     }
     private let defaults: UserDefaults
     private let key = "correctionPreferences.v1"
@@ -28,6 +29,20 @@ final class CorrectionPreferences {
     }
     var appModes: [String: AppCorrectionMode] { state.appModes }
     var ignoredWords: [String] { state.ignoredWords.sorted() }
+    var knownWords: [String: String] { state.knownWords ?? [:] }
+    @discardableResult func addKnownWord(_ input: String) -> Bool {
+        let word = input.trimmingCharacters(in: .whitespacesAndNewlines).precomposedStringWithCanonicalMapping.lowercased()
+        guard word.count >= 2, word.count <= 100, word.allSatisfy(\.isLetter),
+              let language = Layout.language(in: word),
+              word.allSatisfy({ language == "ru" ? Layout.isRussian($0) : ($0.isASCII && $0.isLetter) }) else { return false }
+        var words = knownWords; words[word] = language; state.knownWords = words; persist(); return true
+    }
+    func knows(_ word: String, language: String) -> Bool {
+        knownWords[word.precomposedStringWithCanonicalMapping.lowercased()] == language
+    }
+    func removeKnownWord(_ word: String) {
+        var words = knownWords; words.removeValue(forKey: word); state.knownWords = words; persist()
+    }
     func mode(for bundle: String, defaultExclusions: Set<String>) -> AppCorrectionMode {
         if Self.protectedApps.contains(bundle) { return .disabled }
         return state.appModes[bundle] ?? (defaultExclusions.contains(bundle) ? .manual : .automatic)

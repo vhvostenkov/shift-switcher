@@ -11,6 +11,7 @@ final class SettingsModel: ObservableObject {
     @Published var monitoring = false
     @Published var appModes: [String: AppCorrectionMode] = [:]
     @Published var ignoredWords: [String] = []
+    @Published var knownWords: [String: String] = [:]
     @Published var launchAtLogin = false
     @Published var loginNeedsApproval = false
     @Published var correctionShortcut = CorrectionShortcut.doubleShift
@@ -30,14 +31,14 @@ final class SettingsModel: ObservableObject {
         guard let app = app else { return }
         automatic = app.autoEnabled; paused = app.paused
         accessibility = AXIsProcessTrusted(); monitoring = CGPreflightListenEventAccess()
-        appModes = app.preferences.appModes; ignoredWords = app.preferences.ignoredWords
+        appModes = app.preferences.appModes; ignoredWords = app.preferences.ignoredWords; knownWords = app.preferences.knownWords
         launchAtLogin = SMAppService.mainApp.status == .enabled
         loginNeedsApproval = SMAppService.mainApp.status == .requiresApproval
         correctionShortcut = app.shortcutPreferences.correction
         keyboardUndo = app.shortcutPreferences.keyboardUndo
         app.license.refresh(); proAvailable = app.license.hasPro
         automatic = app.autoEnabled && proAvailable
-        licenseStatus = app.license.licensed ? (app.license.environment == "DEMO" ? "DEMO · Pro активирован" : "Pro активирован") : app.license.days > 0 ? "Pro: осталось \(app.license.days) дн. из 14" : "Free · пробный Pro завершён"
+        licenseStatus = app.license.ownerLicense ? "Лицензия владельца · Pro" : app.license.licensed ? (app.license.environment == "DEMO" ? "DEMO · Pro активирован" : "Pro активирован") : app.license.days > 0 ? "Pro: осталось \(app.license.days) дн. из 14" : "Free · пробный Pro завершён"
         licenseMessage = app.license.message
     }
     func setAutomatic(_ value: Bool) { guard !value || proAvailable else { return }; if app?.autoEnabled != value { app?.toggleAuto() }; refresh() }
@@ -51,6 +52,11 @@ final class SettingsModel: ObservableObject {
         let result = app?.preferences.addIgnoredWord(word) ?? false
         refresh(); return result
     }
+    func addKnownWord(_ word: String) -> Bool {
+        let result = app?.preferences.addKnownWord(word) ?? false
+        refresh(); return result
+    }
+    func removeKnownWord(_ word: String) { app?.preferences.removeKnownWord(word); refresh() }
     func removeWord(_ word: String) { app?.preferences.removeIgnoredWord(word); refresh() }
     func setShortcut(_ value: CorrectionShortcut) {
         guard let app = app else { return }
@@ -224,6 +230,7 @@ private struct RulesView: View {
     @State private var selectedBundle = ""
     @State private var word = ""
     @State private var wordError = false
+    @State private var knownWordMode = true
     @State private var licenseKey = ""
     @State private var activating = false
     private var runningApps: [(id: String, name: String)] {
@@ -277,7 +284,10 @@ private struct RulesView: View {
                     }
                 }
             } else if page == 1 {
-                Text("Автоматика не будет менять эти слова. Ручное исправление остаётся доступным.").font(.system(size: 12)).foregroundColor(.secondary)
+                Picker("Словарь", selection: $knownWordMode) {
+                    Text("Знакомые слова").tag(true); Text("Не исправлять").tag(false)
+                }.pickerStyle(.segmented)
+                Text(knownWordMode ? "Названия и термины, которые можно получать при исправлении раскладки. Ручное исправление незнакомого слова запоминается здесь." : "Эти слова автоматика пропускает. Ручное исправление остаётся доступным.").font(.system(size: 12)).foregroundColor(.secondary)
                 HStack {
                     TextField("Например, название компании", text: $word).textFieldStyle(.roundedBorder).onSubmit(addWord)
                     Button("Добавить", action: addWord)
@@ -285,10 +295,15 @@ private struct RulesView: View {
                 if wordError { Text("Введите одно слово без пробелов, не длиннее 100 символов.").font(.system(size: 11)).foregroundColor(.orange) }
                 ScrollView {
                     VStack(spacing: 12) {
-                        ForEach(model.ignoredWords, id: \.self) { item in
-                            HStack { Text(item).font(.system(size: 13)); Spacer(); Button("Удалить") { model.removeWord(item) }.font(.system(size: 11)) }
+                        ForEach(knownWordMode ? model.knownWords.keys.sorted() : model.ignoredWords, id: \.self) { item in
+                            HStack {
+                                Text(item).font(.system(size: 13))
+                                if knownWordMode { Text(model.knownWords[item]?.uppercased() ?? "").font(.system(size: 10)).foregroundColor(.secondary) }
+                                Spacer()
+                                Button("Удалить") { if knownWordMode { model.removeKnownWord(item) } else { model.removeWord(item) } }.font(.system(size: 11))
+                            }
                         }
-                        if model.ignoredWords.isEmpty { Text("Личный словарь пока пуст.").font(.system(size: 12)).foregroundColor(.secondary) }
+                        if (knownWordMode ? model.knownWords.isEmpty : model.ignoredWords.isEmpty) { Text("Личный словарь пока пуст.").font(.system(size: 12)).foregroundColor(.secondary) }
                     }
                 }
             } else if page == 2 {
@@ -329,7 +344,7 @@ private struct RulesView: View {
         }.padding(28).frame(width: 650, height: 490).background(ink).preferredColorScheme(.dark)
     }
     private func addWord() {
-        wordError = !model.addWord(word)
+        wordError = !(knownWordMode ? model.addKnownWord(word) : model.addWord(word))
         if !wordError { word = "" }
     }
 }

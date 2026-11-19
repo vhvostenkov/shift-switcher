@@ -66,7 +66,14 @@ enum AutomaticCorrection {
             guard word.range.location >= minimumLocation, word.before != word.after, word.targetValid else { return false }
             if word.before.count >= 2 { return !word.sourceValid }
             let single = word.target == "ru" ? Set(["а", "в", "и", "к", "о", "с", "у", "я"]) : Set(["i", "I", "a", "A"])
-            return single.contains(word.after.lowercased()) && votes[word.target, default: 0] >= 2 && votes[word.source, default: 0] == 0
+            guard single.contains(word.after.lowercased()) else { return false }
+            // A Russian preposition before a product name may have English
+            // evidence to its right: отзывы j Voron. Use the preceding word.
+            if word.after.lowercased() == "о", let previous = words.last(where: { $0.range.location < word.range.location }) {
+                return (previous.source == "ru" && previous.sourceValid && !previous.targetValid) ||
+                       (previous.target == "ru" && !previous.sourceValid && previous.targetValid)
+            }
+            return votes[word.target, default: 0] >= 2 && votes[word.source, default: 0] == 0
         }
         guard let first = edits.first, let last = edits.last else { return nil }
         let range = NSRange(location: first.range.location, length: NSMaxRange(last.range) - first.range.location)

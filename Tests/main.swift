@@ -33,8 +33,8 @@ check(Layout.language(in: "123 🙂") == nil, "nonletters have no input language
 // Sentence decisions use a fixed bilingual dictionary; native spelling is
 // exercised separately by the macOS acceptance fixture.
 let contextDictionary: [String: Set<String>] = [
-    "ru": ["привет", "как", "дела", "на", "русском", "языке", "и", "я", "а", "в", "к", "с", "копия", "это", "текст"],
-    "en": ["hello", "world", "mesh", "wifi", "please", "write", "in", "english", "i", "a", "b", "f", "z", "c", "r", "d"]
+    "ru": ["о", "или", "отзывы", "привет", "как", "дела", "на", "русском", "языке", "и", "я", "а", "в", "к", "с", "копия", "это", "текст"],
+    "en": ["voron", "hello", "world", "mesh", "wifi", "please", "write", "in", "english", "i", "a", "b", "f", "z", "c", "r", "d"]
 ]
 func automaticValue(_ value: String, ignored: Set<String> = []) -> String {
     guard let plan = AutomaticCorrection.plan(in: value, caret: value.utf16.count,
@@ -84,6 +84,10 @@ check(automaticValue("DA АС USB ") == "DA АС USB ", "automation preserves up
 check(Layout.previousCharacter(in: "тестю", caret: 5) == NSRange(location: 4, length: 1), "single-character correction does not select whole word")
 check(Layout.previousCharacter(in: "x🙂", caret: 3) == NSRange(location: 1, length: 2), "single-character range preserves surrogate pair")
 check(Layout.previousCharacter(in: "", caret: 0) == nil, "no character before empty caret")
+
+check(automaticValue("отзывы j мщкщт 400 ") == "отзывы о voron 400 ", "Russian preposition before a known Latin product name")
+check(automaticValue("hello j world ") == "hello j world ", "English initial is preserved without a Russian predecessor")
+check(automaticValue("bkb vbh ") == "или vbh ", "completed short source word is corrected once")
 
 var detector = DoubleShift()
 check(!detector.shift(code: 56, down: true, time: 0, otherModifiers: false), "first down")
@@ -135,6 +139,22 @@ check(loaded.mode(for: "com.apple.Terminal", defaultExclusions: terminalExclusio
 isolatedDefaults.set(Data("invalid JSON".utf8), forKey: "correctionPreferences.v1")
 let recovered = CorrectionPreferences(defaults: isolatedDefaults)
 check(recovered.ignoredWords.isEmpty && recovered.appModes.isEmpty, "corrupt settings fallback")
+let legacySuite = "ShiftSwitcher.legacy." + UUID().uuidString
+let legacyDefaults = UserDefaults(suiteName: legacySuite)!
+legacyDefaults.set(Data("{\"appModes\":{\"com.apple.TextEdit\":\"manual\"},\"ignoredWords\":[\"winston\"]}".utf8), forKey: "correctionPreferences.v1")
+let legacyPreferences = CorrectionPreferences(defaults: legacyDefaults)
+check(legacyPreferences.ignores("winston"), "new word dictionary preserves old exceptions")
+check(legacyPreferences.mode(for: "com.apple.TextEdit", defaultExclusions: []) == .manual, "new dictionary preserves old app modes")
+check(legacyPreferences.addKnownWord(" Voron "), "explicit product name can be learned")
+check(legacyPreferences.knows("VORON", language: "en"), "learned product name is case insensitive")
+check(!legacyPreferences.knows("voron", language: "ru"), "learned word is bound to its alphabet")
+check(!legacyPreferences.addKnownWord("two words"), "do not learn phrases")
+check(!legacyPreferences.addKnownWord("voроn"), "do not learn mixed keyboard mistakes as valid words")
+check(CorrectionPreferences(defaults: legacyDefaults).knows("voron", language: "en"), "learned word survives restart")
+legacyPreferences.removeKnownWord("voron")
+check(!legacyPreferences.knows("voron", language: "en"), "learned word can be removed")
+legacyDefaults.removePersistentDomain(forName: legacySuite)
+
 let shortcutPrefs = ShortcutPreferences(defaults: isolatedDefaults)
 check(shortcutPrefs.correction == .doubleShift, "double shift remains default")
 check(!shortcutPrefs.keyboardUndo, "keyboard undo opt in")
@@ -168,6 +188,12 @@ check(LicenseCheck.verify(certificate(["environment": "LIVE"]), device: testDevi
 check(LicenseCheck.verify(certificate(["valid_until": testNow]), device: testDevice, keys: testKeys, environment: "DEMO", now: testNow) == nil, "expired certificate")
 check(LicenseCheck.verify(certificate(["issued_at": testNow + 86400]), device: testDevice, keys: testKeys, environment: "DEMO", now: testNow) == nil, "future certificate rejected")
 check(LicenseCheck.verify(certificate() + "tampered", device: testDevice, keys: testKeys, environment: "DEMO", now: testNow) == nil, "tampered signature rejected")
+check(LicenseCheck.verify(certificate(["kind": "owner", "license": "owner_test", "valid_until": testNow + 365 * 86400]), device: testDevice, keys: testKeys, environment: "DEMO", now: testNow) != nil, "signed device-bound owner license")
+check(LicenseCheck.verify(certificate(["kind": "owner", "license": "ordinary_order", "valid_until": testNow + 365 * 86400]), device: testDevice, keys: testKeys, environment: "DEMO", now: testNow) == nil, "owner term is not granted to normal orders")
+check(LicenseCheck.verify(certificate(["valid_until": testNow + 365 * 86400]), device: testDevice, keys: testKeys, environment: "DEMO", now: testNow) == nil, "normal certificates retain 31-day ceiling")
+check(LicenseCheck.verify(certificate(["kind": "owner", "license": "owner_test", "valid_until": testNow + 367 * 86400]), device: testDevice, keys: testKeys, environment: "DEMO", now: testNow) == nil, "owner lifetime bounded")
+check(LicenseCheck.verify(certificate(["kind": "owner", "license": "owner_test"]), device: String(repeating: "b", count: 64), keys: testKeys, environment: "DEMO", now: testNow) == nil, "owner license is bound to one installation")
+
 var trialTest = TrialState(started: testNow, latest: testNow)
 check(trialTest.daysRemaining(now: testNow) == 14, "full 14 day trial")
 check(trialTest.daysRemaining(now: testNow + 13 * 86400) == 1, "trial last day")

@@ -11,6 +11,7 @@ final class NativeAcceptance {
     let originalAuto: Bool
     let originalShortcut: CorrectionShortcut
     let originalKeyboardUndo: Bool
+    let originalVoronKnown: Bool
     var results: [[String: Any]] = []
     var editor: NSRunningApplication?
     var originalInput: TISInputSource?
@@ -23,6 +24,7 @@ final class NativeAcceptance {
         originalAuto = app.autoEnabled
         originalShortcut = app.shortcutPreferences.correction
         originalKeyboardUndo = app.shortcutPreferences.keyboardUndo
+        originalVoronKnown = app.preferences.knows("voron", language: "en")
     }
     func start() {
         guard AXIsProcessTrusted(), CGPreflightPostEventAccess(), app.tap != nil else {
@@ -403,10 +405,50 @@ final class NativeAcceptance {
                 guard self.prepare("DA-10", range: NSRange(location: 5, length: 0)) else { self.finish(); return }
                 self.doubleShift {
                     self.record("manual_identifier_preserved", self.field()?.value == "DA-10", "Unselected model code is not partially converted")
-                    self.finish()
+                    self.learnedProductCase()
                 }
             }
         }
+    }
+    func learnedProductCase() {
+        app.autoEnabled = false
+        guard prepare("мщкщт", range: NSRange(location: 5, length: 0)) else { finish(); return }
+        doubleShift {
+            self.record("learn_product_name", self.field()?.value == "voron" && self.app.preferences.knows("voron", language: "en"), "Explicit correction teaches a local product name")
+            let source = "отзывы j мщкщт 400"
+            guard self.prepare(source, range: NSRange(location: source.utf16.count, length: 0)) else { self.finish(); return }
+            self.app.autoEnabled = true; self.postSpace()
+            self.later(0.8) {
+                self.record("mixed_product_query", self.field()?.value == "отзывы о voron 400 ", "Russian context, English product name, spaces and model number preserved")
+                self.rapidPhraseCase()
+            }
+        }
+    }
+    func rapidPhraseCase() {
+        guard prepare("", range: NSRange(location: 0, length: 0)) else { finish(); return }
+        _ = app.switchInput(for: "hello")
+        let letters: [(CGKeyCode, String)] = [(11,"b"),(40,"k"),(11,"b"),(49," "),(9,"v"),(11,"b"),(4,"h"),(49," ")]
+        func type(_ index: Int) {
+            guard index < letters.count else {
+                self.later(0.9) {
+                    self.record("rapid_phrase_no_duplicates", self.field()?.value == "или мир ", "25 ms between physical key events; exactly one correction after typing pauses")
+                    self.doubleShift {
+                        self.record("rapid_phrase_exact_undo", self.field()?.value == "bkb vbh ", "Whole rapid phrase restores exactly once")
+                        self.finish()
+                    }
+                }
+                return
+            }
+            guard self.field() != nil else { self.record("focus", false, "Aborted rapid input outside fixture"); self.finish(); return }
+            for down in [true, false] {
+                let event = CGEvent(keyboardEventSource: nil, virtualKey: letters[index].0, keyDown: down)!
+                event.flags = []
+                if down { var unit = letters[index].1.utf16.first!; event.keyboardSetUnicodeString(stringLength: 1, unicodeString: &unit) }
+                event.post(tap: .cghidEventTap)
+            }
+            self.later(0.025) { type(index + 1) }
+        }
+        type(0)
     }
     func postChord(_ key: CGKeyCode) {
         guard field() != nil else { record("focus", false, "Aborted shortcut outside fixture"); finish(); return }
@@ -431,6 +473,7 @@ final class NativeAcceptance {
         results.append(["scenario": name, "passed": passed, "detail": detail])
     }
     func finish() {
+        if !originalVoronKnown { app.preferences.removeKnownWord("voron") }
         postShift(false) // Always release the modifier owned by this test.
         if app.shortcuts.setCorrection(originalShortcut) { app.shortcutPreferences.correction = originalShortcut }
         if app.shortcuts.setUndo(originalKeyboardUndo) { app.shortcutPreferences.keyboardUndo = originalKeyboardUndo }

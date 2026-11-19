@@ -27,6 +27,7 @@ final class LicenseStore {
 
 struct LicensePayload: Decodable {
     let schema: Int
+    let kind: String?
     let product: String
     let license: String
     let device: String
@@ -47,10 +48,16 @@ enum LicenseCheck {
               let payload = try? JSONDecoder().decode(LicensePayload.self, from: body),
               payload.schema == 1, payload.product == "shift-switcher-pro-v1", payload.device == device,
               payload.environment == environment, payload.issued_at <= now + 300, payload.valid_until > now,
-              payload.valid_until > payload.issued_at, payload.valid_until - payload.issued_at <= 31 * 86400,
+              payload.valid_until > payload.issued_at,
               let encoded = keys[environment + ":" + payload.key_id], let raw = Data(base64Encoded: encoded),
               let publicKey = try? Curve25519.Signing.PublicKey(rawRepresentation: raw),
               publicKey.isValidSignature(signature, for: Data(("ss1." + parts[1]).utf8)) else { return nil }
+        if payload.kind == "owner" {
+            guard environment == "DEMO", payload.license.hasPrefix("owner_"),
+                  payload.valid_until - payload.issued_at <= 366 * 86400 else { return nil }
+        } else {
+            guard payload.kind == nil, payload.valid_until - payload.issued_at <= 31 * 86400 else { return nil }
+        }
         return payload
     }
 }
