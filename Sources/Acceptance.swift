@@ -430,11 +430,17 @@ final class NativeAcceptance {
         let letters: [(CGKeyCode, String)] = [(11,"b"),(40,"k"),(11,"b"),(49," "),(9,"v"),(11,"b"),(4,"h"),(49," ")]
         func type(_ index: Int) {
             guard index < letters.count else {
-                self.later(0.9) {
-                    self.record("rapid_phrase_no_duplicates", self.field()?.value == "или мир ", "25 ms between physical key events; exactly one correction after typing pauses")
-                    self.doubleShift {
-                        self.record("rapid_phrase_exact_undo", self.field()?.value == "bkb vbh ", "Whole rapid phrase restores exactly once")
-                        self.finish()
+                self.later(0.05) {
+                    // TextEdit may capitalize the first physical letter. Record
+                    // the actual settled input before the 300 ms idle deadline.
+                    let typed = self.field()?.value ?? ""
+                    self.later(0.7) {
+                        let actual = self.field()?.value ?? "<unavailable>"
+                        self.record("rapid_phrase_no_duplicates", typed.lowercased() == "bkb vbh " && actual == Layout.convert(typed), "25 ms key spacing; before=" + typed + "; after=" + actual)
+                        self.doubleShift {
+                            self.record("rapid_phrase_exact_undo", self.field()?.value == typed, "Restore exact input including editor capitalization")
+                            self.finish()
+                        }
                     }
                 }
                 return
