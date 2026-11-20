@@ -453,8 +453,8 @@ final class NativeAcceptance {
                         self.record(name + "_layout", changed && self.app.currentInputLanguage() == targetLanguage, "Actual input source follows automatic correction")
                         self.doubleShift {
                             let restored = self.field()?.value == typed
-                            self.record(name + "_exact_undo", changed && restored, "Restore exact input including editor capitalization")
-                            self.record(name + "_undo_layout", restored && self.app.currentInputLanguage() == sourceLanguage, "Undo restores original input source")
+                            self.record(name + "_exact_undo", changed && restored, "Restore exact input; actual=" + (self.field()?.value ?? "<unavailable>"))
+                            self.record(name + "_undo_layout", restored && self.app.currentInputLanguage() == sourceLanguage, "Undo input source=" + (self.app.currentInputLanguage() ?? "<unavailable>"))
                             self.postSpace()
                             self.later(0.6) {
                                 self.record(name + "_undo_survives_space", restored && self.field()?.value == typed + " ", "Explicit undo is not corrected again after a space")

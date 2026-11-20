@@ -55,6 +55,7 @@ final class App: NSObject, NSApplicationDelegate {
     var autoEnabled = UserDefaults.standard.bool(forKey: "autoEnabled")
     var paused = false
     var lastEdit: Edit?
+    private var lastEditGeneration: Int?
     var autoGeneration = 0
     private var pendingAutomaticField: Field?
     var automaticDiagnostic = "idle"
@@ -311,7 +312,12 @@ final class App: NSObject, NSApplicationDelegate {
            CFEqual(field.element, edit.element), field.value == edit.expectedValue {
             let expectedSelection = edit.originalSelection.length > 0 ? edit.range : NSRange(
                 location: edit.originalSelection.location + edit.after.utf16.count - edit.before.utf16.count, length: 0)
-            if field.range == expectedSelection { undo(); return }
+            // Chrome may move its caret during input-source handoff. With no
+            // intervening user key/click, this command still undoes our last
+            // edit. Any user interaction keeps the normal caret-based rule.
+            if field.range == expectedSelection || lastEditGeneration.map({ $0 + 1 == autoGeneration }) == true {
+                undo(); return
+            }
         }
         let ns = field.value as NSString
         let range: NSRange
@@ -358,6 +364,7 @@ final class App: NSObject, NSApplicationDelegate {
             setSelection(field.element, NSRange(location: caret, length: 0))
         }
         lastEdit = Edit(element: field.element, pid: field.pid, before: before, after: after, range: newRange, originalSelection: field.range, expectedValue: expected, sourceLanguage: sourceLanguage)
+        lastEditGeneration = autoGeneration
         if !automatic {
             protectAutomaticPrefix(field, value: expected, end: NSMaxRange(newRange))
             if before.count >= 3, after.count >= 3,
@@ -479,7 +486,7 @@ final class App: NSObject, NSApplicationDelegate {
         let restored = (current.value as NSString).replacingCharacters(in: edit.range, with: edit.before) as NSString
         let end = edit.range.location + edit.before.utf16.count
         protectAutomaticPrefix(current, value: restored as String, end: end)
-        switchInput(for: edit.before, language: edit.sourceLanguage); lastEdit = nil; report("Исправление отменено")
+        switchInput(for: edit.before, language: edit.sourceLanguage); lastEdit = nil; lastEditGeneration = nil; report("Исправление отменено")
     }
     @objc func toggleAuto() {
         autoEnabled.toggle(); autoGeneration += 1
