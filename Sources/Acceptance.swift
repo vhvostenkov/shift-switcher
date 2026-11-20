@@ -473,7 +473,9 @@ final class NativeAcceptance {
             }
             self.later(interval) { type(index + 1) }
         }
-        type(0)
+        // Chrome may briefly withdraw its focused AX field during a TIS
+        // input-source transition. Never send the first key before it returns.
+        later(0.2) { self.resultWhenReady { type(0) } }
     }
     func postChord(_ key: CGKeyCode) {
         guard field() != nil else { record("focus", false, "Aborted shortcut outside fixture"); finish(); return }
