@@ -231,11 +231,17 @@ final class App: NSObject, NSApplicationDelegate {
             }
             let generation = autoGeneration
             if code == 49 {
-                pendingAutomaticField = field()
+                // Capture identity only. Chrome can temporarily expose a caret
+                // beyond its older AX value while the space is being delivered.
+                // Requiring a valid value/range here loses the entire retry.
+                pendingAutomaticField = focusedElement().map {
+                    Field(element: $0.element, value: "", range: NSRange(location: 0, length: 0), pid: $0.pid)
+                }
             } else if code > 50 || [36, 48].contains(code) {
                 pendingAutomaticField = nil
             }
-            guard let field = pendingAutomaticField else { return }
+            guard let field = pendingAutomaticField else { automaticDiagnostic = "missing-field-anchor"; return }
+            automaticDiagnostic = "waiting-for-idle"
             // Wait for a real typing pause. Replacing five milliseconds after
             // space can select old text while the user is already typing ahead.
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.30) {
@@ -268,17 +274,21 @@ final class App: NSObject, NSApplicationDelegate {
         }
     }
 
-    func field() -> Field? {
+    private func focusedElement() -> (element: AXUIElement, pid: pid_t)? {
         guard AXIsProcessTrusted(), !IsSecureEventInputEnabled(),
               let app = NSWorkspace.shared.frontmostApplication, app.processIdentifier != getpid(),
               !CorrectionPreferences.protectedApps.contains(app.bundleIdentifier ?? "") else { return nil }
         let root = AXUIElementCreateApplication(app.processIdentifier)
         guard let raw = attribute(root, kAXFocusedUIElementAttribute), CFGetTypeID(raw) == AXUIElementGetTypeID() else { return nil }
         let element = unsafeBitCast(raw, to: AXUIElement.self)
-        guard (attribute(element, kAXSubroleAttribute) as? String) != "AXSecureTextField",
-              let value = attribute(element, kAXValueAttribute) as? String,
-              let range = selection(element), NSMaxRange(range) <= (value as NSString).length else { return nil }
-        return Field(element: element, value: value, range: range, pid: app.processIdentifier)
+        guard (attribute(element, kAXSubroleAttribute) as? String) != "AXSecureTextField" else { return nil }
+        return (element, app.processIdentifier)
+    }
+    func field() -> Field? {
+        guard let focused = focusedElement(),
+              let value = attribute(focused.element, kAXValueAttribute) as? String,
+              let range = selection(focused.element), NSMaxRange(range) <= (value as NSString).length else { return nil }
+        return Field(element: focused.element, value: value, range: range, pid: focused.pid)
     }
     @objc func correctCharacter() { correct(automatic: false, character: true) }
     func correct(automatic: Bool, character: Bool = false) {
