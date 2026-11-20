@@ -1,0 +1,18 @@
+{
+  "accessibility": true,
+  "fixture": "isolated fixture: com.google.Chrome",
+  "input": "CGEvent synthetic keyboard events; not physical keyboard",
+  "postEventAccess": true,
+  "results": [
+    {
+      "detail": "front=true secure=false appField=false role=AXWebArea valueString=true range=Optional({100, 0}) length=0 windowTitleMatches=true windowDocumentMatches=true",
+      "passed": false,
+      "scenario": "prepare"
+    }
+  ],
+  "testedAt": "2026-11-20T05:38:03Z",
+  "launch_method": "LaunchServices",
+  "binary_sha256": "ec6716b97e756d9c5a7279fdf213913ddbbd532df031165d89973e1d238daee4",
+  "source_commit": "3cb354bf7dabf90327c0df9783362f28d1507803",
+  "source_dirty": false
+}
