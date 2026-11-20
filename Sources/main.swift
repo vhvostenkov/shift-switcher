@@ -353,9 +353,14 @@ final class App: NSObject, NSApplicationDelegate {
         return current
     }
     private func awaitValue(_ expected: String, field: Field, selection expectedSelection: NSRange? = nil) -> Bool {
-        for _ in 0..<16 {
-            guard let current = sameField(field) else { return false }
-            if current.value == expected && (expectedSelection.map { current.range == $0 } ?? true) { return true }
+        for _ in 0..<60 {
+            guard NSWorkspace.shared.frontmostApplication?.processIdentifier == field.pid else { return false }
+            if let current = self.field() {
+                guard current.pid == field.pid, CFEqual(current.element, field.element) else { return false }
+                if current.value == expected && (expectedSelection.map { current.range == $0 } ?? true) { return true }
+            }
+            // AX may temporarily lack a valid caret while Chrome updates a
+            // search input. Missing data is not evidence of a focus change.
             usleep(5000)
         }
         return false
@@ -390,10 +395,9 @@ final class App: NSObject, NSApplicationDelegate {
         }
         var value = field.value, replacement = range
         for chunk in chunks {
-            guard let current = sameField(field), current.value == value, current.range == replacement else { return false }
+            guard awaitValue(value, field: field, selection: replacement) else { return false }
             let units = Array(chunk.utf16)
             for down in [true, false] {
-                guard sameField(field) != nil else { return false }
                 let event = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: down)!
                 event.flags = []
                 event.setIntegerValueField(.eventSourceUserData, value: 0x535357)
