@@ -424,27 +424,41 @@ final class NativeAcceptance {
             }
         }
     }
-    func rapidPhraseCase() {
+    func rapidPhraseCase(_ caseIndex: Int = 0) {
+        let cases: [(String, String, Double)] = [
+            (target == nil ? "ghbdtn vbh " : "bkb vbh ", "en", 0.025),
+            ("ghbdtn rfr ", "en", 0.010),
+            ("руддщ цщкдв ", "ru", 0.025),
+            ("руддщ руддщ ", "ru", 0.010)
+        ]
+        guard caseIndex < cases.count else { finish(); return }
         guard prepare("", range: NSRange(location: 0, length: 0)) else { finish(); return }
-        _ = app.switchInput(for: "hello")
-        // TextEdit's own autocorrect turns the physical English typo Bkb
-        // into Bob. Use a non-dictionary source there; Chrome tests the exact
-        // reported bkb -> или case with browser autocorrect disabled.
-        let typedSequence = target == nil ? "ghbdtn vbh " : "bkb vbh "
-        let codes: [Character: CGKeyCode] = ["g":5,"h":4,"b":11,"d":2,"t":17,"n":45,"k":40," ":49,"v":9]
-        let letters = typedSequence.map { (codes[$0]!, String($0)) }
+        let (typedSequence, sourceLanguage, interval) = cases[caseIndex]
+        _ = app.switchInput(for: typedSequence, language: sourceLanguage)
+        let englishCodes: [Character: CGKeyCode] = ["g":5,"h":4,"b":11,"d":2,"t":17,"n":45,"k":40," ":49,"v":9,"r":15,"f":3,"e":14,"l":37,"o":31,"w":13]
+        let physical = sourceLanguage == "ru" ? Layout.convert(typedSequence) : typedSequence
+        let letters = zip(physical, typedSequence).map { (englishCodes[$0.0]!, String($0.1)) }
+        let name = "rapid_" + String(caseIndex) + "_" + sourceLanguage
         func type(_ index: Int) {
             guard index < letters.count else {
                 self.later(0.05) {
-                    // TextEdit may capitalize the first physical letter. Record
-                    // the actual settled input before the 300 ms idle deadline.
                     let typed = self.field()?.value ?? ""
                     self.later(0.7) {
                         let actual = self.field()?.value ?? "<unavailable>"
-                        self.record("rapid_phrase_no_duplicates", typed.lowercased() == typedSequence && actual == Layout.convert(typed), "25 ms key spacing; before=" + typed + "; after=" + actual)
+                        let changed = typed.lowercased() == typedSequence && actual == Layout.convert(typed)
+                        self.record(name + "_no_duplicates", changed, "key spacing=\(interval); before=" + typed + "; after=" + actual + "; auto=" + self.app.automaticDiagnostic)
+                        let targetLanguage = sourceLanguage == "en" ? "ru" : "en"
+                        self.record(name + "_layout", changed && self.app.currentInputLanguage() == targetLanguage, "Actual input source follows automatic correction")
                         self.doubleShift {
-                            self.record("rapid_phrase_exact_undo", self.field()?.value == typed, "Restore exact input including editor capitalization")
-                            self.finish()
+                            let restored = self.field()?.value == typed
+                            self.record(name + "_exact_undo", changed && restored, "Restore exact input including editor capitalization")
+                            self.record(name + "_undo_layout", restored && self.app.currentInputLanguage() == sourceLanguage, "Undo restores original input source")
+                            self.postSpace()
+                            self.later(0.6) {
+                                self.record(name + "_undo_survives_space", restored && self.field()?.value == typed + " ", "Explicit undo is not corrected again after a space")
+                                self.record(name + "_preserved_layout", self.app.currentInputLanguage() == sourceLanguage, "Protected text keeps original input source")
+                                self.rapidPhraseCase(caseIndex + 1)
+                            }
                         }
                     }
                 }
@@ -457,7 +471,7 @@ final class NativeAcceptance {
                 if down { var unit = letters[index].1.utf16.first!; event.keyboardSetUnicodeString(stringLength: 1, unicodeString: &unit) }
                 event.post(tap: .cghidEventTap)
             }
-            self.later(0.025) { type(index + 1) }
+            self.later(interval) { type(index + 1) }
         }
         type(0)
     }

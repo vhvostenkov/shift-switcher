@@ -56,6 +56,7 @@ final class App: NSObject, NSApplicationDelegate {
     var lastEdit: Edit?
     var autoGeneration = 0
     private var pendingAutomaticField: Field?
+    var automaticDiagnostic = "idle"
     private var automaticUndoPrefix: Field?
     private var keyboardConflict = false
     private let diagnostics = ProcessInfo.processInfo.environment["SHIFT_SWITCHER_DIAGNOSTICS"] == "1"
@@ -223,12 +224,32 @@ final class App: NSObject, NSApplicationDelegate {
             // Wait for a real typing pause. Replacing five milliseconds after
             // space can select old text while the user is already typing ahead.
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.30) {
-                guard self.autoGeneration == generation, !self.paused,
-                      self.autoEnabled, let current = self.sameField(field),
-                      current.range.length == 0 else { return }
-                self.pendingAutomaticField = nil
-                self.correct(automatic: true)
+                self.settleAutomatic(field, generation: generation)
             }
+        }
+    }
+
+    private func settleAutomatic(_ field: Field, generation: Int, previous: Field? = nil, attempts: Int = 6) {
+        guard autoGeneration == generation, !paused, autoEnabled,
+              NSWorkspace.shared.frontmostApplication?.processIdentifier == field.pid else { return }
+        let current = self.field()
+        // A search input may publish its text and caret in separate AX updates.
+        // Wait for two matching reads, without following focus to another field.
+        if let current = current {
+            guard current.pid == field.pid, CFEqual(current.element, field.element), current.range.length == 0 else {
+                pendingAutomaticField = nil; automaticDiagnostic = "focus-or-selection-changed"; return
+            }
+            if let previous = previous, previous.value == current.value, previous.range == current.range {
+                pendingAutomaticField = nil
+                correct(automatic: true)
+                return
+            }
+        }
+        guard attempts > 0 else {
+            pendingAutomaticField = nil; automaticDiagnostic = "AX-did-not-settle"; return
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.025) {
+            self.settleAutomatic(field, generation: generation, previous: current, attempts: attempts - 1)
         }
     }
 
@@ -246,6 +267,7 @@ final class App: NSObject, NSApplicationDelegate {
     }
     @objc func correctCharacter() { correct(automatic: false, character: true) }
     func correct(automatic: Bool, character: Bool = false) {
+        if automatic { automaticDiagnostic = "checking" }
         if !automatic { pendingAutomaticField = nil }
         guard !keyboardConflict else {
             if !automatic { report("Сначала завершите оригинальный Lang Switcher", failure: true) }; return
@@ -278,7 +300,9 @@ final class App: NSObject, NSApplicationDelegate {
             }
             guard license.hasPro, field.range.length == 0,
                   let plan = AutomaticCorrection.plan(in: field.value, caret: field.range.location, minimumLocation: minimumLocation,
-                    valid: { self.validWord($0, language: $1) }, ignored: { self.preferences.ignores($0) }) else { return }
+                    valid: { self.validWord($0, language: $1) }, ignored: { self.preferences.ignores($0) }) else {
+                automaticDiagnostic = "no-plan-or-protected-prefix"; return
+            }
             range = plan.range; after = plan.text
         } else if field.range.length > 0 {
             range = field.range; after = Layout.convert(ns.substring(with: range), sourceLanguage: currentInputLanguage())
@@ -298,6 +322,7 @@ final class App: NSObject, NSApplicationDelegate {
         let sourceLanguage = Layout.language(in: before) ?? currentInputLanguage()
         let targetLanguage = Layout.language(in: after) ?? (sourceLanguage == "ru" ? "en" : "ru")
         guard replace(field: field, range: range, text: after) else {
+            if automatic { automaticDiagnostic = "replacement-not-confirmed" }
             if !automatic { report("Не удалось безопасно заменить текст в этом поле", failure: true) }; return
         }
         let expected = ns.replacingCharacters(in: range, with: after)
@@ -320,6 +345,7 @@ final class App: NSObject, NSApplicationDelegate {
         guard switchInput(for: after, language: targetLanguage) else {
             report("Текст исправлен, но macOS не переключила раскладку", failure: true); return
         }
+        if automatic { automaticDiagnostic = "corrected" }
         report(automatic ? "Автоматически исправлено · отмена в меню ⇧⇧" : "Раскладка исправлена · повторите \(shortcutPreferences.correction.title) для обратной замены")
     }
     private func sameField(_ field: Field) -> Field? {
