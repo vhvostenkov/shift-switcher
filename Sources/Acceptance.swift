@@ -435,6 +435,8 @@ final class NativeAcceptance {
         guard prepare("", range: NSRange(location: 0, length: 0)) else { finish(); return }
         let (typedSequence, sourceLanguage, interval) = cases[caseIndex]
         _ = app.switchInput(for: typedSequence, language: sourceLanguage)
+        let originalSpaceCount = app.keyboardSpaceCount
+        let originalTapRestarts = app.tapRestartCount
         let englishCodes: [Character: CGKeyCode] = ["g":5,"h":4,"b":11,"d":2,"t":17,"n":45,"k":40," ":49,"v":9,"r":15,"f":3,"e":14,"l":37,"o":31,"w":13]
         let physical = sourceLanguage == "ru" ? Layout.convert(typedSequence) : typedSequence
         let letters = zip(physical, typedSequence).map { (englishCodes[$0.0]!, String($0.1)) }
@@ -446,7 +448,7 @@ final class NativeAcceptance {
                     self.later(0.7) {
                         let actual = self.field()?.value ?? "<unavailable>"
                         let changed = typed.lowercased() == typedSequence && actual == Layout.convert(typed)
-                        self.record(name + "_no_duplicates", changed, "key spacing=\(interval); before=" + typed + "; after=" + actual + "; auto=" + self.app.automaticDiagnostic)
+                        self.record(name + "_no_duplicates", changed, "key spacing=\(interval); before=" + typed + "; after=" + actual + "; auto=" + self.app.automaticDiagnostic + "; spaces=\(self.app.keyboardSpaceCount - originalSpaceCount); tapRestarts=\(self.app.tapRestartCount - originalTapRestarts)")
                         let targetLanguage = sourceLanguage == "en" ? "ru" : "en"
                         self.record(name + "_layout", changed && self.app.currentInputLanguage() == targetLanguage, "Actual input source follows automatic correction")
                         self.doubleShift {

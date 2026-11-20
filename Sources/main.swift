@@ -47,6 +47,7 @@ final class App: NSObject, NSApplicationDelegate {
     var status: NSStatusItem!
     var tap: CFMachPort?
     var source: CFRunLoopSource?
+    private var tapThread: Thread?
     var detector = DoubleShift()
     var autoItem: NSMenuItem!
     var pauseItem: NSMenuItem!
@@ -57,6 +58,8 @@ final class App: NSObject, NSApplicationDelegate {
     var autoGeneration = 0
     private var pendingAutomaticField: Field?
     var automaticDiagnostic = "idle"
+    var keyboardSpaceCount = 0
+    var tapRestartCount = 0
     private var automaticUndoPrefix: Field?
     private var keyboardConflict = false
     private let diagnostics = ProcessInfo.processInfo.environment["SHIFT_SWITCHER_DIAGNOSTICS"] == "1"
@@ -165,27 +168,38 @@ final class App: NSObject, NSApplicationDelegate {
         let mask = (CGEventMask(1) << CGEventType.flagsChanged.rawValue) | (CGEventMask(1) << CGEventType.keyDown.rawValue) | (CGEventMask(1) << CGEventType.leftMouseDown.rawValue)
         tap = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap, options: .listenOnly, eventsOfInterest: mask, callback: { _, type, event, context in
             guard let context = context else { return Unmanaged.passUnretained(event) }
+            guard event.getIntegerValueField(.eventSourceUserData) != 0x535357,
+                  let copy = event.copy() else { return Unmanaged.passUnretained(event) }
             let app = Unmanaged<App>.fromOpaque(context).takeUnretainedValue()
-            app.handle(type, event)
+            // Never perform synchronous browser AX calls inside the system's
+            // event-tap callback. They can exceed its watchdog deadline.
+            DispatchQueue.main.async { app.handle(type, copy) }
             return Unmanaged.passUnretained(event)
         }, userInfo: Unmanaged.passUnretained(self).toOpaque())
         guard let tap = tap else { report("Нужен доступ: Мониторинг ввода", failure: true); return }
         source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
-        CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
-        CGEvent.tapEnable(tap: tap, enable: true)
+        let source = self.source
+        tapThread = Thread {
+            // Keep delivery responsive even while the main thread waits for AX.
+            CFRunLoopAddSource(CFRunLoopGetCurrent(), source, .commonModes)
+            CGEvent.tapEnable(tap: tap, enable: true)
+            CFRunLoopRun()
+        }
+        tapThread?.name = "Shift Switcher keyboard monitor"
+        tapThread?.start()
         report(AXIsProcessTrusted() ? "Готово — \(shortcutPreferences.correction.title)" : "Нужен доступ: Универсальный доступ")
     }
     func handle(_ type: CGEventType, _ event: CGEvent) {
         guard event.getIntegerValueField(.eventSourceUserData) != 0x535357 else { return }
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
-            detector.reset(); autoGeneration += 1
+            tapRestartCount += 1; detector.reset(); autoGeneration += 1
             if let tap = tap { CGEvent.tapEnable(tap: tap, enable: true) }; return
         }
         guard !paused, !IsSecureEventInputEnabled() else { detector.reset(); autoGeneration += 1; return }
         if type == .leftMouseDown { detector.reset(); autoGeneration += 1; pendingAutomaticField = nil; return }
         let code = Int(event.getIntegerValueField(.keyboardEventKeycode))
         let modifiers = event.flags.intersection([.maskCommand, .maskControl, .maskAlternate, .maskSecondaryFn])
-        let time = ProcessInfo.processInfo.systemUptime
+        let time = Double(event.timestamp) / 1_000_000_000
         if type == .flagsChanged {
             if code == 56 || code == 60 {
                 // Device-specific flags distinguish left/right releases when both are held.
@@ -198,6 +212,7 @@ final class App: NSObject, NSApplicationDelegate {
             } else { detector.otherKey() }
         } else if type == .keyDown {
             detector.otherKey(); autoGeneration += 1
+            if code == 49 { keyboardSpaceCount += 1; automaticDiagnostic = "space-observed" }
             // Respect the user's ordinary Undo even in hosts that keep their
             // own editing history. Protect only the exact expected restoration.
             if code == 6, modifiers == .maskCommand, !event.flags.contains(.maskShift),
