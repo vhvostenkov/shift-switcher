@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup Condition="'$(SelfContained)' == 'true'">
+    <!-- Current .NET 10 security patch verified against Microsoft release metadata on 2026-11-25. -->
+    <RuntimeFrameworkVersion>10.0.15</RuntimeFrameworkVersion>
+  </PropertyGroup>
+</Project>

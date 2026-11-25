@@ -1,0 +1,77 @@
+# Shift Switcher — Windows Preview
+
+Отдельная техническая Windows-версия. Целевая система — Windows 11 x64 или ARM64.
+Это ещё не коммерческий Windows-выпуск. Платежи и Mac-лицензии к этой сборке не подключены;
+существующая касса, цены и Mac-приложение не меняются.
+
+## Реализовано в коде
+
+- Двойной Shift: выделенный фрагмент либо последнее слово, включая смешанное `копbz`.
+- Повторный двойной Shift и Ctrl+Alt+Z: точная отмена при неизменённом тексте поля.
+- Ctrl+Alt+. — один предыдущий символ; обычные цифры совпадают в двух раскладках.
+- Переключение между установленными русской и английской (США) раскладками, с проверкой результата.
+- Автоматика после пробела и паузы; локальный контекст завершённых слов и личный словарь.
+- Защита явно отменённого/ручного исправления от повторной автоматики после пробела.
+- Трей с RU/EN и состоянием, пауза, настройки, необязательный автозапуск при входе.
+- Отдельный поток перехвата; обращения к UI Automation не блокируют callback клавиатуры.
+- Замена выделения через Unicode SendInput. В коде нет Clipboard, Ctrl+C/V или резервной вставки.
+- Проверка исходного поля, полного значения, выделения и нового физического ввода перед записью.
+
+Автоматика изначально выключена. Для неё нужны оба словаря Windows `ru-RU` и `en-US`.
+Без них она недоступна, ручная замена остаётся. Терминалы и редакторы кода исключены
+из автоматики; парольные поля и менеджеры паролей не исправляются.
+
+Работа требует редактируемого поля с UI Automation TextPattern. Неподдерживаемые
+поля пропускаются. Приложение работает без повышения прав и не обходит UIPI/UAC.
+Ручная замена ограничена 256 единицами UTF-16; большой текст и несовпадающие
+диапазоны провайдера не вставляются. Закрытие настроек оставляет программу в трее;
+для завершения выберите «Выйти».
+
+## Сборка
+
+Нужен .NET 10 SDK. Публикация включает .NET Desktop Runtime 10.0.15;
+на компьютере пользователя устанавливать .NET отдельно не требуется.
+Версия runtime закреплена по [метаданным Microsoft](https://builds.dotnet.microsoft.com/dotnet/release-metadata/10.0/releases.json)
+от 25.11.2026. Глобальный SDK и настройки других проектов не меняются.
+
+```powershell
+./windows/build.ps1 -Runtime win-x64
+# Для Windows ARM64:
+./windows/build.ps1 -Runtime win-arm64
+```
+
+С macOS/Linux:
+
+```sh
+dotnet run --project windows/ShiftSwitcher.Checks -c Release
+dotnet publish windows/ShiftSwitcher.Windows -c Release -r win-x64 --self-contained true \
+  -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true \
+  -p:EnableCompressionInSingleFile=true -o release/windows/win-x64
+```
+
+Приложение: `release/windows/<архитектура>/ShiftSwitcher.exe`.
+Распакуйте в постоянную папку перед включением автозапуска. Сборка пока без Authenticode;
+системные предупреждения безопасности не отключаются сборщиком.
+
+Настройки и знакомые слова хранятся в `%LOCALAPPDATA%\VHVost\ShiftSwitcher\settings.json`.
+История набора не сохраняется. Автозапуск записывается только при включении пользователем,
+в собственное значение `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\VHVost.ShiftSwitcher`.
+
+## Проверки и граница готовности
+
+45 проверок переносимого C#-ядра прошли на Mac и в Windows 11 ARM64 через Parallels.
+Windows-приложение собирается без ошибок. Это не проверка его GUI, глобальных хоткеев,
+UI Automation, словарей и изменения раскладки в настоящих программах.
+Mac-результат 140/140 не является проверкой Windows-версии.
+
+Перед установкой пользователям нужен [нативный прогон](ACCEPTANCE.md) в Windows:
+Блокнот, поиск Chrome и обычное поле Chrome, одна и та же сборка и проверка буфера обмена.
+Выбор целевого компьютера и этот прогон ещё не завершены. Публичную кнопку Windows
+и приём оплаты добавлять до них нельзя.
+
+## Платформенные источники
+
+- [LowLevelKeyboardProc: отдельный поток и быстрое возвращение из hook](https://learn.microsoft.com/en-us/windows/win32/winmsg/lowlevelkeyboardproc).
+- [UI Automation TextPatternRange](https://learn.microsoft.com/en-us/dotnet/api/system.windows.automation.text.textpatternrange).
+- [Windows Spell Checking](https://learn.microsoft.com/en-us/windows/win32/intl/spell-checker-interfaces).
+- [COM-контракты spellcheck.h из Microsoft Win32 Metadata](https://github.com/microsoft/win32metadata/blob/main/generation/WinSDK/RecompiledIdlHeaders/um/spellcheck.h).
