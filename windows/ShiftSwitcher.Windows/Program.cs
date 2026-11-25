@@ -9,13 +9,56 @@ namespace ShiftSwitcher.Windows;
 
 internal static class Program
 {
+    internal const string WindowTitle = "Shift Switcher · Windows Preview";
     [STAThread]
     private static void Main(string[] args)
     {
         using var singleton = new Mutex(true, @"Local\VHVost.ShiftSwitcher.Windows", out var created);
-        if (!created) { MessageBox.Show("Shift Switcher уже работает. Откройте его значок в трее."); return; }
+        if (!created)
+        {
+            if (!args.Contains("--background") && !ShowExistingSettings())
+                MessageBox.Show("Shift Switcher уже работает. Откройте его значок в трее.");
+            return;
+        }
         ApplicationConfiguration.Initialize();
         FormsApplication.Run(new SwitcherContext(args.Contains("--background")));
+    }
+    private static bool ShowExistingSettings()
+    {
+        // The first process may still be creating its hidden settings window.
+        for (var attempt = 0; attempt < 20; attempt++)
+        {
+            var handle = Native.FindWindowW(null, WindowTitle);
+            if (handle != 0 && Native.GetWindowThreadProcessId(handle, out var processId) != 0)
+            {
+                try
+                {
+                    using var process = System.Diagnostics.Process.GetProcessById((int)processId);
+                    using var current = System.Diagnostics.Process.GetCurrentProcess();
+                    if (process.SessionId != current.SessionId ||
+                        !string.Equals(process.MainModule?.FileName, Environment.ProcessPath, StringComparison.OrdinalIgnoreCase)) return false;
+                    Native.AllowSetForegroundWindow(processId);
+                    return SettingsForm.ShowMessage != 0 && Native.PostMessageW(handle, SettingsForm.ShowMessage, 0, 0);
+                }
+                catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception) { return false; }
+            }
+            Thread.Sleep(25);
+        }
+        return false;
+    }
+}
+
+internal sealed class SettingsForm : Form
+{
+    internal static readonly uint ShowMessage = Native.RegisterWindowMessageW("VHVost.ShiftSwitcher.ShowSettings.v1");
+    protected override void WndProc(ref System.Windows.Forms.Message message)
+    {
+        if (ShowMessage != 0 && (uint)message.Msg == ShowMessage)
+        {
+            Show(); WindowState = FormWindowState.Normal; Activate();
+            return;
+        }
+        base.WndProc(ref message);
     }
 }
 
@@ -42,6 +85,7 @@ internal sealed class SwitcherContext : ApplicationContext
         if (!keyboard.Connected) hotkeys.Dispose();
         engine.UndoShortcutAvailable = hotkeys.UndoAvailable; engine.CharacterShortcutAvailable = hotkeys.CharacterAvailable;
         window = MakeWindow();
+        _ = window.Handle; // Keep a discoverable window even for --background startup.
         engine.Status += text => status.Text = text;
         var menu = new ContextMenuStrip();
         menu.Items.Add("Настройки", null, (_, _) => { window.Show(); window.Activate(); });
@@ -58,7 +102,7 @@ internal sealed class SwitcherContext : ApplicationContext
     }
     private Form MakeWindow()
     {
-        var form = new Form { Text = "Shift Switcher · Windows Preview", ClientSize = new Size(570, 650), MinimumSize = new Size(540, 620), StartPosition = FormStartPosition.CenterScreen, BackColor = Color.FromArgb(245, 245, 250), Font = new Font("Segoe UI", 10) };
+        var form = new SettingsForm { Text = Program.WindowTitle, ClientSize = new Size(570, 650), MinimumSize = new Size(540, 620), StartPosition = FormStartPosition.CenterScreen, BackColor = Color.FromArgb(245, 245, 250), Font = new Font("Segoe UI", 10) };
         var panel = new FlowLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(26), FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true };
         panel.Controls.Add(new Label { Text = "⇧⇧  Shift Switcher", Font = new Font("Segoe UI", 25, FontStyle.Bold), AutoSize = true });
         panel.Controls.Add(new Label { Text = "RU ↔ EN · раскладка под контролем", AutoSize = true, Margin = new Padding(0, 4, 0, 20) });

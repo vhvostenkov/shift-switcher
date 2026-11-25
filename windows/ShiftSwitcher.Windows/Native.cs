@@ -26,6 +26,9 @@ internal static class Native
     [DllImport("user32.dll")] internal static extern bool UnhookWindowsHookEx(nint hook);
     [DllImport("user32.dll")] internal static extern nint CallNextHookEx(nint hook, int code, nuint message, nint data);
     [DllImport("user32.dll")] internal static extern nint GetForegroundWindow();
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] internal static extern nint FindWindowW(string? className, string title);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] internal static extern uint RegisterWindowMessageW(string name);
+    [DllImport("user32.dll")] internal static extern bool AllowSetForegroundWindow(uint process);
     [DllImport("user32.dll")] internal static extern uint GetWindowThreadProcessId(nint window, out uint process);
     [DllImport("user32.dll")] internal static extern nint GetKeyboardLayout(uint thread);
     [DllImport("user32.dll")] internal static extern int GetKeyboardLayoutList(int count, [Out] nint[] layouts);
