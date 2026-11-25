@@ -72,6 +72,17 @@ dotnet publish windows/ShiftSwitcher.Windows -c Release -r win-x64 --self-contai
 История набора не сохраняется. Автозапуск записывается только при включении пользователем,
 в собственное значение `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\VHVost.ShiftSwitcher`.
 
+## Установленный пилот
+
+На DESKTOP-90VV516 проверенная копия установлена в
+`%LOCALAPPDATA%\Programs\VHVost\Shift Switcher Preview\ShiftSwitcher.exe`.
+На рабочем столе создан ярлык **Shift Switcher Preview**. Запуск через него,
+исправление, отмена и фактическая смена RU/EN подтверждены
+[установочной квитанцией](../docs/evidence/windows-installed-preview-2026-11-26.json).
+26.11.2026 существование EXE/ярлыка и хеш повторно проверены только чтением;
+процессов приложения было 0. После smoke автоматика и автозапуск оставлены выключенными.
+Для обычной работы откройте ярлык и включите автоисправление в настройках по желанию.
+
 ## Проверки и граница готовности
 
 Текущий проверенный Windows-кандидат — source `09ff8596`, EXE SHA-256

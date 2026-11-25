@@ -7,9 +7,12 @@
   "requested_destination": "%LOCALAPPDATA%\\Programs\\VHVost\\Shift Switcher Preview\\ShiftSwitcher.exe",
   "requested_shortcut": "Desktop / Shift Switcher Preview.lnk",
   "handoff_send_accepted": true,
-  "installation_execution_outcome": "unknown; no installation receipt or observed shortcut returned",
-  "blocker": "Remote Codex host disconnected after handoff acceptance. wait_threads could not determine thread existence; list_threads history returned No connected Codex thread host found.",
+  "installation_execution_outcome": "Confirmed: installed same tested EXE, desktop shortcut exists, shortcut smoke and actual RU/EN saved; fresh read-only file/hash/process verification succeeded on2026-11-26.",
   "resume_rule": "Read existing per-user files, shortcut and Windows installation receipt first; reconcile unknown execution before repeating file writes or shortcut creation.",
   "safety_scope": "Same verified product EXE, no overwritten differing files/shortcuts, no Windows security or autostart changes; own HTTPS fixture smoke only, then stop own hook for Winston queue.",
-  "release_state": "Windows Preview only; no public Windows button or paid sales enabled."
+  "release_state": "Windows Preview only; no public Windows button or paid sales enabled.",
+  "previous_outcome_at_disconnect": "unknown; no installation receipt or observed shortcut returned",
+  "previous_blocker": "Remote Codex host disconnected after handoff acceptance. wait_threads could not determine thread existence; list_threads history returned No connected Codex thread host found.",
+  "current_blocker": null,
+  "reconciliation_receipt": "windows-installed-preview-2026-11-26.json"
 }

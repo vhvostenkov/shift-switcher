@@ -1,0 +1,53 @@
+{
+  "source_commit": "09ff859624ecfcd465e415c6d91557afea4ff562",
+  "device": "DESKTOP-90VV516",
+  "os": "Windows 10 build 19045 x64",
+  "installed_exe": "C:\\Users\\Павел\\AppData\\Local\\Programs\\VHVost\\Shift Switcher Preview\\ShiftSwitcher.exe",
+  "desktop_shortcut": "C:\\Users\\Павел\\Desktop\\Shift Switcher Preview.lnk",
+  "exe_sha256": "e84e400f1794d9d3077cfe0f2f363ab1fe5c18fc68270a9d192b6761710024c2",
+  "evidence_origin": {
+    "windows_thread_id": "01a21245-3096-7901-9f81-38a70b40f315",
+    "turn_id": "01a21332-525a-7ca3-8b81-d5374639769f",
+    "reconciliation_message_id": "msg_0622cc15201f6fbf016b075cf2d05c87d281af97b18c53c07f",
+    "initial_installed_message_id": "msg_0622cc15201f6fbf016b07165d0c0887d2865840b89b0ed7a3",
+    "raw_windows_receipt": "outputs/shift-switcher-installed-preview-final.json",
+    "scope": "Windows actor relayed existing installation receipt and fresh read-only verification. No new GUI test or installation was performed during reconciliation."
+  },
+  "saved_installed_shortcut_smoke": {
+    "passed": true,
+    "before": "ghbdtn ",
+    "corrected": "привет ",
+    "undo": "ghbdtn ",
+    "caret_after_correction": [
+      7,
+      7
+    ],
+    "caret_after_undo": [
+      7,
+      7
+    ],
+    "actual_layout_after_correction": {
+      "language": "ru-RU",
+      "hkl": "0000000004190419"
+    },
+    "actual_layout_after_undo": {
+      "language": "en-US",
+      "hkl": "0000000004090409"
+    },
+    "automatic_after_test": false,
+    "autostart_after_test": false,
+    "processes_after_test": 0
+  },
+  "current_readonly_verification": {
+    "client_date": "2026-11-26",
+    "exe_exists": true,
+    "shortcut_exists": true,
+    "exe_sha256_matches_tested_binary": true,
+    "process_count": 0,
+    "application_started": false
+  },
+  "adjacent_files": "README, ACCEPTANCE and available runtime notices were saved beside the installed EXE per original installation receipt.",
+  "installation_confirmed": true,
+  "unknown_disconnect_outcome_reconciled": true,
+  "release_state": "Per-user Windows technical Preview pilot. This does not open Windows sales/public download or prove the remaining full-acceptance items."
+}
