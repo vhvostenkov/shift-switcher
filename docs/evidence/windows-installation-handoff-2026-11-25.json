@@ -1,0 +1,15 @@
+{
+  "product_source_commit": "09ff859624ecfcd465e415c6d91557afea4ff562",
+  "expected_exe_sha256": "e84e400f1794d9d3077cfe0f2f363ab1fe5c18fc68270a9d192b6761710024c2",
+  "device": "DESKTOP-90VV516",
+  "windows_thread_id": "01a21245-3096-7901-9f81-38a70b40f315",
+  "windows_host_id": "remote-control:env_e_6b06b5c30a94832e99257a3f67a14734",
+  "requested_destination": "%LOCALAPPDATA%\\Programs\\VHVost\\Shift Switcher Preview\\ShiftSwitcher.exe",
+  "requested_shortcut": "Desktop / Shift Switcher Preview.lnk",
+  "handoff_send_accepted": true,
+  "installation_execution_outcome": "unknown; no installation receipt or observed shortcut returned",
+  "blocker": "Remote Codex host disconnected after handoff acceptance. wait_threads could not determine thread existence; list_threads history returned No connected Codex thread host found.",
+  "resume_rule": "Read existing per-user files, shortcut and Windows installation receipt first; reconcile unknown execution before repeating file writes or shortcut creation.",
+  "safety_scope": "Same verified product EXE, no overwritten differing files/shortcuts, no Windows security or autostart changes; own HTTPS fixture smoke only, then stop own hook for Winston queue.",
+  "release_state": "Windows Preview only; no public Windows button or paid sales enabled."
+}
