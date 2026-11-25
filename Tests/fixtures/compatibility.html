@@ -1,1 +1,14 @@
-<!doctype html><html lang="ru"><meta charset="utf-8"><title>Shift Switcher — isolated compatibility fixture</title><style>body{font:20px system-ui;margin:50px;max-width:750px}textarea,input{display:block;width:100%;font:24px system-ui;padding:15px;margin:20px 0}textarea{height:170px}</style><h1>Shift Switcher — тестовое поле</h1><p>Отдельный документ для проверки исправления и отмены. Данные никуда не отправляются.</p><label>Обычный текст<textarea aria-label="Тестовый текст" spellcheck="false" autocorrect="off"></textarea></label><label>Поисковое поле<input type="search" aria-label="Тестовый поиск" spellcheck="false" autocorrect="off" autocomplete="off"></label><label>Пароль: исправлять запрещено<input aria-label="Тестовый пароль" type="password" autocomplete="off"></label></html>
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; form-action 'none'; base-uri 'none'">
+<title>Shift Switcher — isolated compatibility fixture</title>
+<style>body{font:20px system-ui;margin:50px;max-width:750px}textarea,input{display:block;width:100%;font:24px system-ui;padding:15px;margin:20px 0;box-sizing:border-box}textarea{height:170px}</style>
+<h1>Shift Switcher — тестовое поле</h1>
+<p>Отдельный документ для проверки исправления и отмены. Используйте только тестовый текст. Данные никуда не отправляются.</p>
+<label>Обычный текст<textarea aria-label="Тестовый текст" spellcheck="false" autocorrect="off"></textarea></label>
+<label>Поисковое поле<input type="search" aria-label="Тестовый поиск" spellcheck="false" autocorrect="off" autocomplete="off"></label>
+<label>Пароль: исправлять запрещено<input aria-label="Тестовый пароль" type="password" autocomplete="off"></label>
+<label>Только чтение: исправлять запрещено<input aria-label="Только чтение" value="ghbdtn" readonly></label>
+</html>

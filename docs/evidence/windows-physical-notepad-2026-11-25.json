@@ -1,0 +1,77 @@
+{
+  "source_commit": "13f23a47e068d5f424d4e9b6544ae84f21edb03e",
+  "device": "DESKTOP-90VV516",
+  "os": "Windows 10 build 19045 x64",
+  "sdk": "10.0.404 portable",
+  "runtime": "10.0.15 self-contained x64",
+  "core_checks": {
+    "passed": 45,
+    "total": 45
+  },
+  "notepad_version": "10.0.19041.4522",
+  "chrome_version": "157.0.8103.79",
+  "source_diff": "none, per Windows actor report",
+  "native_exe_sha256": null,
+  "native_exe_hash_status": "Recorded on Windows; raw receipt not yet transferred. Do not substitute cross-published EXE hash.",
+  "evidence_origin": {
+    "thread_id": "01a21245-3096-7901-9f81-38a70b40f315",
+    "turn_id": "01a212fd-8e2d-7843-ac40-e64d61d4f16d",
+    "receipt": "outputs/shift-switcher-windows-preview-qa.json"
+  },
+  "input": "CUA synthetic remote input; seeded text plus actual shortcut/space events; not physical-keyboard proof",
+  "notepad_passes": [
+    "selected double Shift ghbdtn -> привет",
+    "double Shift exact undo привет -> ghbdtn",
+    "last mixed word mesh wifi копbz -> mesh wifi копия",
+    "вф -> exactly one da",
+    "Ctrl+Alt+Z da -> вф",
+    "undo then space retained вф; disk verified",
+    "automatic ghbdtn -> привет",
+    "automatic руддщ -> hello",
+    "automatic undo then another space retained ghbdtn with two spaces; disk verified",
+    "seeded phrase bkb vbh -> или мир; not timing proof",
+    "phrase exact undo",
+    "руддщ цщкдв -> hello world",
+    "reverse phrase exact undo",
+    "руддщ руддщ -> hello hello",
+    "repeated words exact undo",
+    "Ctrl+Alt+. тестю -> тест.",
+    "single-character exact undo",
+    "changed document rejects stale undo",
+    "known voron: отзывы j мщкщт 400 -> отзывы о voron 400",
+    "English, DA-10, URL and email unchanged",
+    "plain-text clipboard fixture retained after product correction",
+    "settings closed; double Shift still works"
+  ],
+  "whitespace_note": "AX normalizes whitespace; exact trailing spaces separately confirmed only in disk-named cases.",
+  "emoji": "Unchanged; selection/refusal reason not verified, not a conversion pass.",
+  "chrome": {
+    "search": "pending",
+    "textarea": "pending",
+    "password": "pending",
+    "readonly": "pending"
+  },
+  "chrome_blocker": "Local file:// rejected by browser policy. HTTPS fixture subsequently deployed by root; Windows task resume tool returns Cannot steer conversation without an active turn id. User asked to resume manually.",
+  "https_fixture": "https://vhvost.com/shift-switcher/compatibility-windows-20261125.html",
+  "remaining": [
+    "independent actual RU/EN and undo restoration observation",
+    "10/25ms rapid typing",
+    "physical keyboard",
+    "emoji/provider refusal reason",
+    "password/readonly/elevated process",
+    "focus/input races",
+    "hotkey conflicts",
+    "image and all clipboard formats",
+    "tray menu visibility/reopen",
+    "autostart and real login",
+    "process restart"
+  ],
+  "state_after": {
+    "one_copy_running": true,
+    "automatic": false,
+    "autostart": false,
+    "settings_closed": true
+  },
+  "full_acceptance": false,
+  "commercial_windows_release": false
+}
