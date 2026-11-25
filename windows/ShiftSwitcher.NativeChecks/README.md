@@ -28,6 +28,10 @@ does not issue undo shortcuts or reset fields. A failed or interrupted run is no
 retried without first inspecting the current field through CUA.
 
 Actual SendInput dispatch intervals are recorded, including UIA guard overhead.
+Safety metadata is fetched with one UIA CacheRequest per input pair; it still
+checks process, field runtime ID, label, password/enabled flags and writable
+ValuePattern. The guard does not read values of unrelated fields. Short bounded
+spinning between events avoids changing Windows timer settings.
 `functionalPassed` and `timingWithinTolerance` are separate. A run only exits 0
 when both pass; timing outside requested interval -1/+5 ms is not presented as
 10/25 ms proof. This is synthetic input, never physical-keyboard proof.

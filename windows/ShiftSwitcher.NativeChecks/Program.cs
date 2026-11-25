@@ -52,8 +52,11 @@ internal static class Program
             {
                 // UIA guard overhead is measured, never disguised as precise timing.
                 var deadline = times.Count == 0 ? 0 : times[^1] + interval;
-                while (Stopwatch.GetElapsedTime(started).TotalMilliseconds < deadline) Thread.Sleep(1);
-                Guard(); NoModifiers();
+                while (Stopwatch.GetElapsedTime(started).TotalMilliseconds < deadline)
+                {
+                    if (deadline - Stopwatch.GetElapsedTime(started).TotalMilliseconds > 20) Thread.Sleep(1);
+                    else Thread.SpinWait(64);
+                }
                 var key = c == ' ' ? (ushort)32 : (ushort)char.ToUpperInvariant(c);
                 var sent = Send([Key(key), Key(key, true)]);
                 times.Add(Stopwatch.GetElapsedTime(started, sent).TotalMilliseconds);
@@ -95,14 +98,21 @@ internal static class Program
         var title = new StringBuilder(512); GetWindowTextW(window, title, title.Capacity);
         if (title.ToString() != Title) throw new InvalidOperationException("QA tab changed; input stopped");
         GetWindowThreadProcessId(window, out var currentProcess);
-        var field = AutomationElement.FocusedElement ?? throw new InvalidOperationException("Field lost focus");
-        if (currentProcess != processId || field.Current.ProcessId != processId ||
-            field.Current.Name != fieldName || !fieldId.SequenceEqual(field.GetRuntimeId()) ||
-            field.Current.IsPassword || !field.Current.IsEnabled)
+        // Batch the same safety properties in one provider request rather than
+        // several synchronous COM round trips for every 10 ms key interval.
+        var cache = new CacheRequest { TreeScope = TreeScope.Element };
+        foreach (var property in new[] { AutomationElement.ProcessIdProperty, AutomationElement.NameProperty,
+            AutomationElement.RuntimeIdProperty, AutomationElement.IsPasswordProperty, AutomationElement.IsEnabledProperty,
+            ValuePattern.IsReadOnlyProperty }) cache.Add(property);
+        cache.Add(ValuePattern.Pattern);
+        AutomationElement field;
+        using (cache.Activate()) field = AutomationElement.FocusedElement ?? throw new InvalidOperationException("Field lost focus");
+        if (currentProcess != processId || field.Cached.ProcessId != processId ||
+            field.Cached.Name != fieldName || !fieldId.SequenceEqual((int[])field.GetCachedPropertyValue(AutomationElement.RuntimeIdProperty)) ||
+            field.Cached.IsPassword || !field.Cached.IsEnabled)
             throw new InvalidOperationException("QA field changed; input stopped");
-        if (!field.TryGetCurrentPattern(TextPattern.Pattern, out var pattern) ||
-            ((TextPattern)pattern).DocumentRange.GetAttributeValue(TextPattern.IsReadOnlyAttribute) is not false)
-            throw new InvalidOperationException("Field is not writable TextPattern");
+        if (!field.TryGetCachedPattern(ValuePattern.Pattern, out var pattern) || ((ValuePattern)pattern).Cached.IsReadOnly)
+            throw new InvalidOperationException("Field is not writable ValuePattern");
         return field;
     }
     private static string Read()
@@ -148,6 +158,7 @@ internal static class Program
     private static long Send(Input[] inputs)
     {
         Guard();
+        NoModifiers();
         if (GetForegroundWindow() != window) throw new InvalidOperationException("QA window lost focus before dispatch");
         var sent = Stopwatch.GetTimestamp();
         if (SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<Input>()) != inputs.Length)
