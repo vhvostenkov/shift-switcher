@@ -108,7 +108,12 @@ internal static class Program
     private static string Read()
     {
         var field = Guard();
-        var text = ((TextPattern)field.GetCurrentPattern(TextPattern.Pattern)).DocumentRange.GetText(1024);
+        // Chrome may expose the label as its empty TextPattern document. Its
+        // ValuePattern is the editable value, including an actually empty string.
+        var text = field.TryGetCurrentPattern(ValuePattern.Pattern, out var valuePattern)
+            ? ((ValuePattern)valuePattern).Current.Value
+            : ((TextPattern)field.GetCurrentPattern(TextPattern.Pattern)).DocumentRange.GetText(1024);
+        if (text.Length > 1024) throw new InvalidOperationException("Unexpected QA field length");
         observations.Add(new { elapsedUtc = DateTime.UtcNow, text });
         return text;
     }
