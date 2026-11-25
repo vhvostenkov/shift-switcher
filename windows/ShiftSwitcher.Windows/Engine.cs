@@ -172,7 +172,8 @@ internal sealed class Engine : IDisposable
         var expectedValue = Layout.Replace(field.Value, range, after);
         var changed = new TextSpan(range.Start, after.Length);
         var current = TextFields.Read(target);
-        if (field.Selection.Length > 0 && current is not null) TextFields.Select(current, changed);
+        if (field.Selection.Length > 0 && current is not null && current.Value == expectedValue && current.Revision == field.Revision)
+            TextFields.Select(current, changed);
         edit = new(target, before, expectedValue, changed, field.Selection, source, generation);
         if (!automatic)
         {
@@ -195,7 +196,8 @@ internal sealed class Engine : IDisposable
         var end = previous.Range.Start + previous.Before.Length;
         protection = new(previous.Target, restored[..end], end);
         var current = TextFields.Read(previous.Target);
-        if (current is not null) TextFields.Select(current, previous.OriginalSelection);
+        if (current is not null && current.Value == restored && current.Revision == field.Revision)
+            TextFields.Select(current, previous.OriginalSelection);
         edit = null;
         Report(Native.SwitchLayout(previous.Target.Window, previous.Source) ? "Исправление отменено" : "Текст восстановлен, но Windows не сменила раскладку");
     }

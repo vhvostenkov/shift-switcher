@@ -20,6 +20,26 @@ Check(Layout.LastWord("hello", 99) is null, "invalid caret");
 foreach (var value in new[] { "😀", "a\u0301", "👨‍👩‍👧" })
     Check(Layout.PreviousCharacter("test" + value, 4 + value.Length) == new TextSpan(4, value.Length), "whole composed character");
 Check(Layout.PreviousCharacter("😀", 1) is null, "reject split surrogate");
+foreach (var (value, range, replacement, caret, expected) in new[] {
+    ("руддщ ", new TextSpan(0, 5), "hello", 6, "hello "),
+    ("руддщ  ", new TextSpan(0, 5), "hello", 7, "hello  "),
+    ("руддщ typing", new TextSpan(0, 5), "hello", 12, "hello typing"),
+    ("руддщ tail suffix", new TextSpan(0, 5), "hello", 10, "hello tail suffix"),
+    ("mesh wifi копbz \t", new TextSpan(10, 5), "копия", 17, "mesh wifi копия \t"),
+    ("x ", new TextSpan(0, 1), "hello", 2, "hello ") })
+{
+    var insertion = Layout.WithCaretTail(value, range, replacement, caret)!.Value;
+    Check(Layout.Replace(value, insertion.Range, insertion.Text) == expected, "preserve caret tail text");
+    Check(insertion.Range.Start + insertion.Text.Length == caret + replacement.Length - range.Length, "preserve caret position");
+}
+var firstWord = Layout.WithCaretTail("руддщ ", new(0, 5), "hello", 6)!.Value;
+var firstValue = Layout.Replace("руддщ ", firstWord.Range, firstWord.Text);
+var firstCaret = firstWord.Range.Start + firstWord.Text.Length;
+var secondValue = firstValue.Insert(firstCaret, "цщкдв ");
+var secondWord = Layout.WithCaretTail(secondValue, new(firstCaret, 5), "world", firstCaret + 6)!.Value;
+Check(Layout.Replace(secondValue, secondWord.Range, secondWord.Text) == "hello world ", "successive corrected words stay separated");
+Check(Layout.WithCaretTail("word", new(0, 4), "слово", 3) is null, "reject caret inside replacement");
+Check(Layout.WithCaretTail("word", new(0, 5), "слово", 5) is null, "reject invalid replacement bounds");
 var dictionary = new Dictionary<string, HashSet<string>> {
     ["ru"] = ["привет", "мир", "как", "дела", "или", "отзывы", "о", "копия", "и", "это"],
     ["en"] = ["hello", "world", "voron", "mesh", "wifi", "i", "a", "b"] };

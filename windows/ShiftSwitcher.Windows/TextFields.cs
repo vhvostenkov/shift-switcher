@@ -89,6 +89,12 @@ internal static class TextFields
     }
     internal static bool Replace(FieldState field, TextSpan span, string text)
     {
+        if (field.Selection.Length == 0)
+        {
+            var insertion = Layout.WithCaretTail(field.Value, span, text, field.Selection.Start);
+            if (insertion is null) return false;
+            (span, text) = insertion.Value;
+        }
         if (text.Length is 0 or > 256 || !Select(field, span)) return false;
         var selected = Read(field.Target);
         if (selected is null || selected.Value != field.Value || selected.Selection != span || selected.Revision != field.Revision) return false;

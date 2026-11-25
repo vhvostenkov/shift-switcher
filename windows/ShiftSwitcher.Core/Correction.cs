@@ -63,6 +63,13 @@ public static class Layout
     }
     public static string Replace(string value, TextSpan range, string replacement) =>
         value[..range.Start] + replacement + value[range.End..];
+    public static (TextSpan Range, string Text)? WithCaretTail(string value, TextSpan range, string replacement, int caret)
+    {
+        if (range.Start < 0 || range.Length < 0 || range.Start > value.Length - range.Length || caret < range.End || caret > value.Length) return null;
+        // Include unchanged spaces/partial text up to the original caret in the
+        // same insertion batch. Otherwise the next word lands before the space.
+        return (new(range.Start, caret - range.Start), replacement + value[range.End..caret]);
+    }
 }
 
 public sealed class DoubleShift
