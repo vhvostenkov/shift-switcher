@@ -1,0 +1,45 @@
+{
+  "source_commit": "d3d4cdf701859238bbba6cb334514412078ffbe4",
+  "runtime": "10.0.15",
+  "native_ui_acceptance": "pending",
+  "artifacts": [
+    {
+      "rid": "win-x64",
+      "binary_sha256": "f4f34b31fd44e839bb48c96a866891255df3e7fbff9b869198d06c79e1fd3ef3",
+      "archive": "release/Shift-Switcher-Windows-0.1.0-preview.1-win-x64.zip",
+      "archive_sha256": "11786a55af57ca7534e880480254c1d710e8da764fed4f298547254b4a74d6d5"
+    },
+    {
+      "rid": "win-arm64",
+      "binary_sha256": "1a7ec93b60fd33d23b3903e754e59e9af4a9a3eeeb73a358fee5c83ab0898c4e",
+      "archive": "release/Shift-Switcher-Windows-0.1.0-preview.1-win-arm64.zip",
+      "archive_sha256": "3ff3fecabf82ca6c39304b3b646716ef7c53e6be391e1733a6815eeda4b92b61"
+    }
+  ],
+  "date": "2026-11-25",
+  "target_os": "Windows 11",
+  "build_host": "macOS ARM64, .NET SDK 10.0.103",
+  "portable_core_checks": {
+    "macos": {
+      "passed": 45
+    },
+    "windows_11_arm64": {
+      "passed": 45,
+      "environment": "Parallels Windows 11 Pro ARM64",
+      "scope": "console core only; executed before final packaging metadata was committed",
+      "final_console_retest": "blocked: virtual machine suspended; no resume performed"
+    }
+  },
+  "core_source_sha256": "4f3bb862869d50aec4482cb1b81429b8e659c75bd3797b36f06f428d46bac663",
+  "checks_source_sha256": "d584db7b4c9937784a0fae2d8e8b68e36f65f2988abf3adcb8ab6ee630b23f65",
+  "native_gui_acceptance": {
+    "tray": "not run",
+    "double_shift": "not run",
+    "text_fields": "not run",
+    "undo": "not run",
+    "input_language_change": "not run",
+    "clipboard_formats": "not run",
+    "login_autostart": "not run"
+  },
+  "mac_installed_sha256": "ec6716b97e756d9c5a7279fdf213913ddbbd532df031165d89973e1d238daee4"
+}
