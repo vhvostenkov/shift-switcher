@@ -1,0 +1,130 @@
+{
+  "source_commit": "13f23a47e068d5f424d4e9b6544ae84f21edb03e",
+  "native_exe_sha256_after_test": "d4dba8c68513dd4d275cbe4a8490c4aacf265d707304c43d236026135dde7045",
+  "device": "DESKTOP-90VV516",
+  "os": "Windows 10 build 19045 x64",
+  "chrome_version": "157.0.8103.79",
+  "fixture": "https://vhvost.com/shift-switcher/compatibility-windows-20261125.html",
+  "fixture_sha256": "ece54c06471dd20112c523012ff7ab7ed9a5aed62afeb3cf98d998e53181bfe7",
+  "input": "Native CUA key events with browser-seeded test text; not physical keyboard or exact 10/25ms timing proof.",
+  "evidence_origin": {
+    "thread_id": "01a21245-3096-7901-9f81-38a70b40f315",
+    "turn_id": "01a21332-525a-7ca3-8b81-d5374639769f",
+    "summary_message_id": "msg_0622cc15201f6fbf016b06fb1ab8c087d2a5dbf1cebc51b210",
+    "layout_message_id": "msg_0622cc15201f6fbf016b06fadb94fc87d2b5f633cc3d1d7182",
+    "method": "Windows actor relayed saved native receipt and exact observations in commentary. Raw Windows JSON remains on device; these are transcribed results."
+  },
+  "totals": {
+    "passed": 15,
+    "failed": 0,
+    "not_fully_verified": 1
+  },
+  "result_groups": [
+    {
+      "field": "textarea",
+      "case": "selected double Shift then undo",
+      "values": [
+        "ghbdtn",
+        "привет",
+        "ghbdtn"
+      ],
+      "status": "passed"
+    },
+    {
+      "field": "search",
+      "case": "вф correction without duplication and exact undo",
+      "values": [
+        "вф",
+        "da",
+        "вф"
+      ],
+      "status": "passed"
+    },
+    {
+      "field": "search",
+      "case": "undo then space",
+      "value": "вф ",
+      "status": "passed; automatic correction was off for this specific case"
+    },
+    {
+      "field": "search",
+      "case": "last mixed word only",
+      "before": "mesh wifi копbz",
+      "after": "mesh wifi копия",
+      "status": "passed"
+    },
+    {
+      "field": "textarea and search",
+      "case": "automatic EN to RU",
+      "before": "ghbdtn ",
+      "after": "привет ",
+      "status": "passed in both fields"
+    },
+    {
+      "field": "textarea and search",
+      "case": "automatic RU to EN and undo",
+      "before": "руддщ ",
+      "after": "hello ",
+      "status": "passed in both fields; undo passed"
+    },
+    {
+      "field": "textarea",
+      "case": "automatic undo suppression on additional space",
+      "after": "ghbdtn  ",
+      "status": "passed"
+    },
+    {
+      "field": "readonly",
+      "case": "attempted manual correction",
+      "before": "ghbdtn",
+      "after": "ghbdtn",
+      "status": "passed"
+    },
+    {
+      "field": "password",
+      "case": "attempted manual correction",
+      "status": "not fully verified; browser masks value, exact result inaccessible; no workaround"
+    },
+    {
+      "field": "textarea",
+      "case": "actual Chrome thread layout after correction",
+      "text": "привет",
+      "language": "ru-RU",
+      "langid": "0x0419",
+      "foreground": true,
+      "status": "passed"
+    },
+    {
+      "field": "textarea",
+      "case": "actual Chrome thread layout after undo",
+      "text": "ghbdtn",
+      "language": "en-US",
+      "langid": "0x0409",
+      "foreground": true,
+      "status": "passed"
+    }
+  ],
+  "layout_observation": "Read-only GetWindowThreadProcessId/GetKeyboardLayout; exact QA title checked, foreground confirmed; no input synthesized by this API.",
+  "state_after": {
+    "one_copy_running": true,
+    "pid": 10620,
+    "automatic": false,
+    "autostart": false,
+    "qa_tab_closed": true
+  },
+  "ordinary_restart": "Only the already-verified own QA app was restarted to reopen settings; subsequent tests used the same final EXE hash.",
+  "full_acceptance": false,
+  "remaining": [
+    "exact 10/25ms rapid input",
+    "physical keyboard",
+    "password exact value",
+    "emoji/composed-character conversion/refusal reason",
+    "focus/input races",
+    "elevated process rejection",
+    "hotkey conflict registrar",
+    "images and all clipboard formats",
+    "direct tray menu/reopen",
+    "autostart and real login"
+  ],
+  "release": "Technical preview only; public Windows download and sales remain closed."
+}

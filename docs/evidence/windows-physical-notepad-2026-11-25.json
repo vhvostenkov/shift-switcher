@@ -11,12 +11,14 @@
   "notepad_version": "10.0.19041.4522",
   "chrome_version": "157.0.8103.79",
   "source_diff": "none, per Windows actor report",
-  "native_exe_sha256": null,
-  "native_exe_hash_status": "Recorded on Windows; raw receipt not yet transferred. Do not substitute cross-published EXE hash.",
+  "native_exe_sha256": "d4dba8c68513dd4d275cbe4a8490c4aacf265d707304c43d236026135dde7045",
+  "native_exe_hash_status": "Read from existing Windows receipt and relayed by Windows actor in commentary; differs from macOS cross-published EXE.",
   "evidence_origin": {
     "thread_id": "01a21245-3096-7901-9f81-38a70b40f315",
     "turn_id": "01a212fd-8e2d-7843-ac40-e64d61d4f16d",
-    "receipt": "outputs/shift-switcher-windows-preview-qa.json"
+    "receipt": "outputs/shift-switcher-windows-preview-qa.json",
+    "hash_receipt_turn_id": "01a21332-525a-7ca3-8b81-d5374639769f",
+    "hash_receipt_message_id": "msg_0622cc15201f6fbf016b06f7e06ad487d294b9b26c6527acc6"
   },
   "input": "CUA synthetic remote input; seeded text plus actual shortcut/space events; not physical-keyboard proof",
   "notepad_passes": [
@@ -46,15 +48,15 @@
   "whitespace_note": "AX normalizes whitespace; exact trailing spaces separately confirmed only in disk-named cases.",
   "emoji": "Unchanged; selection/refusal reason not verified, not a conversion pass.",
   "chrome": {
-    "search": "pending",
-    "textarea": "pending",
-    "password": "pending",
-    "readonly": "pending"
+    "status": "completed partial native Chrome acceptance",
+    "receipt": "windows-physical-chrome-2026-11-25.json",
+    "passed": 15,
+    "failed": 0,
+    "not_fully_verified": 1
   },
-  "chrome_blocker": "Local file:// rejected by browser policy. HTTPS fixture subsequently deployed by root; Windows task resume tool returns Cannot steer conversation without an active turn id. User asked to resume manually.",
+  "chrome_blocker": "Resolved: remote task resumed, HTTPS fixture opened and Chrome checks performed.",
   "https_fixture": "https://vhvost.com/shift-switcher/compatibility-windows-20261125.html",
   "remaining": [
-    "independent actual RU/EN and undo restoration observation",
     "10/25ms rapid typing",
     "physical keyboard",
     "emoji/provider refusal reason",
@@ -63,8 +65,7 @@
     "hotkey conflicts",
     "image and all clipboard formats",
     "tray menu visibility/reopen",
-    "autostart and real login",
-    "process restart"
+    "autostart and real login"
   ],
   "state_after": {
     "one_copy_running": true,
@@ -73,5 +74,7 @@
     "settings_closed": true
   },
   "full_acceptance": false,
-  "commercial_windows_release": false
+  "commercial_windows_release": false,
+  "https_fixture_sha256": "ece54c06471dd20112c523012ff7ab7ed9a5aed62afeb3cf98d998e53181bfe7",
+  "https_fixture_verified": "HTTP 200; response bytes match tracked Tests/fixtures/compatibility.html"
 }
