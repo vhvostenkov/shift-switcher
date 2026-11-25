@@ -140,7 +140,9 @@ internal sealed class KeyboardMonitor : IDisposable
         if (code >= 0 && message is 0x100 or 0x101 or 0x104 or 0x105)
         {
             var value = Marshal.PtrToStructure<Native.KeyboardData>(data);
-            if ((value.Flags & 0x10) == 0 && value.Extra != Native.OwnInput)
+            // Remote keyboards and accessibility tools may use injected input.
+            // Filter our own tagged writes, not every injected user keystroke.
+            if (value.Extra != Native.OwnInput)
             {
                 var down = message is 0x100 or 0x104;
                 if (down) Native.PhysicalInput();
