@@ -1,0 +1,115 @@
+{
+  "source_commit": "09ff859624ecfcd465e415c6d91557afea4ff562",
+  "native_exe_sha256": "e84e400f1794d9d3077cfe0f2f363ab1fe5c18fc68270a9d192b6761710024c2",
+  "device": "DESKTOP-90VV516",
+  "os": "Windows 10 build 19045 x64",
+  "core_checks": {
+    "passed": 60,
+    "total": 60,
+    "platform": "physical Windows PC"
+  },
+  "fixture": "https://vhvost.com/shift-switcher/compatibility-windows-20261125.html",
+  "evidence_origin": {
+    "thread_id": "01a21245-3096-7901-9f81-38a70b40f315",
+    "turn_id": "01a21332-525a-7ca3-8b81-d5374639769f",
+    "summary_message_id": "msg_0622cc15201f6fbf016b070e5645d887d2874f76e46d4277b9",
+    "raw_receipt_on_windows": "outputs/shift-switcher-09ff8596-native-qa.json",
+    "method": "Windows actor relayed observations and saved receipt; raw JSON remains on Windows."
+  },
+  "input": "Native CUA shortcuts/letter keys with owned browser fixture setup; not physical keyboard or precise rapid timing proof.",
+  "passed_groups": [
+    {
+      "fields": [
+        "textarea",
+        "search"
+      ],
+      "case": "first correction preserves space and caret",
+      "value": "hello ",
+      "selection": [
+        6,
+        6
+      ]
+    },
+    {
+      "fields": [
+        "textarea",
+        "search"
+      ],
+      "case": "second word remains separated",
+      "value": "hello world ",
+      "selection": [
+        12,
+        12
+      ]
+    },
+    {
+      "case": "EN to RU automatic and exact undo",
+      "values": [
+        "привет ",
+        "ghbdtn "
+      ]
+    },
+    {
+      "case": "extra space after undo",
+      "result": "original ghbdtn retained; no repeated automatic replacement"
+    },
+    {
+      "case": "actual Chrome thread layout",
+      "after_correction": "ru-RU",
+      "after_undo": "en-US",
+      "method": "read-only GetKeyboardLayout on foreground QA Chrome thread"
+    },
+    {
+      "case": "double Shift without duplicate",
+      "values": [
+        "вф",
+        "da",
+        "вф"
+      ]
+    },
+    {
+      "case": "single character and undo",
+      "values": [
+        "f",
+        "а",
+        "f"
+      ]
+    },
+    {
+      "case": "relaunch after hidden settings",
+      "result": "settings reopened; same PID11024 at that test"
+    },
+    {
+      "case": "relaunch after minimized settings",
+      "result": "settings restored; same PID11024 at that test"
+    },
+    {
+      "case": "duplicate --background",
+      "result": "no settings window, no second process"
+    },
+    {
+      "case": "initial --background then interactive launch",
+      "result": "settings reopened; one process"
+    }
+  ],
+  "rapid_driver": {
+    "status": "12/12 functional, undo and extra-space cases passed; 0/12 exact timing acceptance",
+    "receipt": "windows-rapid-native-2026-11-25.json"
+  },
+  "state_at_basic_report": {
+    "automatic": false,
+    "qa_process_count": 0,
+    "own_tab_closed": true
+  },
+  "full_acceptance": false,
+  "remaining": [
+    "exact 10/25ms pacing; actual synthetic intervals were11.38-94.68ms",
+    "physical keyboard",
+    "exact password value",
+    "images/all clipboard formats",
+    "hotkey conflict registrar",
+    "elevated process exclusion",
+    "direct tray menu",
+    "real login with autostart"
+  ]
+}

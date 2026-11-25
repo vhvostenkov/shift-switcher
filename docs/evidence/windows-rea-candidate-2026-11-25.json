@@ -1,0 +1,160 @@
+{
+  "scope": "macOS cross-built candidate DLL; not the Windows-native tested EXE; static inspection only",
+  "artifact": {
+    "path": "/Users/max/Documents/ChatGPT/REV/shift-switcher/windows/ShiftSwitcher.Windows/bin/Release/net10.0-windows/ShiftSwitcher.dll",
+    "sha256": "4522574d93bd22bd2d7088bc4a36058a7d34e8e31a51ac5e15f9d53dd57e0a1f",
+    "byte_length": 55808,
+    "format": "pe"
+  },
+  "native_boundary_evidence_id": "ev_feb91af09f83e159d4e4eac27497a63a9ba1ee907e5eb7a2e489924e7cfeb1d0",
+  "native_boundary_coverage": {
+    "state": "complete",
+    "issues": []
+  },
+  "pinvoke_imports": [
+    {
+      "dll": "user32.dll",
+      "name": "SetWindowsHookExW"
+    },
+    {
+      "dll": "user32.dll",
+      "name": "UnhookWindowsHookEx"
+    },
+    {
+      "dll": "user32.dll",
+      "name": "CallNextHookEx"
+    },
+    {
+      "dll": "user32.dll",
+      "name": "GetForegroundWindow"
+    },
+    {
+      "dll": "user32.dll",
+      "name": "FindWindowW"
+    },
+    {
+      "dll": "user32.dll",
+      "name": "RegisterWindowMessageW"
+    },
+    {
+      "dll": "user32.dll",
+      "name": "AllowSetForegroundWindow"
+    },
+    {
+      "dll": "user32.dll",
+      "name": "GetWindowThreadProcessId"
+    },
+    {
+      "dll": "user32.dll",
+      "name": "GetKeyboardLayout"
+    },
+    {
+      "dll": "user32.dll",
+      "name": "GetKeyboardLayoutList"
+    },
+    {
+      "dll": "user32.dll",
+      "name": "PostMessageW"
+    },
+    {
+      "dll": "user32.dll",
+      "name": "SendInput"
+    },
+    {
+      "dll": "user32.dll",
+      "name": "GetMessageW"
+    },
+    {
+      "dll": "user32.dll",
+      "name": "PostThreadMessageW"
+    },
+    {
+      "dll": "user32.dll",
+      "name": "GetAsyncKeyState"
+    },
+    {
+      "dll": "user32.dll",
+      "name": "PeekMessageW"
+    },
+    {
+      "dll": "user32.dll",
+      "name": "RegisterHotKey"
+    },
+    {
+      "dll": "user32.dll",
+      "name": "UnregisterHotKey"
+    },
+    {
+      "dll": "kernel32.dll",
+      "name": "GetCurrentThreadId"
+    },
+    {
+      "dll": "kernel32.dll",
+      "name": "GetModuleHandleW"
+    },
+    {
+      "dll": "user32.dll",
+      "name": "DestroyIcon"
+    }
+  ],
+  "member_evidence_id": "ev_3994374921e567c37208b70278b6b6b75a8e14b1b90a02f6d8415aae46ba7734",
+  "identity_scope": {
+    "token_identity": "build-local",
+    "requires_artifact_sha256": "4522574d93bd22bd2d7088bc4a36058a7d34e8e31a51ac5e15f9d53dd57e0a1f",
+    "requires_mvid": "07f82917-e5e0-4ed0-9e63-2c4c9bedcdd6"
+  },
+  "member_coverage": {
+    "state": "partial",
+    "issues": []
+  },
+  "methods": 280,
+  "call_edges": 1304,
+  "incomplete_cil_methods": [],
+  "observed_replacement_calls": [
+    {
+      "caller_token": "0x06000044",
+      "caller": "ShiftSwitcher.Windows.Native.Unicode",
+      "opcode": "ldftn",
+      "target_token": "0x06000107",
+      "target_kind": "method-def",
+      "target_name": "<Unicode>b__36_0"
+    },
+    {
+      "caller_token": "0x06000044",
+      "caller": "ShiftSwitcher.Windows.Native.Unicode",
+      "opcode": "call",
+      "target_token": "0x06000037",
+      "target_kind": "method-def",
+      "target_name": "SendInput"
+    },
+    {
+      "caller_token": "0x060000b3",
+      "caller": "ShiftSwitcher.Windows.TextFields.Replace",
+      "opcode": "call",
+      "target_token": "0x0a000157",
+      "target_kind": "member-ref",
+      "target_name": "WithCaretTail"
+    },
+    {
+      "caller_token": "0x060000b3",
+      "caller": "ShiftSwitcher.Windows.TextFields.Replace",
+      "opcode": "call",
+      "target_token": "0x06000044",
+      "target_kind": "method-def",
+      "target_name": "Unicode"
+    }
+  ],
+  "bounded_clipboard_search": {
+    "expression": "clipboard|paste|sendkeys, case-insensitive, decoded target_name",
+    "matches": [],
+    "interpretation": "No matching decoded direct call names. Partial CIL coverage, unresolved targets, dependencies and dynamic calls mean this is not a blanket absence or runtime privacy proof."
+  },
+  "limitations": [
+    "P/Invoke rows prove managed import declarations only; this inspection does not verify that a native library, export, thunk, or provider-qualified function exists.",
+    "Managed metadata tokens are build-local coordinates and are only meaningful with the reported artifact SHA-256 and MVID.",
+    "ReadyToRun, NativeAOT, C++/CLI, and IL2CPP native semantics require separately selected native-provider evidence; this tool does not translate managed tokens into native addresses.",
+    "Metadata tokens are build-local coordinates and are only meaningful with the reported artifact SHA-256 and MVID.",
+    "CIL instruction anchors are decoded from file-backed method bodies only; no target assembly is loaded or executed.",
+    "Signatures are decoded for common ECMA-335 primitive, class, valuetype, pointer, byref, array, and generic variable forms; unsupported forms retain raw signature hashes."
+  ]
+}

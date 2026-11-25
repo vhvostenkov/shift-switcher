@@ -36,7 +36,7 @@
     "errors": 0,
     "warnings": 0
   },
-  "native_fix_acceptance": "pending",
+  "native_fix_acceptance": "Basic native acceptance and 12/12 measured rapid functional/undo/extra-space cases passed on source09ff8596, EXE e84e400f...; exact10/25ms timing failed in all12. See fixed-native and rapid-native receipts.",
   "rapid_driver": {
     "source": "windows/ShiftSwitcher.NativeChecks/Program.cs",
     "compiled": true,

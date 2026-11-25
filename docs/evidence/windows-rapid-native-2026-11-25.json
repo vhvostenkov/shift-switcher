@@ -1,0 +1,318 @@
+{
+  "product_source_commit": "09ff859624ecfcd465e415c6d91557afea4ff562",
+  "product_exe_sha256": "e84e400f1794d9d3077cfe0f2f363ab1fe5c18fc68270a9d192b6761710024c2",
+  "driver_source_commit": "ce0f86c7cd97fbef593ede12455d3d094f00ae74",
+  "driver_source_file_sha256": "0545be2b374c8712d9881d364e5b38e5d0d25044b7fd4455d5d5a9418e701f36",
+  "driver_dll_sha256": "245deb2766c1a06c3cf555446e8d14e22c92e26cdb3847bfe7ef24dff0474b3d",
+  "driver_identity_note": "Driver published as apphost+DLL files. EXE apphost hash alone does not identify changed driver code; DLL hash is recorded.",
+  "device": "DESKTOP-90VV516",
+  "os": "Windows 10 build 19045 x64",
+  "evidence_origin": {
+    "thread_id": "01a21245-3096-7901-9f81-38a70b40f315",
+    "turn_id": "01a21332-525a-7ca3-8b81-d5374639769f",
+    "summary_message_id": "msg_0622cc15201f6fbf016b071282846087d2ac6fae0a305ac6c0",
+    "raw_matrix_on_windows": "outputs/shift-switcher-ce0f86c-rapid-matrix.json",
+    "method": "Transcribed complete ordinary-message matrix from Windows actor; per-case raw timing JSON remains on Windows."
+  },
+  "permission": "Owner explicitly authorized this bounded Windows SendInput driver in our Chrome fixture.",
+  "fixture": "https://vhvost.com/shift-switcher/compatibility-windows-20261125.html",
+  "preparation": "Fresh owned fixture/DOM for each case, auto on, confirmed source language; guarded synthetic virtual keys. CUA checks undo and the extra space after the driver exits.",
+  "cases": [
+    {
+      "scenario": "en-phrase",
+      "field": "textarea",
+      "requested_interval_ms": 10,
+      "actual_interval_min_ms": 12.04,
+      "actual_interval_max_ms": 94.68,
+      "functional_passed": true,
+      "timing_within_tolerance": false,
+      "expected_and_observed_corrected_text": "или мир ",
+      "expected_and_observed_undo_text": "bkb vbh ",
+      "undo_caret": [
+        8,
+        8
+      ],
+      "undo_passed": true,
+      "expected_and_observed_extra_space_text": "bkb vbh  ",
+      "extra_space_caret": [
+        9,
+        9
+      ],
+      "extra_space_passed": true
+    },
+    {
+      "scenario": "en-phrase",
+      "field": "textarea",
+      "requested_interval_ms": 25,
+      "actual_interval_min_ms": 26.68,
+      "actual_interval_max_ms": 77.06,
+      "functional_passed": true,
+      "timing_within_tolerance": false,
+      "expected_and_observed_corrected_text": "или мир ",
+      "expected_and_observed_undo_text": "bkb vbh ",
+      "undo_caret": [
+        8,
+        8
+      ],
+      "undo_passed": true,
+      "expected_and_observed_extra_space_text": "bkb vbh  ",
+      "extra_space_caret": [
+        9,
+        9
+      ],
+      "extra_space_passed": true
+    },
+    {
+      "scenario": "en-phrase",
+      "field": "search",
+      "requested_interval_ms": 10,
+      "actual_interval_min_ms": 11.79,
+      "actual_interval_max_ms": 66.96,
+      "functional_passed": true,
+      "timing_within_tolerance": false,
+      "expected_and_observed_corrected_text": "или мир ",
+      "expected_and_observed_undo_text": "bkb vbh ",
+      "undo_caret": [
+        8,
+        8
+      ],
+      "undo_passed": true,
+      "expected_and_observed_extra_space_text": "bkb vbh  ",
+      "extra_space_caret": [
+        9,
+        9
+      ],
+      "extra_space_passed": true
+    },
+    {
+      "scenario": "en-phrase",
+      "field": "search",
+      "requested_interval_ms": 25,
+      "actual_interval_min_ms": 26.59,
+      "actual_interval_max_ms": 60.53,
+      "functional_passed": true,
+      "timing_within_tolerance": false,
+      "expected_and_observed_corrected_text": "или мир ",
+      "expected_and_observed_undo_text": "bkb vbh ",
+      "undo_caret": [
+        8,
+        8
+      ],
+      "undo_passed": true,
+      "expected_and_observed_extra_space_text": "bkb vbh  ",
+      "extra_space_caret": [
+        9,
+        9
+      ],
+      "extra_space_passed": true
+    },
+    {
+      "scenario": "ru-phrase",
+      "field": "textarea",
+      "requested_interval_ms": 10,
+      "actual_interval_min_ms": 11.84,
+      "actual_interval_max_ms": 59.16,
+      "functional_passed": true,
+      "timing_within_tolerance": false,
+      "expected_and_observed_corrected_text": "hello world ",
+      "expected_and_observed_undo_text": "руддщ цщкдв ",
+      "undo_caret": [
+        12,
+        12
+      ],
+      "undo_passed": true,
+      "expected_and_observed_extra_space_text": "руддщ цщкдв  ",
+      "extra_space_caret": [
+        13,
+        13
+      ],
+      "extra_space_passed": true
+    },
+    {
+      "scenario": "ru-phrase",
+      "field": "textarea",
+      "requested_interval_ms": 25,
+      "actual_interval_min_ms": 26.77,
+      "actual_interval_max_ms": 70.76,
+      "functional_passed": true,
+      "timing_within_tolerance": false,
+      "expected_and_observed_corrected_text": "hello world ",
+      "expected_and_observed_undo_text": "руддщ цщкдв ",
+      "undo_caret": [
+        12,
+        12
+      ],
+      "undo_passed": true,
+      "expected_and_observed_extra_space_text": "руддщ цщкдв  ",
+      "extra_space_caret": [
+        13,
+        13
+      ],
+      "extra_space_passed": true
+    },
+    {
+      "scenario": "ru-phrase",
+      "field": "search",
+      "requested_interval_ms": 10,
+      "actual_interval_min_ms": 11.49,
+      "actual_interval_max_ms": 56.62,
+      "functional_passed": true,
+      "timing_within_tolerance": false,
+      "expected_and_observed_corrected_text": "hello world ",
+      "expected_and_observed_undo_text": "руддщ цщкдв ",
+      "undo_caret": [
+        12,
+        12
+      ],
+      "undo_passed": true,
+      "expected_and_observed_extra_space_text": "руддщ цщкдв  ",
+      "extra_space_caret": [
+        13,
+        13
+      ],
+      "extra_space_passed": true
+    },
+    {
+      "scenario": "ru-phrase",
+      "field": "search",
+      "requested_interval_ms": 25,
+      "actual_interval_min_ms": 26.54,
+      "actual_interval_max_ms": 68.71,
+      "functional_passed": true,
+      "timing_within_tolerance": false,
+      "expected_and_observed_corrected_text": "hello world ",
+      "expected_and_observed_undo_text": "руддщ цщкдв ",
+      "undo_caret": [
+        12,
+        12
+      ],
+      "undo_passed": true,
+      "expected_and_observed_extra_space_text": "руддщ цщкдв  ",
+      "extra_space_caret": [
+        13,
+        13
+      ],
+      "extra_space_passed": true
+    },
+    {
+      "scenario": "ru-repeat",
+      "field": "textarea",
+      "requested_interval_ms": 10,
+      "actual_interval_min_ms": 11.61,
+      "actual_interval_max_ms": 67.65,
+      "functional_passed": true,
+      "timing_within_tolerance": false,
+      "expected_and_observed_corrected_text": "hello hello ",
+      "expected_and_observed_undo_text": "руддщ руддщ ",
+      "undo_caret": [
+        12,
+        12
+      ],
+      "undo_passed": true,
+      "expected_and_observed_extra_space_text": "руддщ руддщ  ",
+      "extra_space_caret": [
+        13,
+        13
+      ],
+      "extra_space_passed": true
+    },
+    {
+      "scenario": "ru-repeat",
+      "field": "textarea",
+      "requested_interval_ms": 25,
+      "actual_interval_min_ms": 26.52,
+      "actual_interval_max_ms": 69.92,
+      "functional_passed": true,
+      "timing_within_tolerance": false,
+      "expected_and_observed_corrected_text": "hello hello ",
+      "expected_and_observed_undo_text": "руддщ руддщ ",
+      "undo_caret": [
+        12,
+        12
+      ],
+      "undo_passed": true,
+      "expected_and_observed_extra_space_text": "руддщ руддщ  ",
+      "extra_space_caret": [
+        13,
+        13
+      ],
+      "extra_space_passed": true
+    },
+    {
+      "scenario": "ru-repeat",
+      "field": "search",
+      "requested_interval_ms": 10,
+      "actual_interval_min_ms": 11.38,
+      "actual_interval_max_ms": 58.66,
+      "functional_passed": true,
+      "timing_within_tolerance": false,
+      "expected_and_observed_corrected_text": "hello hello ",
+      "expected_and_observed_undo_text": "руддщ руддщ ",
+      "undo_caret": [
+        12,
+        12
+      ],
+      "undo_passed": true,
+      "expected_and_observed_extra_space_text": "руддщ руддщ  ",
+      "extra_space_caret": [
+        13,
+        13
+      ],
+      "extra_space_passed": true
+    },
+    {
+      "scenario": "ru-repeat",
+      "field": "search",
+      "requested_interval_ms": 25,
+      "actual_interval_min_ms": 26.47,
+      "actual_interval_max_ms": 74.08,
+      "functional_passed": true,
+      "timing_within_tolerance": false,
+      "expected_and_observed_corrected_text": "hello hello ",
+      "expected_and_observed_undo_text": "руддщ руддщ ",
+      "undo_caret": [
+        12,
+        12
+      ],
+      "undo_passed": true,
+      "expected_and_observed_extra_space_text": "руддщ руддщ  ",
+      "extra_space_caret": [
+        13,
+        13
+      ],
+      "extra_space_passed": true
+    }
+  ],
+  "totals": {
+    "completed": 12,
+    "functional_passed": 12,
+    "undo_passed": 12,
+    "extra_space_passed": 12,
+    "timing_passed": 0,
+    "timing_failed": 12
+  },
+  "timing_interpretation": "Do not claim 10/25 ms acceptance. Measured actual intervals include guard and scheduling overhead. Functional results only establish these measured synthetic runs, not physical keyboard proof.",
+  "earlier_attempts": [
+    {
+      "status": "setup aborted before input",
+      "cause": "Empty Chrome TextPattern document returned the field label; ValuePattern reading added in source3569526."
+    },
+    {
+      "status": "functional passed, timing failed",
+      "driver": "3569526",
+      "requested_interval_ms": 10,
+      "actual_interval_ms": [
+        19.44,
+        41.57
+      ],
+      "driver_dll_sha256": "9ec480e68d72211c410c547d2007f12adf92a3df8df3f7fb84e6fa2d976355e1",
+      "note": "Separate preliminary attempt, excluded from the 12-row ce0 matrix."
+    }
+  ],
+  "state_after": {
+    "automatic": false,
+    "qa_processes": 0,
+    "own_fixture_tabs_closed": true
+  },
+  "full_acceptance": false
+}
