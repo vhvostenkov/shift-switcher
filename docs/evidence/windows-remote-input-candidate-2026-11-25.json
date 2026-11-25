@@ -1,0 +1,21 @@
+{
+  "source_commit": "13f23a47e068d5f424d4e9b6544ae84f21edb03e",
+  "runtime": "10.0.15",
+  "native_ui_acceptance": "pending",
+  "artifacts": [
+    {
+      "rid": "win-x64",
+      "binary_sha256": "829936b8349dd161ecccfc94b92493c74fbcc8cdbf4fb5ef84c0015110fe7e9b",
+      "archive": "release/Shift-Switcher-Windows-0.1.0-preview.1-win-x64.zip",
+      "archive_sha256": "1505822b061be195b59fc25c79499ded25787c3d237c135a4eb406394b8b4b00"
+    },
+    {
+      "rid": "win-arm64",
+      "binary_sha256": "1da331cf90d657c0b732f2eaf251ed90e734ebc857f955a15824d4c69aa88d80",
+      "archive": "release/Shift-Switcher-Windows-0.1.0-preview.1-win-arm64.zip",
+      "archive_sha256": "8350ce393c025387feacaaaee8a3ddac004f2afb0d675755da10bbaa1c43e526"
+    }
+  ],
+  "scope": "macOS cross-publish after remote-input fix; physical-PC native acceptance pending",
+  "previous_draft_source": "d3d4cdf701859238bbba6cb334514412078ffbe4"
+}
