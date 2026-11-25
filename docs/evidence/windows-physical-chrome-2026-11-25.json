@@ -126,5 +126,6 @@
     "direct tray menu/reopen",
     "autostart and real login"
   ],
-  "release": "Technical preview only; public Windows download and sales remain closed."
+  "release": "Technical preview only; public Windows download and sales remain closed.",
+  "subsequent_known_issue": "Sequential word correction can join words because the caret remains before an existing space. See windows-caret-regression-2026-11-25.json; this historical report does not validate the fix."
 }

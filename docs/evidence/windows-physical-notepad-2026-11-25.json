@@ -76,5 +76,6 @@
   "full_acceptance": false,
   "commercial_windows_release": false,
   "https_fixture_sha256": "ece54c06471dd20112c523012ff7ab7ed9a5aed62afeb3cf98d998e53181bfe7",
-  "https_fixture_verified": "HTTP 200; response bytes match tracked Tests/fixtures/compatibility.html"
+  "https_fixture_verified": "HTTP 200; response bytes match tracked Tests/fixtures/compatibility.html",
+  "subsequent_known_issue": "Sequential word correction can join words because the caret remains before an existing space. See windows-caret-regression-2026-11-25.json; this historical report does not validate the fix."
 }

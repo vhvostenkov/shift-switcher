@@ -1,0 +1,48 @@
+{
+  "affected_source_commit": "13f23a47e068d5f424d4e9b6544ae84f21edb03e",
+  "affected_native_exe_sha256": "d4dba8c68513dd4d275cbe4a8490c4aacf265d707304c43d236026135dde7045",
+  "observation": {
+    "device": "DESKTOP-90VV516",
+    "surface": "owned HTTPS Chrome fixture",
+    "reported_values": [
+      "hellowor ",
+      "helloworld "
+    ],
+    "reported_carets": [
+      [
+        8,
+        8
+      ],
+      [
+        11,
+        11
+      ]
+    ],
+    "expected": "hello world ",
+    "origin_thread": "01a21245-3096-7901-9f81-38a70b40f315",
+    "origin_message": "msg_0622cc15201f6fbf016b070ca18e5c87d298ed72a820891a05",
+    "raw_receipt_on_windows": "outputs/shift-switcher-extra-13f23a47.json",
+    "note": "Relayed actor observations; interrupted CUA calls and exact input timing are not counted as product failures. Source review independently establishes the missing caret-tail handling."
+  },
+  "cause": "The replacement range excluded already-entered spaces or partial text before the caret. Unicode insertion ended at the replacement word, leaving the caret before that tail. The next word could be inserted before the space.",
+  "fix_source_commit": "09ff859624ecfcd465e415c6d91557afea4ff562",
+  "fix": "For an empty selection, extend the selected replacement range through the original caret and append the unchanged tail to the same Unicode input batch. Avoid resetting a selection after newer input.",
+  "portable_core_checks": {
+    "passed": 60,
+    "total": 60,
+    "platform": "macOS"
+  },
+  "cross_build": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "native_fix_acceptance": "pending",
+  "rapid_driver": {
+    "source": "windows/ShiftSwitcher.NativeChecks/Program.cs",
+    "compiled": true,
+    "run_by_root": false,
+    "owner_permission": "Explicitly received for Windows driver in owned Chrome fixture; forwarded to Windows actor.",
+    "exact_timing": "not yet verified"
+  },
+  "earlier_receipts": "The 22 Notepad and 15 Chrome checks belong to the affected old build. Their passes do not cover sequential correction with a second word after the first correction."
+}
