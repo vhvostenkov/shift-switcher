@@ -41,7 +41,7 @@ final class App: NSObject, NSApplicationDelegate {
     let license = LicenseManager()
     let shortcutPreferences = ShortcutPreferences(defaults: .standard)
     let shortcuts = GlobalShortcuts()
-    private var lastShortcutTime: TimeInterval = 0
+    private var shortcutGate = ShortcutGate()
     var settingsWindow: SettingsWindow?
     var acceptance: NativeAcceptance?
     var status: NSStatusItem!
@@ -98,8 +98,7 @@ final class App: NSObject, NSApplicationDelegate {
         shortcuts.perform = { [weak self] action in
             guard let self = self, !self.paused else { return }
             let now = ProcessInfo.processInfo.systemUptime
-            guard now - self.lastShortcutTime >= 0.3 else { return }
-            self.lastShortcutTime = now
+            guard self.shortcutGate.accept(action, at: now) else { return }
             self.detector.reset(); self.autoGeneration += 1
             if action == 1 { self.correct(automatic: false) }
             else if action == 2 { self.undo() }

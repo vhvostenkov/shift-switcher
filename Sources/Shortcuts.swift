@@ -1,5 +1,15 @@
 import Foundation
 
+struct ShortcutGate {
+    private var lastAction: UInt32?
+    private var lastTime: TimeInterval = 0
+    mutating func accept(_ action: UInt32, at time: TimeInterval) -> Bool {
+        guard action != lastAction || time - lastTime >= 0.3 else { return false }
+        lastAction = action; lastTime = time
+        return true
+    }
+}
+
 enum CorrectionShortcut: String, CaseIterable {
     case doubleShift, controlOptionSpace
     var title: String { self == .doubleShift ? "Двойной Shift" : "⌃⌥Пробел" }

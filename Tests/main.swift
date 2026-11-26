@@ -5,6 +5,13 @@ func check(_ condition: @autoclosure () -> Bool, _ label: String) {
     count += 1
     if !condition() { fatalError(label) }
 }
+var shortcutGate = ShortcutGate()
+check(shortcutGate.accept(3, at: 10), "first character shortcut is accepted")
+check(shortcutGate.accept(2, at: 10.05), "undo immediately after a different shortcut is accepted")
+check(!shortcutGate.accept(2, at: 10.06), "duplicate undo hotkey is suppressed")
+check(shortcutGate.accept(3, at: 10.10), "a new correction after undo is accepted")
+check(!shortcutGate.accept(3, at: 10.11), "duplicate correction hotkey is suppressed")
+check(shortcutGate.accept(3, at: 10.41), "same shortcut is accepted after debounce interval")
 check(Layout.convert("ghbdtn") == "привет", "en to ru")
 check(Layout.convert("руддщ") == "hello", "ru to en")
 check(Layout.convert("Ghbdtn Vbh") == "Привет Мир", "case")
