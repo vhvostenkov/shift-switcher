@@ -11,10 +11,10 @@
     },
     "mac": {
       "filename": "Shift-Switcher-Mac.zip",
-      "bytes": 1977621,
-      "sha256": "77c707d5762556200e11975c1255ee9b921b2e4f68e9309d2ef2cab5cd163c0d",
-      "binary_sha256": "8ec544cc6a717539c0dc43738580f85f100c4a1e1e5e616a3fa56f00744b236a",
-      "source_commit": "056e223a44c81ccca3f91fc829a6422017c7b7c9"
+      "bytes": 1978054,
+      "sha256": "365ca065aa7374e5d99de4b0b3c1d8be73df3d4c328a5e0f84a66df18f89df22",
+      "binary_sha256": "49f60200c9919ff41b7c51bf0854dd84da11a68baaa322d7baa55223731b60f7",
+      "source_commit": "a5e26782d528a8272f960dc2ed7ff0622f732152"
     }
   }
 }

@@ -1,0 +1,142 @@
+{
+  "accessibility": true,
+  "clipboard_change_count_unchanged": true,
+  "fixture": "New isolated TextEdit document",
+  "input": "CGEvent only in the uniquely named TextEdit fixture; ordinary app launch",
+  "original_input_source_restored": true,
+  "post_access": true,
+  "results": [
+    {
+      "actual": "Привет ",
+      "caret": 7,
+      "expected": "Привет ",
+      "language": "ru",
+      "passed": true,
+      "scenario": "first_word_after_space",
+      "selection": 0
+    },
+    {
+      "actual": "Ghbdtn ",
+      "caret": 7,
+      "expected": "Ghbdtn ",
+      "language": "en",
+      "passed": true,
+      "scenario": "automatic_undo_and_language",
+      "selection": 0
+    },
+    {
+      "actual": "Ghbdtn  ",
+      "caret": 8,
+      "expected": "Ghbdtn  ",
+      "language": "en",
+      "passed": true,
+      "scenario": "undo_survives_another_space",
+      "selection": 0
+    },
+    {
+      "actual": "Hello",
+      "caret": 5,
+      "expected": "Hello",
+      "language": "en",
+      "passed": true,
+      "scenario": "double_shift_last_word",
+      "selection": 0
+    },
+    {
+      "actual": "Руддщ",
+      "caret": 5,
+      "expected": "Руддщ",
+      "language": "ru",
+      "passed": true,
+      "scenario": "double_shift_exact_undo",
+      "selection": 0
+    },
+    {
+      "actual": "Mesh wifi",
+      "caret": 9,
+      "expected": "Mesh wifi",
+      "language": "en",
+      "passed": true,
+      "scenario": "last_word_keeps_mesh_prefix",
+      "selection": 0
+    },
+    {
+      "actual": "Mesh цшаш",
+      "caret": 9,
+      "expected": "Mesh цшаш",
+      "language": "ru",
+      "passed": true,
+      "scenario": "mixed_prefix_exact_undo",
+      "selection": 0
+    },
+    {
+      "actual": "Mesh wifi",
+      "caret": 5,
+      "expected": "Mesh wifi",
+      "language": "en",
+      "passed": true,
+      "scenario": "selected_word_only",
+      "selection": 4
+    },
+    {
+      "actual": "Mesh цшаш",
+      "caret": 5,
+      "expected": "Mesh цшаш",
+      "language": "ru",
+      "passed": true,
+      "scenario": "selected_word_undo",
+      "selection": 4
+    },
+    {
+      "actual": "/",
+      "caret": 1,
+      "expected": "/",
+      "language": "en",
+      "passed": true,
+      "scenario": "single_punctuation",
+      "selection": 0
+    },
+    {
+      "actual": ".",
+      "caret": 1,
+      "expected": ".",
+      "language": "ru",
+      "passed": true,
+      "scenario": "punctuation_undo",
+      "selection": 0
+    }
+  ],
+  "tested_at": "2026-11-26T14:15:59.944614+00:00",
+  "binary_sha256": "49f60200c9919ff41b7c51bf0854dd84da11a68baaa322d7baa55223731b60f7",
+  "source_commit": "a5e26782d528a8272f960dc2ed7ff0622f732152",
+  "internal_build": "12",
+  "core_checks": 169,
+  "driver_source_sha256": "52b76d9ce0c901ec0bcb140a891ecf24e02a5409e1ce526b25c2ddc706100b1d",
+  "normal_startup_after_full_exit": {
+    "method": "SIGTERM only after exact process/path/binary guard, followed by ordinary CUA launch with no test arguments",
+    "Pro": true,
+    "automatic": true,
+    "paused": false,
+    "accessibility": true,
+    "input_monitoring": true,
+    "keychain_prompt_observed": false
+  },
+  "online_renewal": {
+    "real_LIVE_API": true,
+    "new_certificate_issued": true,
+    "same_key": true,
+    "ordinary_benefit_certificate": true,
+    "state_mode": "0600",
+    "trial_origin_preserved": true
+  },
+  "autostart": {
+    "SMAppService_UI_enabled": true,
+    "actual_OS_sign_out_in_tested": false
+  },
+  "other_fixture_unchanged_sha256": "a2cbcac0bfc1a61fff12184b766f7866cfd3a96ccf4cf25f47c8e4967b89d274",
+  "limitations": [
+    "Synthetic CGEvent, not physical typing or a measured 10/25ms guarantee.",
+    "The native sentence tests intentionally use capitalized inputs; the lowercase TextEdit trial was normalized to an initial capital and retained separately.",
+    "Paid LIVE purchase/fiscal receipt/refund remain unverified."
+  ]
+}

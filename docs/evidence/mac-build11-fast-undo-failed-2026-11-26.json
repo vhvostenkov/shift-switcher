@@ -1,0 +1,112 @@
+{
+  "accessibility": true,
+  "clipboard_change_count_unchanged": true,
+  "fixture": "Isolated TextEdit document",
+  "input": "CGEvent only in the uniquely named TextEdit fixture; ordinary app launch",
+  "original_input_source_restored": true,
+  "post_access": true,
+  "results": [
+    {
+      "actual": "Привет ",
+      "caret": 7,
+      "expected": "Привет ",
+      "language": "ru",
+      "passed": true,
+      "scenario": "first_word_after_space",
+      "selection": 0
+    },
+    {
+      "actual": "Ghbdtn ",
+      "caret": 7,
+      "expected": "Ghbdtn ",
+      "language": "en",
+      "passed": true,
+      "scenario": "automatic_undo_and_language",
+      "selection": 0
+    },
+    {
+      "actual": "Ghbdtn  ",
+      "caret": 8,
+      "expected": "Ghbdtn  ",
+      "language": "en",
+      "passed": true,
+      "scenario": "undo_survives_another_space",
+      "selection": 0
+    },
+    {
+      "actual": "Hello",
+      "caret": 5,
+      "expected": "Hello",
+      "language": "en",
+      "passed": true,
+      "scenario": "double_shift_last_word",
+      "selection": 0
+    },
+    {
+      "actual": "Руддщ",
+      "caret": 5,
+      "expected": "Руддщ",
+      "language": "ru",
+      "passed": true,
+      "scenario": "double_shift_exact_undo",
+      "selection": 0
+    },
+    {
+      "actual": "Mesh wifi",
+      "caret": 9,
+      "expected": "Mesh wifi",
+      "language": "en",
+      "passed": true,
+      "scenario": "last_word_keeps_mesh_prefix",
+      "selection": 0
+    },
+    {
+      "actual": "Mesh цшаш",
+      "caret": 9,
+      "expected": "Mesh цшаш",
+      "language": "ru",
+      "passed": true,
+      "scenario": "mixed_prefix_exact_undo",
+      "selection": 0
+    },
+    {
+      "actual": "Mesh wifi",
+      "caret": 5,
+      "expected": "Mesh wifi",
+      "language": "en",
+      "passed": true,
+      "scenario": "selected_word_only",
+      "selection": 4
+    },
+    {
+      "actual": "Mesh цшаш",
+      "caret": 5,
+      "expected": "Mesh цшаш",
+      "language": "ru",
+      "passed": true,
+      "scenario": "selected_word_undo",
+      "selection": 4
+    },
+    {
+      "actual": "/",
+      "caret": 1,
+      "expected": "/",
+      "language": "en",
+      "passed": true,
+      "scenario": "single_punctuation",
+      "selection": 0
+    },
+    {
+      "actual": "/",
+      "caret": 1,
+      "expected": ".",
+      "language": "en",
+      "passed": false,
+      "scenario": "punctuation_undo",
+      "selection": 0
+    }
+  ],
+  "binary_sha256": "0ba57e28221d8ba144766c20d5913a86f45a9f268915a445c863c0c1b96804b7",
+  "source_commit": "88e8fdc",
+  "resolution": "Fixed in a5e26782: debounce only repeat occurrences of the same shortcut action; final native11/11 receipt is separate"
+}
