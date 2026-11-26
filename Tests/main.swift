@@ -174,11 +174,11 @@ let testSigner = Curve25519.Signing.PrivateKey()
 let testDevice = String(repeating: "a", count: 64)
 let testNow: Int64 = 1_800_000_000
 func encoded(_ data: Data) -> String { data.base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "") }
-func certificate(_ changes: [String: Any] = [:]) -> String {
+func certificate(_ changes: [String: Any] = [:], signer: Curve25519.Signing.PrivateKey? = nil) -> String {
     var body: [String: Any] = ["schema": 1, "product": "shift-switcher-pro-v1", "license": "test-order", "device": testDevice, "issued_at": testNow, "valid_until": testNow + 30 * 86400, "key_id": "test", "environment": "DEMO"]
     for (key, value) in changes { body[key] = value }
     let message = "ss1." + encoded(try! JSONSerialization.data(withJSONObject: body, options: [.sortedKeys]))
-    return message + "." + encoded(try! testSigner.signature(for: Data(message.utf8)))
+    return message + "." + encoded(try! (signer ?? testSigner).signature(for: Data(message.utf8)))
 }
 let testKeys = ["DEMO:test": testSigner.publicKey.rawRepresentation.base64EncodedString()]
 check(LicenseCheck.verify(certificate(), device: testDevice, keys: testKeys, environment: "DEMO", now: testNow) != nil, "valid Ed25519 certificate")
@@ -193,12 +193,21 @@ check(LicenseCheck.verify(certificate(["kind": "owner", "license": "ordinary_ord
 check(LicenseCheck.verify(certificate(["valid_until": testNow + 365 * 86400]), device: testDevice, keys: testKeys, environment: "DEMO", now: testNow) == nil, "normal certificates retain 31-day ceiling")
 check(LicenseCheck.verify(certificate(["kind": "owner", "license": "owner_test", "valid_until": testNow + 367 * 86400]), device: testDevice, keys: testKeys, environment: "DEMO", now: testNow) == nil, "owner lifetime bounded")
 check(LicenseCheck.verify(certificate(["kind": "owner", "license": "owner_test"]), device: String(repeating: "b", count: 64), keys: testKeys, environment: "DEMO", now: testNow) == nil, "owner license is bound to one installation")
+let liveTestSigner = Curve25519.Signing.PrivateKey()
+let liveTestKeys = ["LIVE:test": liveTestSigner.publicKey.rawRepresentation.base64EncodedString()]
+let liveOwnerClaims: [String: Any] = ["environment": "LIVE", "kind": "owner", "license": "owner_test", "valid_until": testNow + 365 * 86400]
+check(LicenseCheck.verify(certificate(liveOwnerClaims, signer: liveTestSigner), device: testDevice, keys: liveTestKeys, environment: "LIVE", now: testNow) != nil, "explicit LIVE owner grant uses LIVE trust key")
+check(LicenseCheck.verify(certificate(liveOwnerClaims), device: testDevice, keys: liveTestKeys, environment: "LIVE", now: testNow) == nil, "DEMO signer cannot mint LIVE owner grant")
+check(LicenseCheck.validKey(String(repeating: "k", count: 43)), "server format license key")
+check(!LicenseCheck.validKey("email@example.com"), "mistyped email is not sent as a license key")
+check(!LicenseCheck.validKey(String(repeating: "k", count: 32) + "\ntext"), "multiline clipboard text is not sent as a license key")
 
 var trialTest = TrialState(started: testNow, latest: testNow)
 check(trialTest.daysRemaining(now: testNow) == 14, "full 14 day trial")
 check(trialTest.daysRemaining(now: testNow + 13 * 86400) == 1, "trial last day")
 check(trialTest.daysRemaining(now: testNow) == 0, "trial rollback rejected")
 check(trialTest.daysRemaining(now: testNow + 15 * 86400) == 0, "trial expired")
+check(!trialTest.validTime(now: testNow), "paid access also rejects clock rollback")
 
 let storeFolder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
 let localStore = LicenseStore(folder: storeFolder)
@@ -210,6 +219,12 @@ check(reopenedStore.read("installation") == "test-installation", "installation s
 check(reopenedStore.read("certificate") == storedTestCertificate, "certificate survives restart")
 check((try! FileManager.default.attributesOfItem(atPath: storeFolder.path)[.posixPermissions] as! NSNumber).intValue == 0o700, "license folder is private")
 check((try! FileManager.default.attributesOfItem(atPath: storeFolder.appendingPathComponent("license-state.json").path)[.posixPermissions] as! NSNumber).intValue == 0o600, "license file is private")
+check(localStore.write(["license_key": "test-key", "certificate": storedTestCertificate]), "license key and certificate save together")
+check(LicenseStore(folder: storeFolder).read("license_key") == "test-key", "batch survives reopening")
+try! Data("corrupt state".utf8).write(to: storeFolder.appendingPathComponent("license-state.json"))
+let corruptStore = LicenseStore(folder: storeFolder)
+check(!corruptStore.write("installation", "replacement"), "corrupt store cannot mint a new installation or trial")
+check(try! String(contentsOf: storeFolder.appendingPathComponent("license-state.json"), encoding: .utf8) == "corrupt state", "failed load preserves original file for recovery")
 
 check(TextEvents.chunks("привет hello")?.joined() == "привет hello", "Unicode chunks preserve text")
 let emojiText = String(repeating: "😀привет ", count: 8)

@@ -53,6 +53,7 @@ final class App: NSObject, NSApplicationDelegate {
     var pauseItem: NSMenuItem!
     var info: NSMenuItem!
     var autoEnabled = UserDefaults.standard.bool(forKey: "autoEnabled")
+    private var licenseTimer: Timer?
     var paused = false
     var lastEdit: Edit?
     private var lastEditGeneration: Int?
@@ -75,8 +76,8 @@ final class App: NSObject, NSApplicationDelegate {
         menu.addItem(info)
         menu.addItem(.separator())
         _ = item("Открыть Shift Switcher…", #selector(showSettings), menu)
-        autoItem = item("Автоисправление RU ↔ EN", #selector(toggleAuto), menu)
-        autoItem.state = autoEnabled ? .on : .off
+        autoItem = item("Автоисправление RU ↔ EN · Pro", #selector(toggleAuto), menu)
+        autoItem.state = autoEnabled && license.hasPro ? .on : .off
         pauseItem = item("Пауза", #selector(togglePause), menu)
         _ = item("Исправить символ слева от курсора · ⌃⌥.", #selector(correctCharacter), menu)
         _ = item("Отменить последнее исправление", #selector(undo), menu)
@@ -91,6 +92,9 @@ final class App: NSObject, NSApplicationDelegate {
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(checkKeyboardConflict), name: NSWorkspace.didTerminateApplicationNotification, object: nil)
         checkKeyboardConflict()
         license.renewIfNeeded()
+        licenseTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            self?.updateIndicator(); self?.license.renewIfNeeded()
+        }
         shortcuts.perform = { [weak self] action in
             guard let self = self, !self.paused else { return }
             let now = ProcessInfo.processInfo.systemUptime
@@ -150,6 +154,8 @@ final class App: NSObject, NSApplicationDelegate {
                                     range: NSRange(location: end, length: 0), pid: field.pid)
     }
     @objc func updateIndicator() {
+        license.refresh()
+        let automatic = autoEnabled && license.hasPro
         let input = TISCopyCurrentKeyboardInputSource().takeRetainedValue()
         var layout = "—"
         if let property = TISGetInputSourceProperty(input, kTISPropertyInputSourceLanguages) {
@@ -157,9 +163,11 @@ final class App: NSObject, NSApplicationDelegate {
             layout = languages.first?.uppercased() ?? "—"
         }
         let permitted = AXIsProcessTrusted() && CGPreflightListenEventAccess()
-        let state = keyboardConflict ? "Конфликт: завершите Lang Switcher" : (!permitted ? "Нужны разрешения macOS" : (paused ? "Пауза" : (autoEnabled ? "Автоисправление включено" : "Ручное исправление")))
+        let state = keyboardConflict ? "Конфликт: завершите Lang Switcher" : (!permitted ? "Нужны разрешения macOS" : (paused ? "Пауза" : (automatic ? "Автоисправление включено" : (license.hasPro ? "Ручное исправление" : "Free · ручное исправление"))))
+        autoItem?.state = automatic ? .on : .off
+        autoItem?.isEnabled = license.hasPro
         status.button?.title = "⇧⇧ \(layout)"
-        status.button?.image = NSImage(systemSymbolName: (!permitted || keyboardConflict) ? "exclamationmark.circle" : (paused ? "pause.circle" : (autoEnabled ? "bolt.circle.fill" : "hand.point.up")), accessibilityDescription: state)
+        status.button?.image = NSImage(systemSymbolName: (!permitted || keyboardConflict) ? "exclamationmark.circle" : (paused ? "pause.circle" : (automatic ? "bolt.circle.fill" : "hand.point.up")), accessibilityDescription: state)
         status.button?.imagePosition = .imageLeading
         status.button?.toolTip = "Shift Switcher · \(layout) · \(state)\nНажмите, чтобы открыть настройки и отмену"
         status.button?.setAccessibilityLabel("Shift Switcher, \(layout), \(state)")

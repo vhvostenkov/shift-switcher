@@ -38,7 +38,7 @@ final class SettingsModel: ObservableObject {
         keyboardUndo = app.shortcutPreferences.keyboardUndo
         app.license.refresh(); proAvailable = app.license.hasPro
         automatic = app.autoEnabled && proAvailable
-        licenseStatus = app.license.ownerLicense ? "Лицензия владельца · Pro" : app.license.licensed ? (app.license.environment == "DEMO" ? "DEMO · Pro активирован" : "Pro активирован") : app.license.days > 0 ? "Pro: осталось \(app.license.days) дн. из 14" : "Free · пробный Pro завершён"
+        licenseStatus = !app.license.storageReady ? "Free · данные лицензии недоступны" : app.license.clockBackwards ? "Проверьте дату компьютера" : app.license.ownerLicense ? "Лицензия владельца · Pro" : app.license.licensed ? (app.license.environment == "DEMO" ? "DEMO · Pro активирован" : "Pro активирован") : app.license.days > 0 ? "Pro: осталось \(app.license.days) дн. из 14" : "Free · пробный Pro завершён"
         licenseMessage = app.license.message
     }
     func setAutomatic(_ value: Bool) { guard !value || proAvailable else { return }; if app?.autoEnabled != value { app?.toggleAuto() }; refresh() }
@@ -323,7 +323,7 @@ private struct RulesView: View {
             }
             if page == 4 {
                 Text(model.licenseStatus).font(.system(size: 20, weight: .semibold))
-                Text("Пробный Pro — 14 дней. После него двойной Shift и ручная отмена остаются бесплатными. Лицензия Pro 1.x — 499 ₽ на два Mac.").font(.system(size: 12)).foregroundColor(.secondary)
+                Text("Пробный Pro — 14 дней. После него двойной Shift и ручная отмена остаются бесплатными. Лицензия Pro 1.x — 499 ₽ на два компьютера.").font(.system(size: 12)).foregroundColor(.secondary)
                 Text("Сборка без нотариализации Apple. До покупки проверьте установку и работу на своём Mac. Купленная лицензия проверяется онлайн не реже одного раза в 30 дней.").font(.system(size: 12)).foregroundColor(.secondary)
                 SecureField("Ключ лицензии", text: $licenseKey).textFieldStyle(.roundedBorder)
                 HStack {

@@ -3,7 +3,13 @@ import CryptoKit
 import Security
 import LocalAuthentication
 
+private final class LicenseSessionDelegate: NSObject, URLSessionTaskDelegate {
+    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
+                    newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) { completionHandler(nil) }
+}
+
 final class LicenseManager {
+    private let session = URLSession(configuration: .ephemeral, delegate: LicenseSessionDelegate(), delegateQueue: nil)
     private let service = (Bundle.main.bundleIdentifier ?? "local.viktor.ShiftSwitcher") + ".licensing.v1"
     private let store = LicenseStore(folder: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         .appendingPathComponent(Bundle.main.bundleIdentifier ?? "local.viktor.ShiftSwitcher", isDirectory: true))
@@ -14,6 +20,7 @@ final class LicenseManager {
     private var lastRenewal: Int64 = 0
     private var renewing = false
     private var activationGeneration = 0
+    private(set) var clockBackwards = false
     private(set) var device = ""
     private(set) var days = 0
     private(set) var licensed = false
@@ -21,7 +28,7 @@ final class LicenseManager {
     private(set) var message = ""
     private(set) var expires: Int64 = 0
     private(set) var ownerLicense = false
-    var hasPro: Bool { storageReady && (licensed || days > 0) }
+    var hasPro: Bool { storageReady && !clockBackwards && (licensed || days > 0) }
     var environment: String { (Bundle.main.bundleIdentifier ?? "").hasSuffix(".Candidate") ? "DEMO" : "LIVE" }
     private var api: URL { URL(string: "https://vhvost.com/pay/api/")! }
     init() {
@@ -56,39 +63,43 @@ final class LicenseManager {
     func refresh() {
         let now = Int64(Date().timeIntervalSince1970)
         if var trial = trial {
+            clockBackwards = !trial.validTime(now: now)
             days = trial.daysRemaining(now: now)
             self.trial = trial
             if now - lastPersisted >= 60, let data = try? JSONEncoder().encode(trial), let text = String(data: data, encoding: .utf8) { storageReady = write("trial", text); lastPersisted = now }
         }
         licensed = false; ownerLicense = false
-        if let certificate = certificateCache, let payload = LicenseCheck.verify(certificate, device: device, keys: keys, environment: environment, now: now) {
+        if !clockBackwards, let certificate = certificateCache, let payload = LicenseCheck.verify(certificate, device: device, keys: keys, environment: environment, now: now) {
             licensed = true; expires = payload.valid_until; ownerLicense = payload.kind == "owner"
         }
     }
     func activate(_ key: String, completion: @escaping () -> Void) {
         guard storageReady else { return }
+        let key = key.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard LicenseCheck.validKey(key) else { message = "Проверьте ключ лицензии"; completion(); return }
         activationGeneration += 1
         let generation = activationGeneration
         var request = URLRequest(url: api.appendingPathComponent("activate"))
         request.httpMethod = "POST"; request.timeoutInterval = 20
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try? JSONSerialization.data(withJSONObject: ["key": key, "device": device])
-        URLSession.shared.dataTask(with: request) { data, response, _ in
+        session.dataTask(with: request) { data, response, _ in
             DispatchQueue.main.async {
                 defer { completion() }
                 guard self.activationGeneration == generation else { return }
                 if (response as? HTTPURLResponse)?.statusCode == 403, let data = data,
                    let body = try? JSONSerialization.jsonObject(with: data) as? [String: Any], body["error"] as? String == "license_revoked" {
-                    _ = self.write("certificate", ""); self.certificateCache = nil; self.refresh()
+                    if !self.store.write(["certificate": "", "license_key": ""]) { self.storageReady = false }
+                    self.certificateCache = nil; self.refresh()
                     self.message = "Лицензия отозвана. Доступен Free и оставшийся пробный период."; return
                 }
                 guard (response as? HTTPURLResponse)?.statusCode == 200, let data = data, data.count <= 16384,
                       let body = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                       let certificate = body["certificate"] as? String,
                       LicenseCheck.verify(certificate, device: self.device, keys: self.keys, environment: self.environment, now: Int64(Date().timeIntervalSince1970)) != nil else {
-                    self.message = "Активация не выполнена. Проверьте ключ, соединение и лимит двух Mac."; return
+                    self.message = "Активация не выполнена. Проверьте ключ, соединение и лимит двух компьютеров."; return
                 }
-                guard self.write("license_key", key), self.write("certificate", certificate) else {
+                guard self.store.write(["license_key": key, "certificate": certificate]) else {
                     self.message = "Не удалось сохранить лицензию на этом Mac"; return
                 }
                 self.certificateCache = certificate
@@ -117,7 +128,7 @@ final class LicenseManager {
             if let certificate = body["certificate"] as? String,
                let payload = LicenseCheck.verify(certificate, device: self.device, keys: self.keys, environment: self.environment, now: Int64(Date().timeIntervalSince1970)),
                payload.kind == "owner" {
-                guard self.write("certificate", certificate), self.write("license_key", "") else {
+                guard self.store.write(["certificate": certificate, "license_key": ""]) else {
                     self.message = "Не удалось сохранить лицензию владельца"; completion(); return
                 }
                 self.activationGeneration += 1
@@ -131,22 +142,26 @@ final class LicenseManager {
         }
     }
     func release(completion: @escaping () -> Void) {
-        if ownerLicense {
-            guard write("certificate", ""), write("license_key", "") else {
+        activationGeneration += 1
+        let generation = activationGeneration
+        let key = read("license_key") ?? ""
+        if key.isEmpty {
+            guard store.write(["certificate": "", "license_key": ""]) else {
                 message = "Не удалось отключить лицензию владельца"; completion(); return
             }
-            activationGeneration += 1; certificateCache = nil; refresh()
+            certificateCache = nil; refresh()
             message = "Лицензия владельца на этом Mac отключена"; completion(); return
         }
-        guard let key = read("license_key") else { return }
         var request = URLRequest(url: api.appendingPathComponent("release-device"))
         request.httpMethod = "POST"; request.timeoutInterval = 20
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try? JSONSerialization.data(withJSONObject: ["key": key, "device": device])
-        URLSession.shared.dataTask(with: request) { _, response, _ in
+        session.dataTask(with: request) { _, response, _ in
             DispatchQueue.main.async {
-                if (response as? HTTPURLResponse)?.statusCode == 200, self.write("certificate", ""), self.write("license_key", "") {
-                    self.certificateCache = nil; self.refresh(); self.message = "Этот Mac освобождён"
+                guard self.activationGeneration == generation else { completion(); return }
+                if (response as? HTTPURLResponse)?.statusCode == 200 {
+                    if !self.store.write(["certificate": "", "license_key": ""]) { self.storageReady = false }
+                    self.certificateCache = nil; self.refresh(); self.message = self.storageReady ? "Этот Mac освобождён" : "Mac освобождён, но локальные данные не удалось сохранить"
                 } else { self.message = "Не удалось освободить Mac. Проверьте соединение." }
                 completion()
             }
