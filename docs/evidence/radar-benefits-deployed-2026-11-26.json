@@ -1,0 +1,18 @@
+{
+  "source": "f1449d62aa1d105490281997f89e12794deac81a",
+  "health_status": "ok",
+  "public_health_http": 200,
+  "public_news_http": 200,
+  "news_response_type": "dict",
+  "news_heartbeat_status": "ok",
+  "news_heartbeat_age_seconds": 1.92,
+  "container_health": {
+    "frontend": "running",
+    "gateway": "healthy",
+    "news-worker": "healthy",
+    "nginx": "running"
+  },
+  "verified_image_ids": true,
+  "anonymous_benefit_http": 307,
+  "authenticated_account_flow": "pending"
+}
