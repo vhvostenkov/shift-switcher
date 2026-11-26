@@ -1,0 +1,13 @@
+{
+  "verified_at": "2026-11-26T11:05:27.277883+00:00",
+  "merchant": "943870",
+  "terminal": "working",
+  "http_notifications_enabled": true,
+  "callback": "https://vhvost.com/pay/api/notification",
+  "verification": "Saved in bank UI, reopened and confirmed checkbox ON and exact URL",
+  "email_notifications": false,
+  "unsigned_callback_http": 400,
+  "real_payment_created": false,
+  "password_changed": false,
+  "real_bank_notification": "not_yet_verified"
+}
