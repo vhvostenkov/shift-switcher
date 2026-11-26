@@ -1,0 +1,4 @@
+{
+  "note": "Public RFC 8032 test key; Python cryptography signer, matching commerce certificate encoding.",
+  "certificate": "ss1.eyJkZXZpY2UiOiJhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhIiwiZW52aXJvbm1lbnQiOiJMSVZFIiwiaXNzdWVkX2F0IjoxMDAwMDAwLCJrZXlfaWQiOiJ0ZXN0IiwibGljZW5zZSI6InRlc3Rfb25seSIsInByb2R1Y3QiOiJzaGlmdC1zd2l0Y2hlci1wcm8tdjEiLCJzY2hlbWEiOjEsInZhbGlkX3VudGlsIjozNTkyMDAwfQ.7SUF8QrdJFQybqjhbLDdG69SJ0SUMT45SXtlZICJacrbDL8DjwnpyK02akGW-13OF0BGy7egfxrzNJDRe8GICw"
+}

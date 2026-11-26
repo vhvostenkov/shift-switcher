@@ -36,6 +36,7 @@ internal sealed class Engine : IDisposable
         TextSpan OriginalSelection, string Source, long Generation);
     private sealed record Protection(FieldTarget Target, string Prefix, int End);
     private readonly Settings settings;
+    private readonly Func<bool> hasPro;
     private readonly Spelling spelling = new();
     private readonly DoubleShift detector = new();
     private readonly System.Windows.Forms.Timer idle = new() { Interval = 325 };
@@ -58,9 +59,9 @@ internal sealed class Engine : IDisposable
     internal bool CharacterShortcutAvailable { get; set; }
     internal event Action<string>? Status;
 
-    internal Engine(Settings settings)
+    internal Engine(Settings settings, Func<bool> hasPro)
     {
-        this.settings = settings;
+        this.settings = settings; this.hasPro = hasPro;
         idle.Tick += (_, _) => Idle();
         commandTimer.Tick += (_, _) => RunCommand();
     }
@@ -90,7 +91,7 @@ internal sealed class Engine : IDisposable
         detector.OtherKey(); generation++; idle.Stop(); settled = null;
         if (UndoShortcutAvailable && input.Control && input.Alt && !input.Windows && input.Key == 90) { ScheduleCommand(Undo); pending = null; return; }
         if (CharacterShortcutAvailable && input.Control && input.Alt && !input.Windows && input.Key == 190) { ScheduleCommand(() => Correct(false, true)); pending = null; return; }
-        if (modifiers || !settings.Automatic || !spelling.Ready) { pending = null; return; }
+        if (modifiers || !settings.Automatic || !hasPro() || !spelling.Ready) { pending = null; return; }
         if (input.Key == 32) pending = TextFields.Capture();
         else if (input.Key is 8 or 9 or 13 or 27 or 33 or 34 or 35 or 36 or 37 or 38 or 39 or 40 or 46) pending = null;
         if (pending is null || !Permitted(pending, true)) return;
@@ -114,7 +115,7 @@ internal sealed class Engine : IDisposable
     private void Idle()
     {
         idle.Stop();
-        if (Paused || !settings.Automatic || pending is null || Native.ModifiersDown()) return;
+        if (Paused || !settings.Automatic || !hasPro() || pending is null || Native.ModifiersDown()) return;
         var current = TextFields.Read(pending);
         if (current is not null && current.Selection.Length != 0) { pending = null; return; }
         if (current is not null && settled is not null && current.Value == settled.Value && current.Selection == settled.Selection)
@@ -127,7 +128,7 @@ internal sealed class Engine : IDisposable
         (settings.ValidKnown(word) && Layout.Language(word) == language) || spelling.Valid(word, language);
     internal void Correct(bool automatic, bool character = false)
     {
-        if (Paused) return;
+        if (Paused || (automatic && !hasPro())) return;
         var target = TextFields.Capture();
         var field = target is null ? null : TextFields.Read(target);
         if (field is null || target is null || !Permitted(target, automatic))

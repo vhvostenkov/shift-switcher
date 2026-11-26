@@ -8,9 +8,18 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>ShiftSwitcher</AssemblyName>
-    <Version>0.1.1</Version>
+    <Version>1.0.0-rc.1</Version>
+    <LicenseEnvironment Condition="'$(LicenseEnvironment)' == ''">LIVE</LicenseEnvironment>
     <ApplicationIcon>AppIcon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
-  <ItemGroup><ProjectReference Include="../ShiftSwitcher.Core/ShiftSwitcher.Core.csproj" /></ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../ShiftSwitcher.Core/ShiftSwitcher.Core.csproj" />
+    <ProjectReference Include="../ShiftSwitcher.Licensing/ShiftSwitcher.Licensing.csproj" />
+    <AssemblyMetadata Include="LicenseEnvironment" Value="$(LicenseEnvironment)" />
+    <EmbeddedResource Include="../../Assets/license-public-keys.json" LogicalName="ShiftSwitcher.Windows.LicenseKeys" />
+  </ItemGroup>
+  <Target Name="ValidateLicenseEnvironment" BeforeTargets="BeforeBuild">
+    <Error Condition="'$(LicenseEnvironment)' != 'LIVE' and '$(LicenseEnvironment)' != 'DEMO'" Text="LicenseEnvironment must be LIVE or DEMO" />
+  </Target>
 </Project>

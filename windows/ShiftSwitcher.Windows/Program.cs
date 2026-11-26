@@ -1,7 +1,11 @@
 using System.Drawing;
 using System.IO;
 using System.Text;
+using System.Text.Json;
+using System.Reflection;
+using System.Diagnostics;
 using System.Windows.Forms;
+using ShiftSwitcher.Licensing;
 using Microsoft.Win32;
 using FormsApplication = System.Windows.Forms.Application;
 
@@ -9,7 +13,7 @@ namespace ShiftSwitcher.Windows;
 
 internal static class Program
 {
-    internal const string WindowTitle = "Shift Switcher · Windows Preview";
+    internal const string WindowTitle = "Shift Switcher · Windows";
     [STAThread]
     private static void Main(string[] args)
     {
@@ -65,6 +69,7 @@ internal sealed class SettingsForm : Form
 internal sealed class SwitcherContext : ApplicationContext
 {
     private readonly Settings settings = Settings.Load();
+    private readonly LicenseClient license = CreateLicenseClient();
     private readonly Engine engine;
     private readonly KeyboardMonitor keyboard;
     private readonly Hotkeys hotkeys;
@@ -77,16 +82,27 @@ internal sealed class SwitcherContext : ApplicationContext
     private CheckBox? automaticCheck;
     private SettingsView? view;
     private string? traySignature;
+    private bool syncingAutomatic, exiting;
+
+    private static LicenseClient CreateLicenseClient()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        using var stream = assembly.GetManifestResourceStream("ShiftSwitcher.Windows.LicenseKeys");
+        var keys = stream is null ? new Dictionary<string, string>() : JsonSerializer.Deserialize<Dictionary<string, string>>(stream)!;
+        var environment = assembly.GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == "LicenseEnvironment")?.Value ?? "LIVE";
+        return new(new WindowsLicenseStore(WindowsLicenseStore.DefaultPath), keys, environment);
+    }
 
     internal SwitcherContext(bool background)
     {
-        engine = new(settings);
+        engine = new(settings, () => license.HasPro);
         hotkeys = new();
         var dispatcher = new WindowsFormsSynchronizationContext();
         keyboard = new(engine.OnKey, engine.Cancel, dispatcher);
         if (!keyboard.Connected) hotkeys.Dispose();
         engine.UndoShortcutAvailable = hotkeys.UndoAvailable; engine.CharacterShortcutAvailable = hotkeys.CharacterAvailable;
         window = MakeWindow();
+        license.Changed += () => { if (!exiting) { engine.Cancel(); UpdateIndicator(); } };
         _ = window.Handle; // Keep a discoverable window even for --background startup.
         engine.Status += text => status.Text = text;
         var menu = new ContextMenuStrip();
@@ -96,9 +112,9 @@ internal sealed class SwitcherContext : ApplicationContext
         pauseMenu.Click += (_, _) => { engine.Pause(); UpdateIndicator(); };
         menu.Items.Add(autoMenu); menu.Items.Add(pauseMenu); menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Выйти", null, (_, _) => ExitThread());
-        tray = new NotifyIcon { Visible = true, ContextMenuStrip = menu, Text = "Shift Switcher · Windows Preview" };
+        tray = new NotifyIcon { Visible = true, ContextMenuStrip = menu, Text = "Shift Switcher · Windows" };
         tray.DoubleClick += (_, _) => { window.Show(); window.Activate(); };
-        indicator.Tick += (_, _) => UpdateIndicator(); indicator.Start(); UpdateIndicator();
+        indicator.Tick += (_, _) => { UpdateIndicator(); _ = license.RenewIfNeededAsync(); }; indicator.Start(); UpdateIndicator();
         status.Text = keyboard.Connected ? "Готов к работе · двойной Shift" : "Не удалось подключить монитор клавиатуры";
         if (!background) window.Show();
     }
@@ -109,7 +125,7 @@ internal sealed class SwitcherContext : ApplicationContext
         var automatic = view.Automatic;
         automatic.Checked = settings.Automatic && engine.DictionaryReady;
         automaticCheck = automatic;
-        automatic.CheckedChanged += (_, _) => SetAutomatic(automatic.Checked);
+        automatic.CheckedChanged += (_, _) => { if (!syncingAutomatic) SetAutomatic(automatic.Checked); };
         var startup = view.Startup;
         var executable = Environment.ProcessPath;
         startup.Enabled = executable is not null && Path.GetFileNameWithoutExtension(executable).Equals("ShiftSwitcher", StringComparison.OrdinalIgnoreCase);
@@ -137,11 +153,27 @@ internal sealed class SwitcherContext : ApplicationContext
             settings.IgnoredWords = ignored.Lines.Select(s => s.Trim().ToLowerInvariant()).Where(s => s.Length is > 0 and <= 100 && !s.Any(char.IsWhiteSpace)).ToHashSet();
             SaveSettings(); engine.Cancel();
         };
+        view.ActivateLicense.Click += async (_, _) => { await license.ActivateAsync(view.LicenseKey.Text); if (!exiting) UpdateIndicator(); };
+        view.ImportLicense.Click += async (_, _) =>
+        {
+            using var dialog = new System.Windows.Forms.OpenFileDialog { Filter = "Лицензия Shift Switcher|*.sslicense;*.json", Multiselect = false, Title = "Открыть лицензию" };
+            if (dialog.ShowDialog(form) != DialogResult.OK) return;
+            try
+            {
+                if (new FileInfo(dialog.FileName).Length > 16384) { status.Text = "Файл лицензии слишком большой"; return; }
+                await license.ImportAsync(File.ReadAllText(dialog.FileName));
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException) { status.Text = "Не удалось открыть файл лицензии"; }
+            if (!exiting) UpdateIndicator();
+        };
+        view.ReleaseLicense.Click += async (_, _) => { await license.ReleaseAsync(); if (!exiting) UpdateIndicator(); };
+        view.BuyLicense.Click += (_, _) => Process.Start(new ProcessStartInfo("https://vhvost.com/pay/?product=shift-switcher-pro-v1") { UseShellExecute = true });
         form.FormClosing += (_, e) => { if (e.CloseReason == CloseReason.UserClosing) { e.Cancel = true; form.Hide(); } };
         return form;
     }
     private void SetAutomatic(bool enabled)
     {
+        if (enabled && !license.HasPro) { status.Text = "Для автоматики нужен Pro. Ручное исправление доступно бесплатно."; UpdateIndicator(); return; }
         if (settings.Automatic == enabled && autoMenu.Checked == enabled && automaticCheck?.Checked == enabled) return;
         settings.Automatic = enabled; autoMenu.Checked = enabled;
         if (automaticCheck is not null) automaticCheck.Checked = enabled;
@@ -154,8 +186,17 @@ internal sealed class SwitcherContext : ApplicationContext
     }
     private void UpdateIndicator()
     {
+        license.Refresh();
         var language = Native.Language(Native.GetForegroundWindow())?.ToUpperInvariant() ?? "?";
-        var automatic = settings.Automatic && engine.DictionaryReady;
+        var automatic = settings.Automatic && engine.DictionaryReady && license.HasPro;
+        syncingAutomatic = true;
+        try
+        {
+            autoMenu.Enabled = engine.DictionaryReady && license.HasPro; autoMenu.Checked = automatic;
+            if (automaticCheck is not null) { automaticCheck.Enabled = autoMenu.Enabled; automaticCheck.Checked = automatic; }
+        }
+        finally { syncingAutomatic = false; }
+        view?.SetLicense(license.Status, license.Message, license.HasPro, license.Ready, license.Busy, license.HasLicenseData, license.Device, license.Environment);
         var state = !keyboard.Connected ? "!" : engine.Paused ? "P" : automatic ? "A" : "M";
         tray.Text = $"Shift Switcher · {language} · {(engine.Paused ? "Пауза" : automatic ? "Авто" : "Вручную")}";
         pauseMenu.Checked = engine.Paused;
@@ -187,6 +228,7 @@ internal sealed class SwitcherContext : ApplicationContext
     [System.Runtime.InteropServices.DllImport("user32.dll")] private static extern bool DestroyIcon(nint icon);
     protected override void ExitThreadCore()
     {
+        exiting = true; license.Dispose();
         indicator.Stop(); keyboard.Dispose(); hotkeys.Dispose(); engine.Dispose(); tray.Visible = false; tray.Dispose();
         generatedIcon?.Dispose(); indicator.Dispose(); window.Dispose(); base.ExitThreadCore();
     }

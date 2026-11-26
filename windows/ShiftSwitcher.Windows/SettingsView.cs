@@ -92,6 +92,15 @@ internal sealed class SettingsView
     internal Button SaveDictionary { get; } = new SoftButton("Сохранить словарь", true) { Width = 188 };
     internal TextBox Known { get; } = Editor("Знакомые названия");
     internal TextBox Ignored { get; } = Editor("Не исправлять");
+    internal TextBox LicenseKey { get; } = new() { Dock = DockStyle.Fill, UseSystemPasswordChar = true, MaxLength = 100, AccessibleName = "Ключ лицензии", Font = new Font("Segoe UI", 11) };
+    internal TextBox DeviceId { get; } = new() { Dock = DockStyle.Fill, ReadOnly = true, AccessibleName = "Идентификатор установки", Font = new Font("Consolas", 9), BorderStyle = BorderStyle.None, BackColor = Palette.Surface };
+    internal Button ActivateLicense { get; } = new SoftButton("Активировать", true);
+    internal Button ImportLicense { get; } = new SoftButton("Открыть файл лицензии") { Width = 210 };
+    internal Button BuyLicense { get; } = new SoftButton("Купить Pro", true);
+    internal Button ReleaseLicense { get; } = new SoftButton("Освободить этот ПК") { Width = 186 };
+    private readonly Label licenseStatus = Text("Проверяем лицензию…", 14, true);
+    private readonly Label licenseDetail = Text("", 10);
+    private readonly Label licenseMessage = Text("", 9);
     private readonly Label state = Text("Работает в фоне", 11, true);
     private readonly Label language = Text("RU ↔ EN", 9);
     private readonly Label sidebarState = Text("● Готов к работе", 9);
@@ -119,9 +128,9 @@ internal sealed class SettingsView
         var nav = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, Padding = new Padding(0, 24, 0, 0) };
         var footer = Grid(1); footer.Dock = DockStyle.Bottom; footer.Height = 82; footer.BackColor = Palette.Surface;
         footer.RowStyles.Add(new(SizeType.Absolute, 30)); footer.RowStyles.Add(new(SizeType.Percent, 100));
-        footer.Controls.Add(sidebarState); footer.Controls.Add(Text("VHVost\nWindows Preview · 0.1.1", 9));
+        footer.Controls.Add(sidebarState); footer.Controls.Add(Text("VHVost\nWindows · Free + Pro", 9));
         var sidebarLayout = Grid(1); sidebarLayout.Dock = DockStyle.Fill;
-        sidebarLayout.RowStyles.Add(new(SizeType.Absolute, 72)); sidebarLayout.RowStyles.Add(new(SizeType.Absolute, 190));
+        sidebarLayout.RowStyles.Add(new(SizeType.Absolute, 72)); sidebarLayout.RowStyles.Add(new(SizeType.Absolute, 240));
         sidebarLayout.RowStyles.Add(new(SizeType.Percent, 100)); sidebarLayout.RowStyles.Add(new(SizeType.Absolute, 82));
         brand.Dock = footer.Dock = DockStyle.Fill;
         sidebarLayout.Controls.Add(brand, 0, 0); sidebarLayout.Controls.Add(nav, 0, 1); sidebarLayout.Controls.Add(footer, 0, 3);
@@ -144,7 +153,7 @@ internal sealed class SettingsView
         var options = new Card { Height = 156, Dock = DockStyle.Top };
         var optionRows = Grid(1); optionRows.Dock = DockStyle.Fill;
         optionRows.RowStyles.Add(new(SizeType.Percent, 50)); optionRows.RowStyles.Add(new(SizeType.Percent, 50));
-        optionRows.Controls.Add(Option("Автоисправление", dictionaryReady ? "После пробела — на нужной раскладке." : "Нужны языковые словари Windows RU и EN.", Automatic));
+        optionRows.Controls.Add(Option("Автоисправление · Pro", dictionaryReady ? "После пробела. Пробный Pro — 14 дней." : "Нужны языковые словари Windows RU и EN.", Automatic));
         optionRows.Controls.Add(Option("Запускать вместе с Windows", "В фоне, без лишних окон при входе.", Startup));
         options.Controls.Add(optionRows); Add(overview, options);
         var keys = new Card { Height = 118, Dock = DockStyle.Top };
@@ -162,7 +171,7 @@ internal sealed class SettingsView
         var saveRow = new Panel { Height = 44, Dock = DockStyle.Top, BackColor = Palette.Background };
         SaveDictionary.Dock = DockStyle.Right; saveRow.Controls.Add(SaveDictionary); Add(dictionary, saveRow);
 
-        var about = Page("Меньше переключений. Больше дела.", "Shift Switcher для Windows · 0.1.1 Preview");
+        var about = Page("Меньше переключений. Больше дела.", "Shift Switcher для Windows · Free + Pro");
         var aboutCard = new Card { Height = 206, Dock = DockStyle.Top };
         var info = Grid(1); info.Dock = DockStyle.Fill;
         info.RowStyles.Add(new(SizeType.Percent, 25)); info.RowStyles.Add(new(SizeType.Percent, 35)); info.RowStyles.Add(new(SizeType.Percent, 40));
@@ -173,11 +182,39 @@ internal sealed class SettingsView
         var preview = new Card { Height = 128, Dock = DockStyle.Top };
         var previewInfo = Grid(1); previewInfo.Dock = DockStyle.Fill;
         previewInfo.RowStyles.Add(new(SizeType.Absolute, 28)); previewInfo.RowStyles.Add(new(SizeType.Percent, 100));
-        previewInfo.Controls.Add(Text("Ранний доступ", 12, true));
-        previewInfo.Controls.Add(Text("Это техническая Preview. Все реализованные функции доступны без покупки и активации.", 10));
+        previewInfo.Controls.Add(Text("Ручное исправление остаётся бесплатным", 12, true));
+        previewInfo.Controls.Add(Text("Попробуйте Pro в течение 14 дней. После пробного периода двойной Shift и отмена продолжают работать в Free.", 10));
         preview.Controls.Add(previewInfo); Add(about, preview);
 
-        foreach (var (title, page) in new[] { ("Обзор", overview), ("Личный словарь", dictionary), ("О приложении", about) })
+        var licensing = Page("Ваш Pro. На ваших условиях.", "Одна лицензия для двух компьютеров. Без подписки.");
+        var entitlement = new Card { Height = 146 };
+        var entitlementRows = Grid(1); entitlementRows.Dock = DockStyle.Fill;
+        entitlementRows.RowStyles.Add(new(SizeType.Absolute, 34)); entitlementRows.RowStyles.Add(new(SizeType.Percent, 100));
+        entitlementRows.Controls.Add(licenseStatus); entitlementRows.Controls.Add(licenseDetail); entitlement.Controls.Add(entitlementRows); Add(licensing, entitlement);
+        var activation = new Card { Height = 228 };
+        var activationRows = Grid(1); activationRows.Dock = DockStyle.Fill;
+        activationRows.RowStyles.Add(new(SizeType.Absolute, 28)); activationRows.RowStyles.Add(new(SizeType.Absolute, 36));
+        activationRows.RowStyles.Add(new(SizeType.Absolute, 48)); activationRows.RowStyles.Add(new(SizeType.Percent, 100));
+        activationRows.Controls.Add(Text("Уже купили? Активируйте Pro.", 11, true)); activationRows.Controls.Add(LicenseKey);
+        var actions = new FlowLayoutPanel { Dock = DockStyle.Fill, BackColor = Palette.Surface, WrapContents = false, Padding = new Padding(0, 6, 0, 0) };
+        ActivateLicense.Margin = new Padding(0, 0, 10, 0); ImportLicense.Margin = Padding.Empty;
+        actions.Controls.Add(ActivateLicense); actions.Controls.Add(ImportLicense); activationRows.Controls.Add(actions);
+        activationRows.Controls.Add(licenseMessage); activation.Controls.Add(activationRows); Add(licensing, activation);
+        var purchase = new Card { Height = 142 };
+        var purchaseRows = Grid(1); purchaseRows.Dock = DockStyle.Fill;
+        purchaseRows.RowStyles.Add(new(SizeType.Absolute, 28)); purchaseRows.RowStyles.Add(new(SizeType.Absolute, 28)); purchaseRows.RowStyles.Add(new(SizeType.Percent, 100));
+        purchaseRows.Controls.Add(Text("Pro · 499 ₽ один раз", 12, true)); purchaseRows.Controls.Add(Text("Автоматика после пробела. 14 дней на проверку.", 9));
+        var purchaseActions = new FlowLayoutPanel { Dock = DockStyle.Fill, BackColor = Palette.Surface, WrapContents = false };
+        BuyLicense.Margin = new Padding(0, 0, 10, 0); ReleaseLicense.Margin = Padding.Empty;
+        purchaseActions.Controls.Add(BuyLicense); purchaseActions.Controls.Add(ReleaseLicense); purchaseRows.Controls.Add(purchaseActions);
+        purchase.Controls.Add(purchaseRows); Add(licensing, purchase);
+        var identity = new Card { Height = 102 };
+        var identityRows = Grid(1); identityRows.Dock = DockStyle.Fill;
+        identityRows.RowStyles.Add(new(SizeType.Absolute, 28)); identityRows.RowStyles.Add(new(SizeType.Percent, 100));
+        identityRows.Controls.Add(Text("Идентификатор установки для поддержки", 9)); identityRows.Controls.Add(DeviceId);
+        identity.Controls.Add(identityRows); Add(licensing, identity);
+
+        foreach (var (title, page) in new[] { ("Обзор", overview), ("Личный словарь", dictionary), ("Лицензия", licensing), ("О приложении", about) })
         {
             var button = new Button { Text = title, AccessibleName = title, Width = 174, Height = 44, FlatStyle = FlatStyle.Flat,
                 TextAlign = ContentAlignment.MiddleLeft, Padding = new Padding(14, 0, 0, 0), Margin = new Padding(0, 0, 0, 6),
@@ -198,6 +235,18 @@ internal sealed class SettingsView
             Window.Size = new Size(Math.Min(Window.Width, area.Width - 24), Math.Min(Window.Height, area.Height - 24));
             Window.Location = new Point(area.X + (area.Width - Window.Width) / 2, area.Y + (area.Height - Window.Height) / 2);
         };
+    }
+    internal void SetLicense(string status, string message, bool pro, bool ready, bool busy, bool hasData, string device, string environment)
+    {
+        licenseStatus.Text = status; licenseStatus.ForeColor = pro ? Palette.Green : Palette.Ink;
+        licenseDetail.Text = environment == "DEMO" ? "Тестовая сборка. Покупки недоступны; нужны DEMO-ключи. Ручное исправление и отмена работают в Free."
+            : "Ручное исправление и отмена доступны бесплатно. Pro включает автоматику. Для платной лицензии нужна проверка онлайн раз в 30 дней.";
+        licenseMessage.Text = busy ? "Проверяем активацию…" : message;
+        ActivateLicense.Enabled = ImportLicense.Enabled = LicenseKey.Enabled = !busy && ready;
+        BuyLicense.Enabled = !busy && ready && environment == "LIVE";
+        ReleaseLicense.Enabled = !busy && ready && hasData;
+        DeviceId.Text = device;
+        Automatic.AccessibleDescription = pro ? "Pro доступен" : "Для автоматики нужен Pro; ручное исправление остаётся бесплатным";
     }
     internal void SetState(string currentLanguage, bool paused, bool automatic, bool connected)
     {

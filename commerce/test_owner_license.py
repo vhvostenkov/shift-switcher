@@ -26,6 +26,14 @@ class OwnerLicenseTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             issue(dict(self.config, environment='LIVE'), 'a' * 64)
 
+    def test_explicit_live_owner_grant(self):
+        result = issue(dict(self.config, environment='LIVE'), 'a' * 64, now=1000, allow_live=True)
+        self.assertEqual(result['environment'], 'LIVE')
+        body = result['certificate'].split('.')[1]
+        payload = json.loads(base64.urlsafe_b64decode(body + '=' * (-len(body) % 4)))
+        self.assertEqual(payload['environment'], 'LIVE')
+        self.assertEqual(payload['kind'], 'owner')
+
     def test_invalid_device(self):
         with self.assertRaises(ValueError):
             issue(self.config, 'not-a-device')
