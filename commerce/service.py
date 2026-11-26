@@ -40,10 +40,11 @@ class Commerce:
         self.sandbox = self.environment == 'DEMO'
         required=['bank_approved','fresh_credentials_verified']
         if config.get('checkout_enabled'): required += ['receipt_delivery_verified','legal_terms_approved','live_checkout_approved']
+        if config.get('control_checkout_approved'): required += ['legal_terms_approved']
         if not self.sandbox and not all(config.get(k) is True for k in required):
             raise ValueError('LIVE readiness is incomplete')
         self.products = catalog_from(config)
-        if not self.sandbox and config.get('checkout_enabled') and any(not p.get(k) or p[k].endswith('-draft') for p in self.products.values() for k in ['terms_version','privacy_version']):
+        if not self.sandbox and (config.get('checkout_enabled') or config.get('control_checkout_approved')) and any(not p.get(k) or p[k].endswith('-draft') for p in self.products.values() for k in ['terms_version','privacy_version']):
             raise ValueError('LIVE legal versions are not published')
         self.cipher = Fernet(config['encryption_key'].encode())
         signer = serialization.load_pem_private_key(config['signing_key'].encode(), password=None)
@@ -71,6 +72,9 @@ class Commerce:
                     terms_version TEXT NOT NULL, privacy_version TEXT NOT NULL,
                     accepted_at INTEGER NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS control_sessions (
+                    order_id TEXT PRIMARY KEY REFERENCES orders(id), expires INTEGER NOT NULL
+                );
             ''')
         with closing(self.ledger.connect()) as db: ensure_tables(db)
         self.limits, self.lock = {}, Lock()
@@ -92,9 +96,12 @@ class Commerce:
     def create_checkout(self, request_id, email, product=PRODUCT, consent=None):
         if product not in self.products: raise ValueError('unknown_product')
         if not self.config.get('checkout_enabled'): raise ValueError('checkout_closed')
+        return self._create_checkout(request_id,email,product,consent)
+
+    def _create_checkout(self, request_id, email, product, consent, *, control=False):
         selected=self.products[product]
         accepted=isinstance(consent,dict) and consent.get('accepted') is True and all(consent.get(k)==selected.get(k) and selected.get(k) for k in ['terms_version','privacy_version'])
-        if not self.sandbox and not accepted: raise ValueError('terms_acceptance_required')
+        if not self.sandbox and not accepted and not control: raise ValueError('terms_acceptance_required')
         if not isinstance(request_id,str) or not re.fullmatch(r'[a-f0-9]{64}', request_id): raise ValueError('invalid_request')
         if not isinstance(email,str) or len(email)>254 or not re.fullmatch(r'[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+',email): raise ValueError('invalid_email')
         # Session identity comes from a high-entropy browser-owned request ID.
@@ -113,9 +120,37 @@ class Commerce:
                 (digest(request_id),digest(request_id),order,self.cipher.encrypt(key.encode()).decode(),self.cipher.encrypt(email.encode()).decode(),None,int(time.time())))
             if accepted:
                 db.execute('INSERT INTO consents VALUES(?,?,?,?)',(order,selected['terms_version'],selected['privacy_version'],int(time.time())))
+            if control:
+                db.execute('INSERT INTO control_sessions VALUES(?,?)',(order,int(time.time())+3600))
             db.commit()
         self.event(order,'created',self.environment+'; '+product)
         return request_id, self.checkout_status(request_id)
+
+    def prepare_control_checkout(self, email, product=PRODUCT):
+        # SSH/operator only. There is deliberately no HTTP route to this method.
+        if self.sandbox or self.config.get('control_checkout_approved') is not True or self.config.get('checkout_enabled'):
+            raise ValueError('control_checkout_closed')
+        if product not in self.products: raise ValueError('unknown_product')
+        token=secrets.token_hex(32)
+        return self._create_checkout(token,email,product,None,control=True)
+
+    def control_session(self, token):
+        if self.sandbox or self.config.get('control_checkout_approved') is not True: raise ValueError('control_checkout_closed')
+        row=self.session(token)
+        with closing(self.ledger.connect()) as db:
+            control=db.execute('SELECT expires FROM control_sessions WHERE order_id=?',(row['order_id'],)).fetchone()
+        if not control or control['expires']<=int(time.time()): raise ValueError('unknown_session')
+        return row
+
+    def accept_control_checkout(self, token, product, consent):
+        row=self.control_session(token)
+        if product!=row['product']: raise ValueError('unknown_product')
+        selected=self.products[product]
+        if not isinstance(consent,dict) or consent.get('accepted') is not True or any(consent.get(k)!=selected[k] for k in ['terms_version','privacy_version']):
+            raise ValueError('terms_acceptance_required')
+        with closing(self.ledger.connect()) as db:
+            db.execute('INSERT OR IGNORE INTO consents VALUES(?,?,?,?)',(row['order_id'],selected['terms_version'],selected['privacy_version'],int(time.time())))
+        return token,self.checkout_status(token)
 
     def session(self, token):
         if not isinstance(token,str) or not re.fullmatch(r'[a-f0-9]{64}',token): raise ValueError('unknown_session')
@@ -125,7 +160,11 @@ class Commerce:
         return row
 
     def start_payment(self, token):
-        if not self.config.get('checkout_enabled'): raise ValueError('checkout_closed')
+        if not self.config.get('checkout_enabled'):
+            row=self.control_session(token)
+            with closing(self.ledger.connect()) as db:
+                consent=db.execute('SELECT * FROM consents WHERE order_id=?',(row['order_id'],)).fetchone()
+            if not consent or any(consent[k]!=self.products[row['product']][k] for k in ['terms_version','privacy_version']): raise ValueError('terms_acceptance_required')
         # Serialize Init per process. A failed/uncertain Init is never retried
         # automatically: its order remains for operator reconciliation.
         with self.lock:
@@ -238,6 +277,10 @@ def handler_for(service):
                 if path=='/api/checkout':
                     service.limit(ip,'checkout',5)
                     token,result=service.create_checkout(data.get('request_id'),data.get('email'),data.get('product',PRODUCT),data.get('consent'))
+                    self.send(200,result,cookie='ss_session='+token+'; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800'); return
+                if path=='/api/control-checkout':
+                    service.limit(ip,'checkout',5)
+                    token,result=service.accept_control_checkout(data.get('request_id'),data.get('product'),data.get('consent'))
                     self.send(200,result,cookie='ss_session='+token+'; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800'); return
                 if path=='/api/pay': self.send(200,{'payment_url':service.start_payment(self.token())}); return
                 if path=='/api/notification':

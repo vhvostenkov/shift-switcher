@@ -1,6 +1,7 @@
 """Owner-only operations over SSH. Never expose this CLI as a public HTTP API."""
 import argparse
 import json
+import os
 import sqlite3
 import time
 from pathlib import Path
@@ -12,8 +13,29 @@ def main():
     parser=argparse.ArgumentParser();parser.add_argument('--data',required=True);parser.add_argument('--config',required=True)
     sub=parser.add_subparsers(dest='action',required=True)
     sub.add_parser('receipts')
+    control=sub.add_parser('prepare-control-checkout')
+    control.add_argument('--email',required=True); control.add_argument('--product',default='shift-switcher-pro-v1')
+    control.add_argument('--output',required=True)
     attach=sub.add_parser('attach-receipt');attach.add_argument('--order',required=True);attach.add_argument('--url',required=True)
     args=parser.parse_args()
+    if args.action=='prepare-control-checkout':
+        from .service import Commerce
+        from urllib.parse import urlencode
+        config_path=Path(args.config)
+        if config_path.stat().st_mode & 0o077: raise SystemExit('Private configuration required')
+        config=json.loads(config_path.read_text())
+        checkout=config.get('checkout_url','')
+        url=urlsplit(checkout)
+        if url.scheme!='https' or url.netloc!='vhvost.com' or url.path!='/pay/' or url.query or url.fragment:
+            raise SystemExit('Expected the owned HTTPS checkout URL')
+        # Reserve a private output file before creating anything. Never print the token.
+        fd=os.open(args.output,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+        with os.fdopen(fd,'w') as output:
+            service=Commerce(args.data,config)
+            token,order=service.prepare_control_checkout(args.email,args.product)
+            json.dump(dict(order=order['order'],url=checkout+'?'+urlencode({'product':args.product})+'#control='+token,expires_in=3600),output)
+            output.write('\n');output.flush();os.fsync(output.fileno())
+        print('Private control checkout saved. No bank initialization or payment performed.');return
     db=sqlite3.connect(Path(args.data)/'orders.sqlite');db.row_factory=sqlite3.Row
     try:
         if args.action=='receipts':
