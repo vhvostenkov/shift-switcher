@@ -38,10 +38,11 @@ class Commerce:
         self.environment = config.get('environment','DEMO')
         if self.environment not in {'DEMO','LIVE'}: raise ValueError('invalid_environment')
         self.sandbox = self.environment == 'DEMO'
-        required=['bank_approved','fresh_credentials_verified']
+        required=['bank_approved']
+        credentials_approved=config.get('fresh_credentials_verified') is True or config.get('existing_credentials_owner_approved') is True
         if config.get('checkout_enabled'): required += ['receipt_delivery_verified','legal_terms_approved','live_checkout_approved']
         if config.get('control_checkout_approved'): required += ['legal_terms_approved']
-        if not self.sandbox and not all(config.get(k) is True for k in required):
+        if not self.sandbox and (not credentials_approved or not all(config.get(k) is True for k in required)):
             raise ValueError('LIVE readiness is incomplete')
         self.products = catalog_from(config)
         if not self.sandbox and (config.get('checkout_enabled') or config.get('control_checkout_approved')) and any(not p.get(k) or p[k].endswith('-draft') for p in self.products.values() for k in ['terms_version','privacy_version']):

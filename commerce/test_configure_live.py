@@ -24,6 +24,12 @@ class ConfigureLiveTests(unittest.TestCase):
             with self.assertRaises(ValueError):prepare(self.base,self.key,self.keys,terminal,password,fresh_confirmed=fresh)
     def test_requires_exact_shipped_live_signing_key(self):
         with self.assertRaises(ValueError):prepare(self.base,self.key,{'DEMO:ss-live-1':self.keys['LIVE:ss-live-1']},'1234LIVE','fresh-test-only',fresh_confirmed=True)
+    def test_owner_can_explicitly_retain_existing_password_without_claiming_rotation(self):
+        config=prepare(self.base,self.key,self.keys,'1234LIVE','existing-test-only',fresh_confirmed=False,retain_existing_approved=True)
+        self.assertIs(config['fresh_credentials_verified'],False)
+        self.assertIs(config['existing_credentials_owner_approved'],True)
+        self.assertIs(config['checkout_enabled'],False)
+        self.assertIs(config['control_checkout_approved'],False)
 
 
 if __name__=='__main__':unittest.main()

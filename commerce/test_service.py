@@ -71,6 +71,15 @@ class ServiceTests(unittest.TestCase):
         self.config.update(environment='LIVE',terminal='testLIVE')
         with self.assertRaises(ValueError): Commerce(self.folder.name,self.config,bank=self.bank)
 
+    def test_explicit_owner_retention_is_recorded_without_faking_fresh_credentials(self):
+        self.config.update(environment='LIVE',terminal='testLIVE',checkout_enabled=False,bank_approved=True,
+            fresh_credentials_verified=False,existing_credentials_owner_approved=True)
+        service=Commerce(Path(self.folder.name)/'owner-retained-live',self.config,bank=self.bank)
+        with self.assertRaises(ValueError):service.create_checkout(self.token,'buyer@example.test')
+        self.assertIs(self.config['fresh_credentials_verified'],False)
+        self.config['existing_credentials_owner_approved']='yes'
+        with self.assertRaises(ValueError):Commerce(Path(self.folder.name)/'unapproved-live',self.config,bank=self.bank)
+
     def test_closed_live_can_receive_control_payment_without_opening_public_checkout(self):
         self.config.update(environment='LIVE',terminal='testLIVE',checkout_enabled=False,bank_approved=True,fresh_credentials_verified=True)
         service=Commerce(Path(self.folder.name)/'closed-live',self.config,bank=self.bank)
