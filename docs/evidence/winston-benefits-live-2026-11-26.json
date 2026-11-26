@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "verified_at": "2026-11-26T15:16:45.797927+00:00",
+  "producer_source": "472a5d4cd6e960393c6f2a4c60f11acee2f227af",
+  "routing_fix_source": "d9fb0c76afb4178dd462325ba92ee5a473e571ad",
+  "consumer_revision": "c7c35e51d155",
+  "canonical_CI": {
+    "all_six_success": true,
+    "official_verifier_exit": 0,
+    "report_sha256": "b3e03c9f17a2c5c68732220760d609360c8ebdfe32e376bf74125827baffa160"
+  },
+  "deploy_exit": 0,
+  "public_anonymous_route_statuses": [
+    422,
+    401
+  ],
+  "issuer_config_backup": "/opt/shift-switcher/config/service-live.pre-winston-benefits-1795706021.json",
+  "issuer_config_mode": "0600",
+  "other_configuration_unchanged": true,
+  "real_normal_account_SSO": true,
+  "real_browser_file_download": true,
+  "repeat_file_identical": true,
+  "file_sha256": "19d13537a81ecd828e91c8f54536ea197fa56dfb0a715f165a9bf4663dd16388",
+  "file_mode": "0600",
+  "grants_for_winston": 1,
+  "real_Mac_and_Windows_installation_ID_API_certificates": true,
+  "ordinary_LIVE_30_day_no_owner_kind": true,
+  "shipping_Swift_verifier_checks": "6/6",
+  "shipping_NET_verifier_checks": "6/6 on Mac; not native Windows DPAPI",
+  "temporary_Winston_API_slots_released": true,
+  "installed_Radar_licences_and_two_devices_preserved": true,
+  "native_Winston_import_separately_tested": false,
+  "new_encrypted_backup": {
+    "file": "orders-1795706192496216893.fernet",
+    "restore_integrity": "ok",
+    "all_tables_match": true
+  },
+  "public_checkout_enabled": false,
+  "SMTP_enabled": false,
+  "paid_confirmed_orders": 0,
+  "bank_initialized_orders": 0,
+  "mail_jobs": 0,
+  "limits": [
+    "The real SSO account was the existing owner. Free-tier eligibility is covered by producer tests, not a newly created live free account.",
+    "Paid purchase, fiscal receipt, email delivery and refund remain unverified."
+  ]
+}

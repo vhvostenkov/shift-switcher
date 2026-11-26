@@ -12,6 +12,8 @@
 - Доказательства: `docs/evidence/mac-commercial-{search,textarea}-2026-11-26.json`, `windows-commercial-installed-2026-11-26.json` (история), `windows-service-gift-installed-2026-11-26.json`, `downloads-service-gift-browser-2026-11-26.json`, `mac-final-commercial-2026-11-26.json`, `mac-build11-fast-undo-failed-2026-11-26.json`, `downloads-mac-final-browser-2026-11-26.json`.
 - LIVE commerce развёрнут на РФ-хосте из `c7c35e51d155`, checkout и SMTP выключены. Шифрованный ежедневный backup включён. HTTP-уведомления рабочего терминала включены на `https://vhvost.com/pay/api/notification`, сохранение проверено повторным открытием настройки; неподписанный callback отклонён HTTP 400. Настоящий банковский callback пока не получен. Рабочие реквизиты сохранены только в закрытой конфигурации РФ-сервера; по прямому решению владельца пароль оставлен прежним, это не проверка его обновления.
 
+Бесплатная выдача Pro через Winston и Radar работает на любых тарифах. Реальный вход и повторная выдача проверены для обоих; обычные сертификаты Winston приняты модулями клиентов. Новая нативная проверка именно Winston не выполнялась. Подробности — `docs/evidence/winston-benefits-live-2026-11-26.json`.
+
 ## Preview 4 — 21.10.2026
 
 - Индикатор RU/EN и режима; резервный Unicode-ввод для Codex без буфера обмена.
