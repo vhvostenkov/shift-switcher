@@ -1,0 +1,39 @@
+{
+  "device": "DESKTOP-90VV516",
+  "owner_request": "Enable automatic correction and Windows sign-in startup; keep the installed program running for everyday use.",
+  "source_commit": "09ff859624ecfcd465e415c6d91557afea4ff562",
+  "installed_exe": "C:\\Users\\Павел\\AppData\\Local\\Programs\\VHVost\\Shift Switcher Preview\\ShiftSwitcher.exe",
+  "verified_binary_sha256_reference": "e84e400f1794d9d3077cfe0f2f363ab1fe5c18fc68270a9d192b6761710024c2",
+  "evidence_origin": {
+    "thread_id": "01a21245-3096-7901-9f81-38a70b40f315",
+    "turn_id": "01a21332-525a-7ca3-8b81-d5374639769f",
+    "message_id": "msg_0622cc15201f6fbf016b07c3846ae487d2b1765eefd206404e",
+    "scope": "Windows actor confirmed UI/settings/startup registration and fresh smoke, then left one installed copy running."
+  },
+  "automatic_setting": true,
+  "startup_registry_key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+  "startup_value_name": "VHVost.ShiftSwitcher",
+  "startup_command": "\"C:\\Users\\Павел\\AppData\\Local\\Programs\\VHVost\\Shift Switcher Preview\\ShiftSwitcher.exe\" --background",
+  "startup_command_verified_exact": true,
+  "smoke": {
+    "input": "ghbdtn ",
+    "actual": "привет ",
+    "caret": [
+      7,
+      7
+    ],
+    "passed": true
+  },
+  "state_after": {
+    "automatic": true,
+    "startup_registered": true,
+    "installed_process_count": 1,
+    "settings_window_closed": true,
+    "left_running_in_tray": true
+  },
+  "reboot_or_signout_performed": false,
+  "fresh_login_execution_verified": false,
+  "security_settings_changed": false,
+  "coordination": "New owner instruction supersedes earlier QA cleanup that turned automatic correction off and stopped the hook. Future Winston tests must account for owner-requested running Shift rather than silently disabling it.",
+  "license_note": "Windows remains a technical Preview with implemented features available without paid activation; this is not issuance of a commercial Windows Pro licence."
+}
