@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "tested_at": "2026-11-26",
+  "source_commit": "68d4cc5bf70d1b09739838dcba3630d96073cd97",
+  "installed_exe_sha256": "93993c57145822c7aa306e6fce302074dff126e831da2def3fa3fd5b735dbe43",
+  "platform": "Windows 10 x64 build 19045",
+  "host": "DESKTOP-90VV516",
+  "installed_path": "C:\\Users\\Павел\\AppData\\Local\\Programs\\VHVost\\Shift Switcher\\ShiftSwitcher.exe",
+  "desktop_shortcut": "C:\\Users\\Павел\\Desktop\\Shift Switcher.lnk",
+  "settings_sha256_before": "a50d4ca7a9e4fcfda4643b9d6db2f081ef39d7197cf3d267eec2a469604e5c79",
+  "settings_sha256_after": "a50d4ca7a9e4fcfda4643b9d6db2f081ef39d7197cf3d267eec2a469604e5c79",
+  "automatic": true,
+  "startup_command": "\"C:\\Users\\Павел\\AppData\\Local\\Programs\\VHVost\\Shift Switcher\\ShiftSwitcher.exe\" --background",
+  "process_count": 1,
+  "checks": {
+    "core": 60,
+    "licensing": 56,
+    "native_dpapi": 7
+  },
+  "ui": {
+    "default_pages": 4,
+    "minimum_pages": 4,
+    "scale_percent": 125,
+    "dpi": 120,
+    "tab_space": true,
+    "pause_resume": true
+  },
+  "trial": {
+    "days": 14,
+    "automatic_enabled": true
+  },
+  "free": {
+    "automatic_disabled": true,
+    "manual_double_shift": true,
+    "undo": true,
+    "actual_ru": "ru-RU",
+    "actual_en": "en-US",
+    "saved_automatic_preserved": true,
+    "trial_store_restored_hash_matches": true
+  },
+  "owner": {
+    "imported": true,
+    "restart_persisted": true,
+    "dpapi_dialog": false,
+    "automatic": true,
+    "undo": true,
+    "actual_ru": "ru-RU",
+    "actual_en": "en-US",
+    "installed_launch_pro": true,
+    "certificate_sha256": "4677227f63a283e1f835ae48b634f15e485fd522af76b2f18a496f9df8a9604b"
+  },
+  "license_store_sha256": "e0e0912be98c4203b6b7c10cae1791971d97cd1579db1de3bb6447b463dd3bf1",
+  "evidence_source": {
+    "thread_id": "01a21245-3096-7901-9f81-38a70b40f315",
+    "message_id": "msg_0622cc15201f6fbf016b08001649cc87d2885ccb796d31b299",
+    "method": "Windows actor report; root independently received the exact EXE and matched SHA256"
+  },
+  "limitations": [
+    "Synthetic input and owned Chrome fixtures, not physical typing acceptance",
+    "Actual Windows sign-out/sign-in not performed; own HKCU Run command verified",
+    "Paid LIVE purchase and fiscal receipt remain unverified"
+  ]
+}
