@@ -72,7 +72,8 @@ internal sealed class Toggle : CheckBox
     protected override void OnPaint(PaintEventArgs e)
     {
         e.Graphics.Clear(Parent?.BackColor ?? Palette.Surface); e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-        var scale = DeviceDpi / 96f; var track = new RectangleF(3 * scale, 5 * scale, 44 * scale, 24 * scale);
+        var scale = Math.Min(Width / 52f, Height / 32f);
+        var track = new RectangleF(3 * scale, 5 * scale, 44 * scale, 24 * scale);
         using var path = Palette.Round(track, 12 * scale);
         using var brush = new SolidBrush(!Enabled ? Palette.Border : Checked ? Palette.Accent : Palette.Muted);
         e.Graphics.FillPath(brush, path);
@@ -103,13 +104,15 @@ internal sealed class SettingsView
         Window = new SettingsForm
         {
             Text = Program.WindowTitle, ClientSize = new Size(940, 680), MinimumSize = new Size(720, 480),
-            AutoScaleDimensions = new SizeF(96, 96), AutoScaleMode = AutoScaleMode.Dpi,
+            AutoScaleMode = AutoScaleMode.None,
             StartPosition = FormStartPosition.CenterScreen, BackColor = Palette.Background,
             Font = new Font("Segoe UI", 10), ForeColor = Palette.Ink,
             Icon = Icon.ExtractAssociatedIcon(Environment.ProcessPath!)
         };
+        Window.SuspendLayout();
         var sidebar = new Panel { Dock = DockStyle.Left, Width = 216, BackColor = Palette.Surface, Padding = new Padding(22, 28, 18, 20) };
         var brand = Grid(2); brand.Height = 58; brand.Dock = DockStyle.Top;
+        brand.RowStyles.Add(new(SizeType.Percent, 100));
         brand.ColumnStyles.Clear(); brand.ColumnStyles.Add(new(SizeType.Absolute, 46)); brand.ColumnStyles.Add(new(SizeType.Percent, 100));
         var picture = new PictureBox { Image = Window.Icon?.ToBitmap(), SizeMode = PictureBoxSizeMode.Zoom, Size = new Size(36, 36), AccessibleName = "Shift Switcher" };
         brand.Controls.Add(picture, 0, 0); brand.Controls.Add(Text("Shift\nSwitcher", 14, true), 1, 0);
@@ -183,6 +186,9 @@ internal sealed class SettingsView
             nav.Controls.Add(button); pages.Controls.Add(page); navigation.Add((button, page));
         }
         Select(overview);
+        Window.AutoScaleDimensions = new SizeF(96, 96);
+        Window.AutoScaleMode = AutoScaleMode.Dpi;
+        Window.ResumeLayout(true);
         Window.Shown += (_, _) =>
         {
             var area = Screen.FromControl(Window).WorkingArea;
@@ -238,6 +244,7 @@ internal sealed class SettingsView
     private static Control Option(string title, string description, CheckBox toggle)
     {
         var row = Grid(2); row.Dock = DockStyle.Fill; row.ColumnStyles.Clear(); row.ColumnStyles.Add(new(SizeType.Percent, 100)); row.ColumnStyles.Add(new(SizeType.Absolute, 56));
+        row.RowStyles.Add(new(SizeType.Percent, 100));
         var copy = Grid(1); copy.Dock = DockStyle.Fill; copy.RowStyles.Add(new(SizeType.Percent, 50)); copy.RowStyles.Add(new(SizeType.Percent, 50));
         copy.Controls.Add(Text(title, 10, true)); copy.Controls.Add(Text(description, 9)); row.Controls.Add(copy, 0, 0); toggle.Anchor = AnchorStyles.Right; row.Controls.Add(toggle, 1, 0); return row;
     }
