@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "verified_at": "2026-11-26T14:28:57.784588+00:00",
+  "source_commit": "a5e26782d528a8272f960dc2ed7ff0622f732152",
+  "packaging_commit": "bd98e6242b69cc59b4b0bed710ad3a2f939e9cbd",
+  "site_button_download": true,
+  "archive_bytes": 1978054,
+  "archive_sha256": "365ca065aa7374e5d99de4b0b3c1d8be73df3d4c328a5e0f84a66df18f89df22",
+  "binary_sha256": "49f60200c9919ff41b7c51bf0854dd84da11a68baaa322d7baa55223731b60f7",
+  "executable_mode": "0755",
+  "owner_state_or_keys_in_archive": false,
+  "codesign_strict_verified_after_extraction": true,
+  "native_receipt": "mac-final-commercial-2026-11-26.json",
+  "github_release": "https://github.com/vhvostenkov/shift-switcher/releases/tag/v1.0.0-rc.3",
+  "github_asset_digests_match": true,
+  "github_tag_target_verified": true,
+  "windows_archive_unchanged": true,
+  "public_checkout_enabled": false,
+  "publication_backup": "/opt/winston/.shift-switcher-backups/downloads-mac-bd98e62"
+}
