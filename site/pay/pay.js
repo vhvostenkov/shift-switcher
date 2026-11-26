@@ -6,6 +6,8 @@ let controlToken=new URLSearchParams(location.hash.slice(1)).get('control');
 if(controlToken&&!/^[a-f0-9]{64}$/.test(controlToken))controlToken=null;
 // Keep this one-hour capability out of request URLs, history and referrers.
 if(location.hash){history.replaceState(null,'',location.pathname+location.search);}
+// Pasting a private link into an already open checkout otherwise changes only the hash.
+window.addEventListener('hashchange',()=>{if(/^#control=[a-f0-9]{64}$/.test(location.hash))location.reload();});
 async function api(path,body){const response=await fetch('/pay/api/'+path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined,cache:'no-store',credentials:'same-origin'});if(!response.ok)throw Error('Сервис оплаты временно недоступен. Повторите позже или напишите в поддержку.');try{return await response.json();}catch{throw Error('Не удалось получить ответ сервиса оплаты. Повторите позже.');}}
 function select(id){if(!products[id])return;selected=id;$('checkout').hidden=false;$('product-name').textContent=products[id].name;$('price').textContent=money(products[id].amount)+' · один раз · '+products[id].devices+' компьютера';$('terms').href=products[id].terms;$('privacy').href=products[id].privacy;$('order-form').hidden=!available;$('email-label').hidden=!!controlToken;$('email').disabled=!!controlToken;$('email').hidden=!!controlToken;$('download').hidden=true;$('result').textContent='';}
 function requestId(){const name='vhvost-order:'+selected;let id=sessionStorage.getItem(name);if(!id){id=Array.from(crypto.getRandomValues(new Uint8Array(32)),v=>v.toString(16).padStart(2,'0')).join('');sessionStorage.setItem(name,id);}return id;}
