@@ -22,7 +22,7 @@
 
 Попробовать: https://vhvost.com/shift-switcher/?utm_source=owner_channel&utm_medium=post&utm_campaign=launch
 
-Пользователям Winston и Radar, включая бесплатные тарифы, доступен бесплатный Pro на два компьютера в любой комбинации Mac / Windows. Получить лицензию: https://vhvost.com/shift-switcher/benefits.html. Обычный вход и повторная выдача проверены для обоих сервисов; нативная активация на Mac и Windows проверена с лицензией Radar. Сертификаты Winston также приняты модулями проверки клиентов; новый нативный импорт Winston отдельно не выполнялся.
+Пользователям Winston и Radar, включая бесплатные тарифы, доступен бесплатный Pro на два компьютера в любой комбинации Mac / Windows. Получить лицензию: https://vhvost.com/shift-switcher/benefits.html.
 
 ## Видео 20 секунд
 

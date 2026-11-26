@@ -43,5 +43,28 @@
   "limits": [
     "The real SSO account was the existing owner. Free-tier eligibility is covered by producer tests, not a newly created live free account.",
     "Paid purchase, fiscal receipt, email delivery and refund remain unverified."
-  ]
+  ],
+  "site_publication": {
+    "source": "29594a8ef5bf80ba9a270789c0d6a3f9c460e24d",
+    "backup": "/opt/winston/.shift-switcher-backups/benefits-live-29594a8",
+    "http_hashes_verified": [
+      {
+        "path": "shift-switcher/index.html",
+        "status": 200,
+        "sha256": "04bf71a8885a21b718c68deeacf2e576340b9cb7dc4ca675b8cd2972ba4eef4a"
+      },
+      {
+        "path": "shift-switcher/windows.html",
+        "status": 200,
+        "sha256": "fb7ab7512cc0fef9040c1ebbb982e72f38f3edc937383e6cd1d277365eb15437"
+      },
+      {
+        "path": "pay/index.html",
+        "status": 200,
+        "sha256": "943ca68cc4bdb541ca55f9ea71801ac929ccabe513242b19fc39275875070de2"
+      }
+    ],
+    "real_browser_updated_callout_verified": true,
+    "Caddy_env_downloads_Google_untouched": true
+  }
 }
