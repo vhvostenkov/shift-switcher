@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "verified_at": "2026-11-26T14:30:03.722355+00:00",
+  "root_programs_navigation_present": true,
+  "root_programs_card_click_opened": "https://vhvost.com/shift-switcher/",
+  "browser_proof": "release/root-programs-live-proof.png",
+  "http": [
+    {
+      "url": "https://vhvost.com/robots.txt",
+      "status": 200,
+      "content_type": "text/plain; charset=utf-8",
+      "sitemap_declared": true
+    },
+    {
+      "url": "https://vhvost.com/sitemap.xml",
+      "status": 200,
+      "content_type": "text/xml; charset=utf-8",
+      "urls": [
+        "https://vhvost.com/",
+        "https://vhvost.com/shift-switcher/",
+        "https://vhvost.com/shift-switcher/windows.html"
+      ]
+    },
+    {
+      "url": "https://vhvost.com/shift-switcher/sitemap.xml",
+      "status": 200,
+      "content_type": "text/xml; charset=utf-8",
+      "urls": [
+        "https://vhvost.com/shift-switcher/",
+        "https://vhvost.com/shift-switcher/windows.html"
+      ]
+    }
+  ],
+  "indexing_guaranteed": false
+}
