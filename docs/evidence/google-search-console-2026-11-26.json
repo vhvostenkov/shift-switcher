@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "verified_at": "2026-11-26T13:06:47.881863+00:00",
+  "property": "https://vhvost.com/shift-switcher/",
+  "owner_account": "Existing owner Google account; no new account or delegated user",
+  "ownership": "Verified by Google Search Console with public HTML verification file",
+  "verification_file": "google0d1064743c1d484a.html",
+  "verification_file_sha256": "dbc86316f31460a513eb09a7fef7d77dd79a3731b3f3dc3d1e8f2814a90ab27d",
+  "sitemap": "https://vhvost.com/shift-switcher/sitemap.xml",
+  "sitemap_processed": true,
+  "discovered_pages": 2,
+  "main_url_index_status": "Discovered, not indexed",
+  "indexing_request": "Accepted into priority crawl queue",
+  "indexed": false,
+  "search_position_or_traffic_confirmed": false,
+  "paid_advertising_spend_rub": 0
+}
