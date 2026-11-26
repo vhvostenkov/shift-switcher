@@ -441,17 +441,22 @@ final class NativeAcceptance {
         let physical = sourceLanguage == "ru" ? Layout.convert(typedSequence) : typedSequence
         let letters = zip(physical, typedSequence).map { (englishCodes[$0.0]!, String($0.1)) }
         let name = "rapid_" + String(caseIndex) + "_" + sourceLanguage
-        func type(_ index: Int) {
+        func type(_ index: Int, retries: Int = 20) {
             guard index < letters.count else {
                 self.later(0.05) {
-                    let typed = self.field()?.value ?? ""
+                    let observed = self.field()?.value ?? ""
+                    // AX may still omit the final injected space here. The oracle is
+                    // the known input sequence, not this deliberately early snapshot.
+                    // TextEdit can capitalize the first letter of a new paragraph.
+                    let typed = self.target == nil && observed.first?.isUppercase == true
+                        ? typedSequence.prefix(1).uppercased() + typedSequence.dropFirst() : typedSequence
                     self.later(0.7) {
                         let actual = self.field()?.value ?? "<unavailable>"
                         let changed = typed.lowercased() == typedSequence && actual == Layout.convert(typed)
-                        self.record(name + "_no_duplicates", changed, "key spacing=\(interval); before=" + typed + "; after=" + actual + "; auto=" + self.app.automaticDiagnostic + "; spaces=\(self.app.keyboardSpaceCount - originalSpaceCount); tapRestarts=\(self.app.tapRestartCount - originalTapRestarts)")
+                        self.record(name + "_no_duplicates", changed, "requested key spacing=\(interval); expected input=" + typed + "; early AX=" + observed + "; after=" + actual + "; auto=" + self.app.automaticDiagnostic + "; spaces=\(self.app.keyboardSpaceCount - originalSpaceCount); tapRestarts=\(self.app.tapRestartCount - originalTapRestarts)")
                         let targetLanguage = sourceLanguage == "en" ? "ru" : "en"
                         self.record(name + "_layout", changed && self.app.currentInputLanguage() == targetLanguage, "Actual input source follows automatic correction")
-                        self.doubleShift {
+                        self.resultWhenReady { self.doubleShift {
                             let restored = self.field()?.value == typed
                             self.record(name + "_exact_undo", changed && restored, "Restore exact input; actual=" + (self.field()?.value ?? "<unavailable>"))
                             self.record(name + "_undo_layout", restored && self.app.currentInputLanguage() == sourceLanguage, "Undo input source=" + (self.app.currentInputLanguage() ?? "<unavailable>"))
@@ -461,12 +466,18 @@ final class NativeAcceptance {
                                 self.record(name + "_preserved_layout", self.app.currentInputLanguage() == sourceLanguage, "Protected text keeps original input source")
                                 self.rapidPhraseCase(caseIndex + 1)
                             }
-                        }
+                        } }
                     }
                 }
                 return
             }
-            guard self.field() != nil else { self.record("focus", false, "Aborted rapid input outside fixture"); self.finish(); return }
+            guard self.field() != nil else {
+                // A source transition can temporarily withdraw Chrome's AX field.
+                // Do not post any key until the same owned fixture is readable again.
+                if retries > 0 { self.later(0.05) { type(index, retries: retries - 1) } }
+                else { self.record("focus", false, "Aborted rapid input outside fixture"); self.finish() }
+                return
+            }
             for down in [true, false] {
                 let event = CGEvent(keyboardEventSource: nil, virtualKey: letters[index].0, keyDown: down)!
                 event.flags = []

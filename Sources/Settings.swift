@@ -118,7 +118,7 @@ struct SettingsView: View {
                     Text("Без отправки текста\nи истории ввода.").font(.system(size: 11)).foregroundColor(.secondary).lineSpacing(3)
                 }
                 Divider().padding(.vertical, 20)
-                Text("\(model.licenseStatus)\n\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "") · PREVIEW").font(.system(size: 9, weight: .medium, design: .monospaced)).tracking(1.4).foregroundColor(.secondary)
+                Text("\(model.licenseStatus)\nRU ↔ EN · MACOS").font(.system(size: 9, weight: .medium, design: .monospaced)).tracking(1.4).foregroundColor(.secondary)
             }.padding(.horizontal, 22).padding(.top, 38).padding(.bottom, 26).frame(width: 188)
                 .background(Color.black.opacity(0.18))
             VStack(alignment: .leading, spacing: 19) {
