@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "channel": "preview",
+  "downloads": {
+    "windows": {
+      "filename": "Shift-Switcher-Windows.zip",
+      "bytes": 69853064,
+      "sha256": "d59778eeb7843cfd0c32c9ec937491315f030b9d299fd1f0f88651c74091127b",
+      "binary_sha256": "b6dbf3e831395c6bc5ab7d5055e29065047af3399b3839aef7ebc06be964e47b",
+      "source_commit": "5960d815bdb0b6e042633150cc7394ea31040cc0"
+    },
+    "mac": {
+      "filename": "Shift-Switcher-Mac.zip",
+      "bytes": 1971849,
+      "sha256": "704d51e633f060fad9c0d71e8c809480baaa54bd1d887db3aa2111c12246603e",
+      "binary_sha256": "ec6716b97e756d9c5a7279fdf213913ddbbd532df031165d89973e1d238daee4",
+      "source_commit": "1395e055972e53f26d774aeec6d00ed2bff44d96"
+    }
+  }
+}
