@@ -1,0 +1,80 @@
+{
+  "source_commit": "09ff859624ecfcd465e415c6d91557afea4ff562",
+  "device": "DESKTOP-90VV516",
+  "installed_exe": "C:\\Users\\Павел\\AppData\\Local\\Programs\\VHVost\\Shift Switcher Preview\\ShiftSwitcher.exe",
+  "desktop_shortcut": "C:\\Users\\Павел\\Desktop\\Shift Switcher Preview.lnk",
+  "exe_sha256_after_test": "e84e400f1794d9d3077cfe0f2f363ab1fe5c18fc68270a9d192b6761710024c2",
+  "evidence_origin": {
+    "thread_id": "01a21245-3096-7901-9f81-38a70b40f315",
+    "turn_id": "01a21332-525a-7ca3-8b81-d5374639769f",
+    "message_id": "msg_0622cc15201f6fbf016b07c2293d9087d29ab55bac49be1866",
+    "method": "Fresh native CUA check in owned HTTPS fixture by sole Windows actor; ordinary-message results transcribed here. Raw full receipt retained on Windows."
+  },
+  "request": "Owner explicitly requested installation and testing through another chat.",
+  "installation": "Existing EXE and shortcut verified; no reinstall required. Fresh run launched through desktop shortcut.",
+  "fixture": "https://vhvost.com/shift-switcher/compatibility-windows-20261125.html",
+  "passed": [
+    {
+      "case": "selected double Shift and exact undo",
+      "values": [
+        "ghbdtn",
+        "привет",
+        "ghbdtn"
+      ]
+    },
+    {
+      "case": "last word only",
+      "before": "mesh wifi копbz",
+      "after": "mesh wifi копия"
+    },
+    {
+      "case": "automatic EN to RU after space",
+      "value": "привет ",
+      "caret": [
+        7,
+        7
+      ]
+    },
+    {
+      "case": "automatic RU to EN after space",
+      "value": "hello ",
+      "caret": [
+        6,
+        6
+      ]
+    },
+    {
+      "case": "continuing with second word without joining",
+      "value": "hello world ",
+      "caret": [
+        12,
+        12
+      ]
+    },
+    {
+      "case": "automatic undo",
+      "value": "ghbdtn "
+    },
+    {
+      "case": "another space does not repeat correction",
+      "original_phrase_retained": true,
+      "reported_caret": [
+        8,
+        8
+      ]
+    },
+    {
+      "case": "actual RU and EN input layouts",
+      "result": "confirmed by Windows actor"
+    }
+  ],
+  "state_after": {
+    "automatic": false,
+    "shift_process_count": 0,
+    "own_fixture_tabs_closed": true,
+    "autostart_changed": false,
+    "windows_security_changed": false,
+    "winston_touched": false
+  },
+  "scope": "Fresh functional smoke of the installed technical Preview. No new exact-timing, physical-keyboard, all-clipboard-format or full commercial acceptance claim."
+}

@@ -49,5 +49,6 @@
   "adjacent_files": "README, ACCEPTANCE and available runtime notices were saved beside the installed EXE per original installation receipt.",
   "installation_confirmed": true,
   "unknown_disconnect_outcome_reconciled": true,
-  "release_state": "Per-user Windows technical Preview pilot. This does not open Windows sales/public download or prove the remaining full-acceptance items."
+  "release_state": "Per-user Windows technical Preview pilot. This does not open Windows sales/public download or prove the remaining full-acceptance items.",
+  "fresh_functional_recheck_receipt": "windows-installed-recheck-2026-11-26.json"
 }
