@@ -21,6 +21,7 @@ from .ledger import Ledger, PRODUCT
 from .tbank import TBankDemo, TBankLive
 from .catalog import catalog_from
 from .delivery import ensure_tables, enqueue
+from .benefits import ServiceBenefits
 
 
 def digest(text):
@@ -78,6 +79,7 @@ class Commerce:
                 );
             ''')
         with closing(self.ledger.connect()) as db: ensure_tables(db)
+        self.benefits=ServiceBenefits(self.ledger,self.cipher,config,self.environment)
         self.limits, self.lock = {}, Lock()
 
     def limit(self, ip, group, maximum=30):
@@ -229,12 +231,17 @@ class Commerce:
     def activate(self, key, device):
         if not isinstance(key,str) or not 30<=len(key)<=100: raise ValueError('invalid_license')
         try:
-            cert=self.ledger.activate(key,device)
+            cert=self.benefits.activate(key,device) or self.ledger.activate(key,device)
         except ValueError as error:
+            if str(error) in {'license_revoked','device_limit'}:raise EntitlementError(str(error)) from None
             if str(error)=='license not paid or revoked': raise EntitlementError('license_revoked') from None
             if str(error)=='device limit reached': raise EntitlementError('device_limit') from None
             raise
         return {'certificate':cert,'environment':self.environment}
+
+    def release_device(self, key, device):
+        if not isinstance(key,str) or not 30<=len(key)<=100:raise ValueError('invalid_license')
+        if not self.benefits.release(key,device):self.ledger.release_device(key,device)
 
 
 def handler_for(service):
@@ -251,9 +258,9 @@ def handler_for(service):
                 'Content-Security-Policy':"default-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"}.items(): self.send_header(k,v)
             if cookie: self.send_header('Set-Cookie',cookie)
             self.end_headers(); self.wfile.write(raw)
-        def token(self):
+        def token(self,name='ss_session'):
             cookies=SimpleCookie(); cookies.load(self.headers.get('Cookie',''))
-            return cookies['ss_session'].value if 'ss_session' in cookies else ''
+            return cookies[name].value if name in cookies else ''
         def route(self,method):
             if not hmac.compare_digest(self.headers.get('X-Edge-Key',''),service.config['edge_key']):
                 self.send(403,{'error':'forbidden'}); return
@@ -263,7 +270,8 @@ def handler_for(service):
                 service.limit(ip,'general',120)
                 if method=='GET':
                     if path=='/api/health': self.send(200,{'ok':True,'environment':service.environment,'revision':service.config.get('revision','local')}); return
-                    if path=='/api/catalog': self.send(200,{'products':service.products,'environment':service.environment,'checkout_enabled':service.config.get('checkout_enabled') is True}); return
+                    if path=='/api/catalog': self.send(200,{'products':service.products,'environment':service.environment,'checkout_enabled':service.config.get('checkout_enabled') is True,'benefits':service.benefits.catalogue()}); return
+                    if path=='/api/benefit/license': self.send(200,service.benefits.file(self.token('ss_benefit'))); return
                     if path=='/api/order': self.send(200,service.checkout_status(self.token())); return
                     if path=='/api/license': self.send(200,service.license_file(self.token())); return
                     self.send(404,{'error':'not_found'}); return
@@ -275,6 +283,14 @@ def handler_for(service):
                     raise ValueError('origin_rejected')
                 data=json.loads(self.rfile.read(length))
                 if not isinstance(data,dict): raise ValueError('object_required')
+                if path=='/api/benefit/start':
+                    service.limit(ip,'benefits',5)
+                    token,result=service.benefits.start(data.get('provider'),data.get('consent'))
+                    self.send(200,result,cookie='ss_benefit='+token+'; Secure; HttpOnly; SameSite=Lax; Path=/pay/; Max-Age=600');return
+                if path=='/api/benefit/claim':
+                    service.limit(ip,'benefits',10)
+                    result=service.benefits.claim(self.token('ss_benefit'),data.get('ticket'))
+                    self.send(200,result,cookie='ss_benefit='+self.token('ss_benefit')+'; Secure; HttpOnly; SameSite=Lax; Path=/pay/; Max-Age=604800');return
                 if path=='/api/checkout':
                     service.limit(ip,'checkout',5)
                     token,result=service.create_checkout(data.get('request_id'),data.get('email'),data.get('product',PRODUCT),data.get('consent'))
@@ -291,8 +307,7 @@ def handler_for(service):
                     self.send(200,service.activate(data.get('key'),data.get('device'))); return
                 if path=='/api/release-device':
                     service.limit(ip,'activate',10)
-                    if not isinstance(data.get('key'),str): raise ValueError('invalid_license')
-                    service.ledger.release_device(data['key'],data.get('device'))
+                    service.release_device(data.get('key'),data.get('device'))
                     self.send(200,{'released':True}); return
                 self.send(404,{'error':'not_found'})
             except EntitlementError as error:
