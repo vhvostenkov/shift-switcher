@@ -14,7 +14,7 @@
   "certificate_signature": "Verified against the shipped LIVE public key",
   "certificate_offline_days": 30,
   "paid_payment_created": false,
-  "native_clients_not_yet_imported": true,
+  "native_clients_not_yet_imported": false,
   "initial_check": "Correct device_limit rejection returned HTTP 409; first harness expected 403 and stopped before release/reuse",
   "repeat_browser_login_same_license": true,
   "shipping_swift_verifier": {
@@ -27,5 +27,23 @@
     "passed": 6,
     "source_blob": "2cfb5c38864c484b831ca00d82035ac0ad533ec9",
     "execution_host": "Mac; native Windows DPAPI not part of this check"
-  }
+  },
+  "native_mac_import": {
+    "ui": "Pro activated; licence activated",
+    "persisted_key_matches_browser_file": true,
+    "ordinary_live_benefit_certificate": true,
+    "binary_sha256": "8ec544cc6a717539c0dc43738580f85f100c4a1e1e5e616a3fa56f00744b236a",
+    "state_mode": "0o600",
+    "restart_tested": true,
+    "after_restart": {
+      "Pro": true,
+      "automatic": true,
+      "paused": false,
+      "accessibility": true,
+      "input_monitoring": true,
+      "new_permission_or_keychain_prompt": false
+    },
+    "original_trial_started_preserved": true
+  },
+  "native_windows_service_file_import": "not yet performed; owner licence remains active"
 }
