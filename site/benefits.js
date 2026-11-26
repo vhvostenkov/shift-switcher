@@ -25,7 +25,7 @@ node('download-benefit').addEventListener('click',()=>{
  try{
   const response=await fetch('/pay/api/catalog',{cache:'no-store',credentials:'same-origin'});if(!response.ok)throw Error('Сервис временно недоступен.');const data=await response.json();product=data.products['shift-switcher-pro-v1'];const providers=data.benefits||[];
   for(const p of providers)if(hosts[p.id]){enabledProviders.add(p.id);node(p.id).disabled=false;}
-  node('status').textContent=providers.length?'Выберите сервис, которым уже пользуетесь.':'Подключаем бесплатную выдачу. Приложение уже можно установить и проверить в пробном режиме.';
+  node('status').textContent=providers.length===2?'Выберите сервис, которым уже пользуетесь.':providers.length===1?'Уже доступен '+providers[0].name+'. Подключение второго сервиса завершаем.':'Подключаем бесплатную выдачу. Приложение уже можно установить и проверить в пробном режиме.';
   if(ticket){if(ticket.length>8192)throw Error('Ссылка подтверждения не подходит. Войдите заново.');ready(await api('claim',{ticket}));}
   else{try{ready(await api('license'));}catch{}}
  }catch(error){node('status').textContent=error.message;}
