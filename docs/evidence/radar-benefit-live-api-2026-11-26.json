@@ -1,0 +1,31 @@
+{
+  "tested_at": 1795692174,
+  "provider": "radar",
+  "browser_existing_owner_account": true,
+  "downloaded_license_sha256": "3499848a7eed55dc4f28e2a8053445dfc0a9b2896d3aca23ffa81ddf0a190948",
+  "license_file_mode": "0600",
+  "live_api_two_actual_installation_ids": true,
+  "windows_device_source": "Installed Windows actor receipt from DESKTOP-90VV516",
+  "mac_device_source": "SHA256 of the currently installed Mac application installation ID",
+  "third_device_http": 409,
+  "third_device_denied": true,
+  "release_and_reuse": true,
+  "final_slots": "Current Mac and Windows IDs restored",
+  "certificate_signature": "Verified against the shipped LIVE public key",
+  "certificate_offline_days": 30,
+  "paid_payment_created": false,
+  "native_clients_not_yet_imported": true,
+  "initial_check": "Correct device_limit rejection returned HTTP 409; first harness expected 403 and stopped before release/reuse",
+  "repeat_browser_login_same_license": true,
+  "shipping_swift_verifier": {
+    "checks": 6,
+    "passed": 6,
+    "source_blob": "ee8037d9161692840ae37513976d2596f816fd12"
+  },
+  "shipping_dotnet_verifier": {
+    "checks": 6,
+    "passed": 6,
+    "source_blob": "2cfb5c38864c484b831ca00d82035ac0ad533ec9",
+    "execution_host": "Mac; native Windows DPAPI not part of this check"
+  }
+}
