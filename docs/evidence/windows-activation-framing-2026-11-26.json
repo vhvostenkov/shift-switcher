@@ -18,5 +18,28 @@
   "regression_red": "Activation Content-Length assertion fails before mock reads/serializes the body",
   "fix": "Pre-serialize the small activation/release JSON into StringContent so the HTTP transport supplies Content-Length",
   "server_policy": "Unchanged: Transfer-Encoding rejected; body must have length 1..16384",
-  "native_fixed_build": "pending"
+  "native_fixed_build": "pending",
+  "regression_green": {
+    "licensing_checks": 58,
+    "portable_core_checks": 60
+  },
+  "real_production_client_on_mac": {
+    "original_trial_has_pro": false,
+    "online_activation": true,
+    "ordinary_benefit_not_owner": true,
+    "offline_reopen": true,
+    "trial_start_preserved": true,
+    "installed_app_files_changed": false
+  },
+  "fixed_source": "c51157f9426210cef2b7d80ead3ce596f7d80bd6",
+  "candidate_managed_artifact": {
+    "sha256": "2f2bdbac4f954836224043d2d7e2fb8e5d74a914441f81b643537cbffb52d01c",
+    "mvid": "f70859df-e151-4667-b957-49dabf2bf051",
+    "rea_evidence": "ev_5003379285d963cf6120fab84428e849459c92efa374e4ec8a348ab382dc2de7",
+    "coverage": "partial static metadata; local candidate DLL, not the newly installed Windows EXE"
+  },
+  "alternate_key_regression": {
+    "red": "Source c51157f clears the current valid licence when another key receives 403 license_revoked",
+    "green": "59 licensing checks; rejection of a different key preserves existing licence, revocation of the current key still clears it"
+  }
 }

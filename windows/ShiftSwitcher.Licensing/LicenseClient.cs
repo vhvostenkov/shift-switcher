@@ -124,8 +124,13 @@ public sealed class LicenseClient : IDisposable
                 if (operation != generation) return;
                 if (status == HttpStatusCode.Forbidden && body.RootElement.TryGetProperty("error", out var error) && error.GetString() == "license_revoked")
                 {
-                    if (!Persist(state with { Key = "", Certificate = "" })) Ready = false;
-                    payload = null; Message = "Лицензия отозвана. Доступны Free и оставшийся пробный период."; return;
+                    if (key == state.Key)
+                    {
+                        if (!Persist(state with { Key = "", Certificate = "" })) Ready = false;
+                        payload = null; Message = "Лицензия отозвана. Доступны Free и оставшийся пробный период.";
+                    }
+                    else Message = "Этот ключ отозван. Текущая лицензия не изменена.";
+                    return;
                 }
                 if (status != HttpStatusCode.OK || !body.RootElement.TryGetProperty("certificate", out var value) || value.ValueKind != JsonValueKind.String ||
                     LicenseCheck.Verify(value.GetString()!, Device, keys, Environment, clock()) is not { Kind: null })

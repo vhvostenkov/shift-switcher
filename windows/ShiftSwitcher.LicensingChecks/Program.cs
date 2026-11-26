@@ -83,6 +83,8 @@ await client.ActivateAsync(new string('x', 43)); Check(client.Licensed && !clien
 bank.Reply = _ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(new string('x', 20000)) });
 await client.ActivateAsync(new string('x', 43)); Check(client.Licensed && !client.Busy, "oversized reply rejected without losing old access");
 bank.Reply = _ => Task.FromResult(BankHandler.Json(new { error = "license_revoked" }, HttpStatusCode.Forbidden));
+await client.ActivateAsync(new string('x', 43));
+Check(client.Licensed && store.State!.Certificate == saved, "a rejected different key preserves the existing valid licence");
 await client.ActivateAsync(new string('k', 43));
 Check(!client.Licensed && !client.HasPro && store.State.Key == "" && store.State.Certificate == "", "refund revocation clears cached access");
 store.FailSave = true;
