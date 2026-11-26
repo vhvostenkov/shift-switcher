@@ -45,5 +45,14 @@
     },
     "original_trial_started_preserved": true
   },
-  "native_windows_service_file_import": "not yet performed; owner licence remains active"
+  "native_windows_service_file_import": {
+    "source_commit": "2ceecc6db71ca3976ff3cd30f556e22f97d084db",
+    "binary_sha256": "efb64aed687ef5876e82e3a185aa61f7c0e02cd31b1c03d561a3524177586f9f",
+    "native_online_activation": true,
+    "pro_after_process_restart": true,
+    "automatic": true,
+    "startup": true,
+    "receipt": "windows-service-gift-installed-2026-11-26.json",
+    "historical_failure": "Old 9399 build failed online activation; retained in windows-activation-framing-2026-11-26.json"
+  }
 }

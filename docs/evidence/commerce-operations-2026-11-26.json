@@ -18,5 +18,15 @@
     "mail_jobs": 0,
     "receipt_tasks": 0
   },
-  "unit_integrity": "Installed mail units match reviewed repository units with tested release WorkingDirectory; 0600 SMTP config readable by dedicated service user"
+  "unit_integrity": "Installed mail units match reviewed repository units with tested release WorkingDirectory; 0600 SMTP config readable by dedicated service user",
+  "bank_connectivity": {
+    "strict_tls_verified": true,
+    "protocol": "TLSv1.3",
+    "hostname_checked": true,
+    "certificate_validation": true,
+    "http_sent": false,
+    "credentials_sent": false,
+    "execution_host": "RF commerce dedicated service user",
+    "verified_on": "2026-11-26"
+  }
 }

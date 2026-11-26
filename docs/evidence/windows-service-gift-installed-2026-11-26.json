@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "tested_at": "2026-11-26T12:35:23.669Z",
+  "source_commit": "2ceecc6db71ca3976ff3cd30f556e22f97d084db",
+  "installed_exe_sha256": "efb64aed687ef5876e82e3a185aa61f7c0e02cd31b1c03d561a3524177586f9f",
+  "installed_exe_bytes": 78252260,
+  "platform": "Windows 10 x64 build 19045",
+  "host": "DESKTOP-90VV516",
+  "checks": {
+    "portableCorePASS": 60,
+    "licensingPASS": 59,
+    "currentUserDPAPIPASS": 7,
+    "allBuildStagesExit0": true
+  },
+  "automatic": true,
+  "autostart_ui": true,
+  "settings_unchanged": true,
+  "hkcu_run_unchanged": true,
+  "process_count": 1,
+  "real_service_gift": {
+    "provider": "radar",
+    "normal_online_import": true,
+    "import_attempts": 1,
+    "native_pro_after_process_relaunch": true,
+    "device_id_unchanged": true,
+    "dpapi_prompt_observed": false
+  },
+  "old_owner_backup_preserved": true,
+  "execution_policy": "Restricted",
+  "evidence_source": {
+    "thread_id": "01a21245-3096-7901-9f81-38a70b40f315",
+    "command_id": "exec-495dff86-1a2e-413d-b5fe-8e076e1727b2",
+    "raw_report_sha256": "5e5f9bd7e62b9298d6397efbcde37d24f5a536a9e22f2b46302781c3c8a0a1b8"
+  },
+  "limitations": [
+    "New build native licensing acceptance; keyboard algorithms unchanged from previously accepted source 68d4cc5b.",
+    "Operating system sign-out/sign-in not performed; registry command and shortcut relaunch verified.",
+    "Paid LIVE purchase and fiscal receipt remain unverified.",
+    "Direct launch with lowercased path can display Startup OFF; normal installed shortcut displays ON with original registry command unchanged."
+  ],
+  "root_received_binary_sha256_verified": true,
+  "rea_static_resources": {
+    "evidence_id": "ev_edb03f097250a6be1d0f62bfe71b53859bc06820f2682361a66a076fc33d260d",
+    "format": "pe32-plus",
+    "machine": 34404,
+    "resource_entries": 23,
+    "resources": 9,
+    "icon_groups": 1,
+    "scope": "Static complete resource directory; does not prove actual shell rendering"
+  }
+}
