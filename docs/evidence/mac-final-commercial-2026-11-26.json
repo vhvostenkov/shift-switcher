@@ -138,5 +138,13 @@
     "Synthetic CGEvent, not physical typing or a measured 10/25ms guarantee.",
     "The native sentence tests intentionally use capitalized inputs; the lowercase TextEdit trial was normalized to an initial capital and retained separately.",
     "Paid LIVE purchase/fiscal receipt/refund remain unverified."
-  ]
+  ],
+  "additional_Chrome_attempt": {
+    "attempted_at": "2026-11-26T14:35:48.741372+00:00",
+    "result": "CUA getApp(com.google.Chrome) timed out and reset the runtime before fixture preparation or keyboard test",
+    "native_tests_started": false,
+    "app_restarted_for_attempt": false,
+    "fixture_server_stopped": true,
+    "new_Chrome_pass_claimed": false
+  }
 }
