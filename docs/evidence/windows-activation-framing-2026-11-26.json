@@ -18,7 +18,14 @@
   "regression_red": "Activation Content-Length assertion fails before mock reads/serializes the body",
   "fix": "Pre-serialize the small activation/release JSON into StringContent so the HTTP transport supplies Content-Length",
   "server_policy": "Unchanged: Transfer-Encoding rejected; body must have length 1..16384",
-  "native_fixed_build": "pending",
+  "native_fixed_build": {
+    "status": "passed",
+    "source": "2ceecc6db71ca3976ff3cd30f556e22f97d084db",
+    "binary_sha256": "efb64aed687ef5876e82e3a185aa61f7c0e02cd31b1c03d561a3524177586f9f",
+    "receipt": "windows-service-gift-installed-2026-11-26.json",
+    "ordinary_gift_online_import": true,
+    "full_process_restart_Pro": true
+  },
   "regression_green": {
     "licensing_checks": 58,
     "portable_core_checks": 60
