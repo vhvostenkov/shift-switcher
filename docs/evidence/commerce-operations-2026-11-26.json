@@ -1,0 +1,22 @@
+{
+  "verified_at": "2026-11-26T12:01:27.488987+00:00",
+  "source": "c7c35e51d155",
+  "mail_worker_timer": "enabled; once per minute",
+  "smtp_enabled": false,
+  "last_worker_result": "DISABLED",
+  "mail_sent": false,
+  "backup": {
+    "file": "orders-1795692532066215971.fernet",
+    "restore_integrity": "ok",
+    "all_tables_match": true
+  },
+  "live_counts_at_check": {
+    "NEW_control_orders": 1,
+    "bank_payment_ids": 0,
+    "benefit_grants": 1,
+    "benefit_devices": 2,
+    "mail_jobs": 0,
+    "receipt_tasks": 0
+  },
+  "unit_integrity": "Installed mail units match reviewed repository units with tested release WorkingDirectory; 0600 SMTP config readable by dedicated service user"
+}
