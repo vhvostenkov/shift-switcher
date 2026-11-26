@@ -103,7 +103,7 @@ internal sealed class SettingsView
     {
         Window = new SettingsForm
         {
-            Text = Program.WindowTitle, ClientSize = new Size(940, 680), MinimumSize = new Size(720, 480),
+            Text = Program.WindowTitle, ClientSize = new Size(940, 680), MinimumSize = new Size(860, 520),
             AutoScaleMode = AutoScaleMode.None,
             StartPosition = FormStartPosition.CenterScreen, BackColor = Palette.Background,
             Font = new Font("Segoe UI", 10), ForeColor = Palette.Ink,
@@ -192,6 +192,9 @@ internal sealed class SettingsView
         Window.Shown += (_, _) =>
         {
             var area = Screen.FromControl(Window).WorkingArea;
+            var scale = Window.DeviceDpi / 96f;
+            Window.MinimumSize = new Size(Math.Min((int)Math.Ceiling(860 * scale), area.Width - 24),
+                Math.Min((int)Math.Ceiling(520 * scale), area.Height - 24));
             Window.Size = new Size(Math.Min(Window.Width, area.Width - 24), Math.Min(Window.Height, area.Height - 24));
             Window.Location = new Point(area.X + (area.Width - Window.Width) / 2, area.Y + (area.Height - Window.Height) / 2);
         };
