@@ -7,6 +7,7 @@ import threading
 import time
 import unittest
 from contextlib import closing
+from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
@@ -123,6 +124,15 @@ class BenefitTests(unittest.TestCase):
             with self.assertRaises(ValueError):self.b.start('winston',consent)
         self.config['legal_terms_approved']=False
         with self.assertRaises(ValueError):Commerce(self.folder.name,self.config,bank=Bank())
+    def test_actual_winston_and_radar_producer_vectors_are_compatible(self):
+        for issuer in ['winston','radar']:
+            with self.subTest(issuer=issuer):
+                vector=json.loads((Path(__file__).parent/'fixtures'/('benefit-'+issuer+'.json')).read_text())
+                self.b.providers[issuer]['public_key']=vector['public_key']
+                proof=self.b.proof(vector['ticket'],issuer,vector['state'],vector['now'])
+                self.assertEqual(proof['issuer'],issuer)
+                self.assertEqual(proof['expires_at']-proof['issued_at'],90)
+                with self.assertRaises(ValueError):self.b.proof(vector['ticket'],issuer,'c'*64,vector['now'])
 
 
 if __name__=='__main__':unittest.main()

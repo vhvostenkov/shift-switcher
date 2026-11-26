@@ -1,0 +1,8 @@
+{
+  "issuer": "radar",
+  "state": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "now": 1000000,
+  "public_key": "11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo=",
+  "ticket": "sb1.eyJhdWRpZW5jZSI6InNoaWZ0LXN3aXRjaGVyLWJlbmVmaXQiLCJlbnZpcm9ubWVudCI6IkxJVkUiLCJleHBpcmVzX2F0IjoxMDAwMDkwLCJpc3N1ZWRfYXQiOjEwMDAwMDAsImlzc3VlciI6InJhZGFyIiwianRpIjoiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmIiLCJwcm9kdWN0Ijoic2hpZnQtc3dpdGNoZXItcHJvLXYxIiwic2NoZW1hIjoxLCJzdGF0ZSI6ImFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWEiLCJzdWJqZWN0IjoiNjcyNTBmYjRmODk3Njc3NGM4YzdjZjI3MGI4MjUzYTYxNzVkYTIxYmJlZmFiYjRkNjBkMjhjYjdmNmFkN2Q1OSJ9.aJocexhxdQYkshHvCooirvoLI1hGOYTMfPSWzNDoHNGCZiZiXy79Q5fSMC7hO_vBiLs9kZTIJwmkeRaf6KD-Aw",
+  "provenance": "Actual Radar Node producer with public RFC8032 test seed; not a production key"
+}
