@@ -201,6 +201,8 @@ check(LicenseCheck.verify(certificate(liveOwnerClaims), device: testDevice, keys
 check(LicenseCheck.validKey(String(repeating: "k", count: 43)), "server format license key")
 check(!LicenseCheck.validKey("email@example.com"), "mistyped email is not sent as a license key")
 check(!LicenseCheck.validKey(String(repeating: "k", count: 32) + "\ntext"), "multiline clipboard text is not sent as a license key")
+var extremeTrial = TrialState(started: Int64.max, latest: Int64.max)
+check(extremeTrial.daysRemaining(now: 1000) == 0, "extreme corrupt trial timestamps do not overflow or grant access")
 
 var trialTest = TrialState(started: testNow, latest: testNow)
 check(trialTest.daysRemaining(now: testNow) == 14, "full 14 day trial")

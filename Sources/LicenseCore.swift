@@ -55,11 +55,13 @@ enum LicenseCheck {
         return Data(base64Encoded: text + String(repeating: "=", count: (4 - text.count % 4) % 4))
     }
     static func verify(_ certificate: String, device: String, keys: [String: String], environment: String, now: Int64) -> LicensePayload? {
+        guard certificate.utf8.count <= 16384, now >= 0, ["DEMO", "LIVE"].contains(environment) else { return nil }
         let parts = certificate.split(separator: ".", omittingEmptySubsequences: false).map(String.init)
         guard parts.count == 3, parts[0] == "ss1", let body = data(parts[1]), let signature = data(parts[2]),
               let payload = try? JSONDecoder().decode(LicensePayload.self, from: body),
               payload.schema == 1, payload.product == "shift-switcher-pro-v1", payload.device == device,
-              payload.environment == environment, payload.issued_at <= now + 300, payload.valid_until > now,
+              payload.environment == environment, !payload.license.isEmpty, payload.issued_at >= 0,
+              (payload.issued_at <= now || payload.issued_at - now <= 300), payload.valid_until > now,
               payload.valid_until > payload.issued_at,
               let encoded = keys[environment + ":" + payload.key_id], let raw = Data(base64Encoded: encoded),
               let publicKey = try? Curve25519.Signing.PublicKey(rawRepresentation: raw),
@@ -81,6 +83,8 @@ struct TrialState: Codable {
     mutating func daysRemaining(now: Int64) -> Int {
         guard validTime(now: now) else { return 0 }
         latest = max(latest, now)
-        return max(0, Int(ceil(Double(started + 14 * 86400 - latest) / 86400)))
+        let elapsed = latest - started
+        guard elapsed < 14 * 86400 else { return 0 }
+        return Int((14 * 86400 - elapsed + 86399) / 86400)
     }
 }
