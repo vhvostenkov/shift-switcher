@@ -1,11 +1,19 @@
 {
-  "verified_at": "2026-11-26T11:48:04.967810+00:00",
+  "verified_at": "2026-11-26T12:49:37.288420+00:00",
   "merchant": "943870",
-  "current_name": "Shift Switcher",
+  "current_name": "VHVost",
   "bank_reply": "A separate merchant is needed for a different business activity; current merchant name was requested",
   "clarification": "Current merchant Shift Switcher 943870; request VHVost name and https://vhvost.com/pay/ for our own software catalogue without changing activity, tariff or paid services",
   "ui_sent_time_samara": "15:46",
   "shared_catalog_approved": false,
   "tariff_changed": false,
-  "paid_services_added": false
+  "paid_services_added": false,
+  "name_change_confirmed_by_bank": true,
+  "bank_name_confirmation_time_samara": "16:18",
+  "bank_followup": {
+    "name_request_forwarded_until": "2026-11-26",
+    "site_and_other_questions_forwarded_until": "2026-11-28",
+    "site_address_change_confirmed": false,
+    "shared_catalog_explicit_approval": false
+  }
 }
