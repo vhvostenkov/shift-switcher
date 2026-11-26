@@ -1,0 +1,22 @@
+{
+  "tested_at": "2026-11-26T11:57:11.823109+00:00",
+  "affected_windows_exe_sha256": "93993c57145822c7aa306e6fce302074dff126e831da2def3fa3fd5b735dbe43",
+  "native_ui_activation": "failed; previous owner licence preserved",
+  "windows_fixed_length_cli_activation": "HTTP 200 reported by Windows actor",
+  "same_key_device_live_dotnet_probe": {
+    "streamed_json_content": {
+      "content_length": null,
+      "http": 400,
+      "error": "request_rejected"
+    },
+    "buffered_string_content": {
+      "content_length": 129,
+      "http": 200,
+      "certificate_present": true
+    }
+  },
+  "regression_red": "Activation Content-Length assertion fails before mock reads/serializes the body",
+  "fix": "Pre-serialize the small activation/release JSON into StringContent so the HTTP transport supplies Content-Length",
+  "server_policy": "Unchanged: Transfer-Encoding rejected; body must have length 1..16384",
+  "native_fixed_build": "pending"
+}

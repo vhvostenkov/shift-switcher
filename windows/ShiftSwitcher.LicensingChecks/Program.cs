@@ -50,6 +50,7 @@ Check(new TrialState(start, start - 1).DaysRemaining(start) == 0, "invalid store
 var store = new MemoryStore();
 var bank = new BankHandler(async request =>
 {
+    Check(request.Content!.Headers.ContentLength is > 0 and <= 512, "activation body has bounded Content-Length before serialization by the transport");
     using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync());
     Check(request.RequestUri!.Scheme == "https" && request.RequestUri.Host == "vhvost.com" && request.RequestUri.Query == "", "key uses owned HTTPS endpoint without URL secrets");
     Check(body.RootElement.EnumerateObject().Count() == 2, "activation sends only key and device");
@@ -91,6 +92,7 @@ store.FailSave = false;
 await client.ActivateAsync(new string('k', 43)); Check(client.Licensed, "activation after storage recovery");
 bank.Reply = request =>
 {
+    Check(request.Content!.Headers.ContentLength is > 0 and <= 512, "release body has bounded Content-Length before serialization by the transport");
     Check(request.RequestUri!.AbsolutePath == "/pay/api/release-device", "release uses shared device endpoint");
     return Task.FromResult(BankHandler.Json(new { released = true }));
 };

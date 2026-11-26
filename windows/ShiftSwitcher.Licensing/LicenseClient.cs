@@ -1,6 +1,6 @@
 using System.Net;
-using System.Net.Http.Json;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 
 namespace ShiftSwitcher.Licensing;
@@ -95,7 +95,8 @@ public sealed class LicenseClient : IDisposable
     private async Task<(HttpStatusCode Status, JsonDocument Body)> Post(string endpoint, string key)
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-        using var request = new HttpRequestMessage(HttpMethod.Post, new Uri(Api, endpoint)) { Content = JsonContent.Create(new { key, device = Device }) };
+        // The bounded RF API requires Content-Length, rather than a streamed JSON body.
+        using var request = new HttpRequestMessage(HttpMethod.Post, new Uri(Api, endpoint)) { Content = new StringContent(JsonSerializer.Serialize(new { key, device = Device }), Encoding.UTF8, "application/json") };
         using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
         if (response.Content.Headers.ContentLength > 16384) throw new JsonException();
         await using var input = await response.Content.ReadAsStreamAsync();
