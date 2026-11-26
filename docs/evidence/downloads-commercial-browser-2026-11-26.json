@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "site": "https://vhvost.com/shift-switcher/#download",
+  "checks": {
+    "windows": {
+      "browser_download": "/Users/max/Downloads/Shift-Switcher-Windows (1).zip",
+      "zip_sha256": "2b2d4a2babc42bd0541d6272a084091d27c569e3b475bdb79f16e3f30b92c66f",
+      "binary_sha256": "93993c57145822c7aa306e6fce302074dff126e831da2def3fa3fd5b735dbe43",
+      "source_commit": "68d4cc5bf70d1b09739838dcba3630d96073cd97",
+      "native_receipt_matched": true
+    },
+    "mac": {
+      "browser_download": "/Users/max/Downloads/Shift-Switcher-Mac (1).zip",
+      "zip_sha256": "77c707d5762556200e11975c1255ee9b921b2e4f68e9309d2ef2cab5cd163c0d",
+      "binary_sha256": "8ec544cc6a717539c0dc43738580f85f100c4a1e1e5e616a3fa56f00744b236a",
+      "source_commit": "056e223a44c81ccca3f91fc829a6422017c7b7c9",
+      "native_receipt_matched": true
+    }
+  },
+  "version_free_buttons": true,
+  "latest_click_cache_buster": true
+}

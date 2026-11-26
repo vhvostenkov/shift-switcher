@@ -13,6 +13,10 @@ def main():
     with sqlite3.connect(Path(args.data)/'orders.sqlite') as source, sqlite3.connect(':memory:') as snapshot:
         source.backup(snapshot);raw=snapshot.serialize()
         original=snapshot.execute('SELECT COUNT(*) FROM orders').fetchone()[0]
+        tables=[r[0] for r in snapshot.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")]
+        def counts(db):
+            return {name:db.execute('SELECT COUNT(*) FROM "'+name.replace('"','""')+'"').fetchone()[0] for name in tables}
+        expected=counts(snapshot)
     encrypted=cipher.encrypt(raw)
     directory=Path(args.output);directory.mkdir(mode=0o700,parents=True,exist_ok=True)
     target=directory/('orders-'+str(time.time_ns())+'.fernet')
@@ -22,7 +26,8 @@ def main():
         restored.deserialize(cipher.decrypt(target.read_bytes()))
         assert restored.execute('PRAGMA integrity_check').fetchone()[0]=='ok'
         assert restored.execute('SELECT COUNT(*) FROM orders').fetchone()[0]==original
-    print(json.dumps({'backup_created':True,'restore_integrity':'ok','orders_match':True,'file':target.name}))
+        assert counts(restored)==expected
+    print(json.dumps({'backup_created':True,'restore_integrity':'ok','orders_match':True,'all_tables_match':True,'file':target.name}))
 
 
 if __name__=='__main__':main()
