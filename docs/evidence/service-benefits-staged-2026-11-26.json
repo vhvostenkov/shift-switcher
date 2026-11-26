@@ -1,0 +1,27 @@
+{
+  "tested_at": "2026-11-26T10:57:52.525115+00:00",
+  "consumer_source": "c7c35e51d155",
+  "rf_tests": 93,
+  "health": {
+    "ok": true,
+    "environment": "LIVE",
+    "revision": "c7c35e51d155"
+  },
+  "public_checkout_enabled": false,
+  "public_benefits_enabled": false,
+  "smtp_enabled": false,
+  "backup_restore": {
+    "integrity": "ok",
+    "orders_match": true,
+    "all_tables_match": true,
+    "receipt": "orders-1795690498240182850.fernet"
+  },
+  "producer_sources": {
+    "winston": "6958e7b9dab39e05dacd7a37699b00d472f4ed0e",
+    "radar": "41f60a2a54b39f148497684afe716ff8508a27f5"
+  },
+  "private_seed_storage": "Independent runtime .env files, 0600, on the originating service hosts; only public issuer keys configured on RF",
+  "live_account_browser_flow": "not_yet_tested",
+  "live_payment": "not_attempted",
+  "legal_status": "published drafts only"
+}
