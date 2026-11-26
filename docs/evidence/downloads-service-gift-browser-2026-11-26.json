@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "verified_at": "2026-11-26T12:47:47.160679+00:00",
+  "source": "703ab4ae5fcd0771540d07863f496565743b87c3",
+  "windows_source": "2ceecc6db71ca3976ff3cd30f556e22f97d084db",
+  "windows_archive_sha256": "09c9122e7fe10d08686bd35b0c523d2d46d578bd263b5a4e10e0778c25b32c04",
+  "windows_archive_bytes": 72483023,
+  "windows_binary_sha256": "efb64aed687ef5876e82e3a185aa61f7c0e02cd31b1c03d561a3524177586f9f",
+  "native_receipt": "windows-service-gift-installed-2026-11-26.json",
+  "site_button_download": true,
+  "browser_download_archive_and_inner_exe_verified": true,
+  "owner_state_or_keys_in_archive": false,
+  "github_release": "https://github.com/vhvostenkov/shift-switcher/releases/tag/v1.0.0-rc.2",
+  "github_asset_digests_match": true,
+  "mac_archive_unchanged": true,
+  "public_checkout_enabled": false,
+  "publication_backup": "/opt/winston/.shift-switcher-backups/downloads-703ab4a"
+}
