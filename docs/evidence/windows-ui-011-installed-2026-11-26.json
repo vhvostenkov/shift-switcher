@@ -1,0 +1,105 @@
+{
+  "date": "2026-11-26",
+  "device": "DESKTOP-90VV516",
+  "platform": "Windows 10 x64 build 19045",
+  "version": "0.1.1 Preview",
+  "source_commit": "5960d815bdb0b6e042633150cc7394ea31040cc0",
+  "installed_exe": "C:\\Users\\Павел\\AppData\\Local\\Programs\\VHVost\\Shift Switcher Preview\\ShiftSwitcher.exe",
+  "installed_exe_sha256": "b6dbf3e831395c6bc5ab7d5055e29065047af3399b3839aef7ebc06be964e47b",
+  "previous_exe_sha256": "e84e400f1794d9d3077cfe0f2f363ab1fe5c18fc68270a9d192b6761710024c2",
+  "backup_directory_reported": "work\\shift-switcher-5960d815\\backup-e84-1795677388793",
+  "evidence_origin": {
+    "thread_id": "01a21245-3096-7901-9f81-38a70b40f315",
+    "turn_id": "01a21332-525a-7ca3-8b81-d5374639769f",
+    "message_id": "msg_0622cc15201f6fbf016b07ddb52e3487d29c6cbaa7b8055760",
+    "scope": "Native Windows actor built, visually inspected and updated the installed copy, then reported the exact installed hash and acceptance results. Root did not operate the Windows GUI.",
+    "metadata_message_id": "msg_0622cc15201f6fbf016b07ddfb5f8887d29ef39c2778cb2c14"
+  },
+  "scope": "Windows settings and branding. Correction core, Engine, TextFields and Native sources are unchanged from 09ff8596.",
+  "visual_qa": {
+    "scale_percent": 125,
+    "window_dpi": 120,
+    "pages": [
+      "Обзор",
+      "Личный словарь",
+      "О приложении"
+    ],
+    "default_size": "PASS",
+    "minimum_size": "PASS",
+    "screenshots_saved": 6,
+    "screenshot_paths": [
+      "C:\\Users\\Павел\\Documents\\Codex\\2026-11-25\\new-chat\\outputs\\shift-ui11-5960-overview-default.png",
+      "C:\\Users\\Павел\\Documents\\Codex\\2026-11-25\\new-chat\\outputs\\shift-ui11-5960-dictionary-default.png",
+      "C:\\Users\\Павел\\Documents\\Codex\\2026-11-25\\new-chat\\outputs\\shift-ui11-5960-about-default.png",
+      "C:\\Users\\Павел\\Documents\\Codex\\2026-11-25\\new-chat\\outputs\\shift-ui11-5960-overview-min.png",
+      "C:\\Users\\Павел\\Documents\\Codex\\2026-11-25\\new-chat\\outputs\\shift-ui11-5960-dictionary-min.png",
+      "C:\\Users\\Павел\\Documents\\Codex\\2026-11-25\\new-chat\\outputs\\shift-ui11-5960-about-min.png"
+    ],
+    "recorded_geometry": {
+      "win32_dpi_virtualized": true,
+      "reported_default_outer": [
+        860,
+        582
+      ],
+      "reported_default_client": [
+        845,
+        544
+      ],
+      "reported_minimum_outer": [
+        860,
+        520
+      ],
+      "reported_minimum_client": [
+        845,
+        482
+      ],
+      "physical_min_track": [
+        1075,
+        650
+      ],
+      "reported_default_png": [
+        1059,
+        719
+      ],
+      "reported_minimum_png": [
+        1059,
+        642
+      ]
+    }
+  },
+  "validation": {
+    "native_core_checks": {
+      "passed": 60,
+      "failed": 0
+    },
+    "local_cross_build": {
+      "errors": 0,
+      "warnings": 0
+    },
+    "keyboard_tab_space": "PASS",
+    "pause_resume": "PASS",
+    "dictionary_save_and_original_settings_hash_restore": "PASS",
+    "chrome_textarea_and_search_correction": "PASS",
+    "undo_without_recorrection": "PASS",
+    "hello_world_without_joining": "PASS",
+    "actual_ru_en": "PASS"
+  },
+  "state_after": {
+    "installed_process_count": 1,
+    "automatic": true,
+    "startup_registered": true,
+    "overview_left_open": true
+  },
+  "limitations": [
+    "This is a technical Windows Preview, not a commercial Windows Pro licence.",
+    "125% native visual QA does not establish every display scale or high-contrast mode.",
+    "No reboot/signout or physical-keyboard pacing acceptance was added by this UI update. Existing broader acceptance gaps remain open."
+  ],
+  "native_report": "C:\\Users\\Павел\\Documents\\Codex\\2026-11-25\\new-chat\\outputs\\shift-ui11-5960-installed-final.json",
+  "backup_directory": "C:\\Users\\Павел\\Documents\\Codex\\2026-11-25\\new-chat\\work\\shift-switcher-5960d815\\backup-e84-1795677388793",
+  "settings_sha256_restored": "a50d4ca7a9e4fcfda4643b9d6db2f081ef39d7197cf3d267eec2a469604e5c79",
+  "settings_sha256_before": "a50d4ca7a9e4fcfda4643b9d6db2f081ef39d7197cf3d267eec2a469604e5c79",
+  "startup_value_name": "VHVost.ShiftSwitcher",
+  "startup_command": "\"C:\\Users\\Павел\\AppData\\Local\\Programs\\VHVost\\Shift Switcher Preview\\ShiftSwitcher.exe\" --background",
+  "shortcut_icon_location": "C:\\Users\\Павел\\AppData\\Local\\Programs\\VHVost\\Shift Switcher Preview\\AppIcon-0.1.1.ico,0"
+}
