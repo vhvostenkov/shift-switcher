@@ -234,4 +234,53 @@ check(TextEvents.chunks(emojiText)?.joined() == emojiText, "Unicode chunks prese
 check(TextEvents.chunks(emojiText)?.allSatisfy { $0.utf16.count <= 16 } == true, "Unicode event chunks stay bounded")
 check(TextEvents.chunks("a" + String(repeating: "\u{0301}", count: 30)) == nil, "oversized composed character is rejected before input")
 
+final class RevokedLicenseProtocol: URLProtocol {
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() {
+        guard request.url?.host == "vhvost.com", request.url?.path == "/pay/api/activate", request.httpMethod == "POST" else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badURL)); return
+        }
+        let response = HTTPURLResponse(url: request.url!, statusCode: 403, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json"])!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Data(#"{"error":"license_revoked"}"#.utf8))
+        client?.urlProtocolDidFinishLoading(self)
+    }
+    override func stopLoading() {}
+}
+let activationFolder = FileManager.default.temporaryDirectory.appendingPathComponent("shift-activation-" + UUID().uuidString)
+let activationStore = LicenseStore(folder: activationFolder)
+let activationInstallation = "isolated-revocation-test"
+let activationDevice = SHA256.hash(data: Data(activationInstallation.utf8)).map { String(format: "%02x", $0) }.joined()
+let currentActivationKey = String(repeating: "k", count: 43)
+let activationNow = Int64(Date().timeIntervalSince1970)
+let originalActivationTrial = TrialState(started: activationNow - 15 * 86400, latest: activationNow)
+let activationCertificate = certificate(["environment": "LIVE", "device": activationDevice,
+    "issued_at": activationNow, "valid_until": activationNow + 30 * 86400], signer: liveTestSigner)
+check(activationStore.write(["installation": activationInstallation, "license_key": currentActivationKey,
+    "certificate": activationCertificate, "trial": String(data: try! JSONEncoder().encode(originalActivationTrial), encoding: .utf8)!]), "isolated active Pro fixture")
+let activationConfiguration = URLSessionConfiguration.ephemeral
+activationConfiguration.protocolClasses = [RevokedLicenseProtocol.self]
+let activationSession = URLSession(configuration: activationConfiguration)
+let activationManager = LicenseManager(storage: activationStore, session: activationSession, publicKeys: liveTestKeys)
+check(activationManager.licensed && activationManager.hasPro && activationManager.days == 0, "active Pro without remaining trial")
+let beforeForeignRevocation = try! Data(contentsOf: activationFolder.appendingPathComponent("license-state.json"))
+func runRevokedActivation(_ key: String) -> Bool {
+    var completed = false
+    activationManager.activate(key) { completed = true }
+    let deadline = Date().addingTimeInterval(3)
+    while !completed && Date() < deadline { _ = RunLoop.main.run(mode: .default, before: Date().addingTimeInterval(0.01)) }
+    return completed
+}
+check(runRevokedActivation(String(repeating: "r", count: 43)), "other revoked key response completes")
+check(activationManager.licensed && activationManager.hasPro, "other revoked key preserves active Pro")
+check(activationStore.read("license_key") == currentActivationKey && activationStore.read("certificate") == activationCertificate, "other revoked key preserves original credentials")
+check(try! Data(contentsOf: activationFolder.appendingPathComponent("license-state.json")) == beforeForeignRevocation, "other revoked key makes no state write")
+check(runRevokedActivation(currentActivationKey), "current revoked key response completes")
+check(!activationManager.licensed && !activationManager.hasPro, "current key revocation still removes Pro")
+check(activationStore.read("license_key") == "" && activationStore.read("certificate") == "", "current revoked credentials are cleared")
+let afterRevocationTrial = try! JSONDecoder().decode(TrialState.self, from: Data(activationStore.read("trial")!.utf8))
+check(afterRevocationTrial.started == originalActivationTrial.started, "revocation never restarts trial")
+activationSession.invalidateAndCancel()
+
 print("PASS: \(count) checks")

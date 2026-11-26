@@ -9,10 +9,9 @@ private final class LicenseSessionDelegate: NSObject, URLSessionTaskDelegate {
 }
 
 final class LicenseManager {
-    private let session = URLSession(configuration: .ephemeral, delegate: LicenseSessionDelegate(), delegateQueue: nil)
+    private let session: URLSession
     private let service = (Bundle.main.bundleIdentifier ?? "local.viktor.ShiftSwitcher") + ".licensing.v1"
-    private let store = LicenseStore(folder: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        .appendingPathComponent(Bundle.main.bundleIdentifier ?? "local.viktor.ShiftSwitcher", isDirectory: true))
+    private let store: LicenseStore
     private var keys: [String: String] = [:]
     private var trial: TrialState?
     private var certificateCache: String?
@@ -31,8 +30,12 @@ final class LicenseManager {
     var hasPro: Bool { storageReady && !clockBackwards && (licensed || days > 0) }
     var environment: String { (Bundle.main.bundleIdentifier ?? "").hasSuffix(".Candidate") ? "DEMO" : "LIVE" }
     private var api: URL { URL(string: "https://vhvost.com/pay/api/")! }
-    init() {
-        if let url = Bundle.main.url(forResource: "license-public-keys", withExtension: "json"), let raw = try? Data(contentsOf: url),
+    init(storage: LicenseStore? = nil, session suppliedSession: URLSession? = nil, publicKeys: [String: String]? = nil) {
+        session = suppliedSession ?? URLSession(configuration: .ephemeral, delegate: LicenseSessionDelegate(), delegateQueue: nil)
+        store = storage ?? LicenseStore(folder: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent(Bundle.main.bundleIdentifier ?? "local.viktor.ShiftSwitcher", isDirectory: true))
+        if let publicKeys = publicKeys { keys = publicKeys }
+        else if let url = Bundle.main.url(forResource: "license-public-keys", withExtension: "json"), let raw = try? Data(contentsOf: url),
            let decoded = try? JSONDecoder().decode([String: String].self, from: raw) { keys = decoded }
         // Legacy migration must never trigger an authentication dialog.
         if store.read("installation") == nil {
@@ -87,7 +90,7 @@ final class LicenseManager {
             DispatchQueue.main.async {
                 defer { completion() }
                 guard self.activationGeneration == generation else { return }
-                if (response as? HTTPURLResponse)?.statusCode == 403, let data = data,
+                if self.read("license_key") == key, (response as? HTTPURLResponse)?.statusCode == 403, let data = data,
                    let body = try? JSONSerialization.jsonObject(with: data) as? [String: Any], body["error"] as? String == "license_revoked" {
                     if !self.store.write(["certificate": "", "license_key": ""]) { self.storageReady = false }
                     self.certificateCache = nil; self.refresh()
