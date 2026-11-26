@@ -75,6 +75,8 @@ internal sealed class SwitcherContext : ApplicationContext
     private readonly ToolStripMenuItem autoMenu = new("Автоисправление"), pauseMenu = new("Пауза");
     private Icon? generatedIcon;
     private CheckBox? automaticCheck;
+    private SettingsView? view;
+    private string? traySignature;
 
     internal SwitcherContext(bool background)
     {
@@ -102,18 +104,13 @@ internal sealed class SwitcherContext : ApplicationContext
     }
     private Form MakeWindow()
     {
-        var form = new SettingsForm { Text = Program.WindowTitle, ClientSize = new Size(570, 650), MinimumSize = new Size(540, 620), StartPosition = FormStartPosition.CenterScreen, BackColor = Color.FromArgb(245, 245, 250), Font = new Font("Segoe UI", 10) };
-        var panel = new FlowLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(26), FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true };
-        panel.Controls.Add(new Label { Text = "⇧⇧  Shift Switcher", Font = new Font("Segoe UI", 25, FontStyle.Bold), AutoSize = true });
-        panel.Controls.Add(new Label { Text = "RU ↔ EN · раскладка под контролем", AutoSize = true, Margin = new Padding(0, 4, 0, 20) });
-        status.Width = 490; panel.Controls.Add(status);
-        panel.Controls.Add(new Label { Text = "Двойной Shift — выделение или последнее слово.\nПовторный ⇧⇧ — точная отмена. " + (hotkeys.UndoAvailable ? "Также Ctrl+Alt+Z." : "Ctrl+Alt+Z занят.") + "\n" + (hotkeys.CharacterAvailable ? "Ctrl+Alt+. — один символ слева от курсора." : "Ctrl+Alt+. занят; используйте выделение символа."), AutoSize = true, Margin = new Padding(0, 0, 0, 18) });
-        var automatic = new CheckBox { Text = "Автоисправление после пробела и паузы", Checked = settings.Automatic && engine.DictionaryReady, Enabled = engine.DictionaryReady, AutoSize = true };
+        view = new SettingsView(status, engine.DictionaryReady, hotkeys.UndoAvailable, hotkeys.CharacterAvailable);
+        var form = view.Window;
+        var automatic = view.Automatic;
+        automatic.Checked = settings.Automatic && engine.DictionaryReady;
         automaticCheck = automatic;
         automatic.CheckedChanged += (_, _) => SetAutomatic(automatic.Checked);
-        panel.Controls.Add(automatic);
-        panel.Controls.Add(new Label { Text = engine.DictionaryReady ? "Словари RU/EN доступны в Windows." : "Для автоматики нужны языковые словари RU и EN в Windows.", AutoSize = true, ForeColor = Color.DimGray });
-        var startup = new CheckBox { Text = "Запускать при входе в Windows", AutoSize = true };
+        var startup = view.Startup;
         var executable = Environment.ProcessPath;
         startup.Enabled = executable is not null && Path.GetFileNameWithoutExtension(executable).Equals("ShiftSwitcher", StringComparison.OrdinalIgnoreCase);
         using (var run = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run"))
@@ -130,24 +127,16 @@ internal sealed class SwitcherContext : ApplicationContext
             catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException)
             { status.Text = "Не удалось изменить автозапуск"; }
         };
-        panel.Controls.Add(startup);
-        var paused = new Button { Text = "Пауза / продолжить", AutoSize = true, Margin = new Padding(0, 12, 0, 12) };
-        paused.Click += (_, _) => { engine.Pause(); UpdateIndicator(); }; panel.Controls.Add(paused);
-        panel.Controls.Add(new Label { Text = "Знакомые названия · одно слово в строке", AutoSize = true });
-        var known = new TextBox { Multiline = true, Width = 490, Height = 68, Text = string.Join(Environment.NewLine, settings.KnownWords), ScrollBars = ScrollBars.Vertical };
-        panel.Controls.Add(known);
-        panel.Controls.Add(new Label { Text = "Не исправлять · одно слово в строке", AutoSize = true });
-        var ignored = new TextBox { Multiline = true, Width = 490, Height = 52, Text = string.Join(Environment.NewLine, settings.IgnoredWords), ScrollBars = ScrollBars.Vertical };
-        panel.Controls.Add(ignored);
-        var save = new Button { Text = "Сохранить словарь", AutoSize = true };
+        view.Pause.Click += (_, _) => { engine.Pause(); UpdateIndicator(); };
+        var known = view.Known; known.Text = string.Join(Environment.NewLine, settings.KnownWords);
+        var ignored = view.Ignored; ignored.Text = string.Join(Environment.NewLine, settings.IgnoredWords);
+        var save = view.SaveDictionary;
         save.Click += (_, _) =>
         {
             settings.KnownWords = known.Lines.Select(s => s.Trim().Normalize(NormalizationForm.FormC).ToLowerInvariant()).Where(s => s.Length is >= 2 and <= 100 && s.All(char.IsLetter) && (s.All(c => c is >= 'а' and <= 'я' or 'ё') || s.All(char.IsAsciiLetter))).ToHashSet();
             settings.IgnoredWords = ignored.Lines.Select(s => s.Trim().ToLowerInvariant()).Where(s => s.Length is > 0 and <= 100 && !s.Any(char.IsWhiteSpace)).ToHashSet();
             SaveSettings(); engine.Cancel();
-        }; panel.Controls.Add(save);
-        panel.Controls.Add(new Label { Text = "Техническая Windows Preview · продажи Windows закрыты.\nТекст и буфер обмена не отправляются в сеть.\nПарольные поля пропускаются; неподдерживаемые поля не меняются.\nАвтоматика по умолчанию выключена в терминалах и редакторах кода.", AutoSize = true, ForeColor = Color.DimGray, Margin = new Padding(0, 16, 0, 0) });
-        form.Controls.Add(panel);
+        };
         form.FormClosing += (_, e) => { if (e.CloseReason == CloseReason.UserClosing) { e.Cancel = true; form.Hide(); } };
         return form;
     }
@@ -170,15 +159,25 @@ internal sealed class SwitcherContext : ApplicationContext
         var state = !keyboard.Connected ? "!" : engine.Paused ? "P" : automatic ? "A" : "M";
         tray.Text = $"Shift Switcher · {language} · {(engine.Paused ? "Пауза" : automatic ? "Авто" : "Вручную")}";
         pauseMenu.Checked = engine.Paused;
+        view?.SetState(language, engine.Paused, automatic, keyboard.Connected);
+        var signature = language + state;
+        if (traySignature == signature) return;
+        traySignature = signature;
         using var bitmap = new Bitmap(32, 32);
         using (var canvas = Graphics.FromImage(bitmap))
-        using (var brush = new SolidBrush(engine.Paused ? Color.Gray : Color.FromArgb(109, 80, 230)))
-        using (var font = new Font("Segoe UI", 11, FontStyle.Bold))
+        using (var brush = new SolidBrush(!keyboard.Connected ? Color.FromArgb(167, 89, 20) : engine.Paused ? Palette.Muted : Palette.Accent))
+        using (var font = new Font("Segoe UI", 12, FontStyle.Bold))
         {
-            canvas.Clear(Color.Transparent); canvas.FillEllipse(brush, 0, 0, 31, 31);
-            canvas.DrawString(language, font, Brushes.White, new PointF(2, 5));
-            using var modeFont = new Font("Segoe UI", 6, FontStyle.Bold);
-            canvas.DrawString(state, modeFont, Brushes.White, new PointF(23, 21));
+            canvas.Clear(Color.Transparent); canvas.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            using var shape = Palette.Round(new RectangleF(1, 1, 30, 30), 8);
+            canvas.FillPath(brush, shape);
+            using var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+            canvas.DrawString(!keyboard.Connected ? "!" : engine.Paused ? "II" : language, font, Brushes.White, new RectangleF(0, 0, 32, 29), format);
+            if (automatic && !engine.Paused && keyboard.Connected)
+            {
+                using var dot = new SolidBrush(Color.FromArgb(95, 225, 166));
+                canvas.FillEllipse(dot, 23, 23, 8, 8);
+            }
         }
         var handle = bitmap.GetHicon();
         using var borrowed = Icon.FromHandle(handle);
