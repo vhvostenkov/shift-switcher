@@ -1,6 +1,7 @@
 {
   "schema": 1,
-  "channel": "release-candidate",
+  "channel": "stable",
+  "version": "1.0.0",
   "downloads": {
     "windows": {
       "filename": "Shift-Switcher-Windows.zip",
@@ -11,8 +12,8 @@
     },
     "mac": {
       "filename": "Shift-Switcher-Mac.zip",
-      "bytes": 1978054,
-      "sha256": "365ca065aa7374e5d99de4b0b3c1d8be73df3d4c328a5e0f84a66df18f89df22",
+      "bytes": 1978042,
+      "sha256": "55a49f0bede6ebc44ba25adcb7b654d4538b5414b7e2de110faa58305fb3e9f1",
       "binary_sha256": "49f60200c9919ff41b7c51bf0854dd84da11a68baaa322d7baa55223731b60f7",
       "source_commit": "a5e26782d528a8272f960dc2ed7ff0622f732152"
     }

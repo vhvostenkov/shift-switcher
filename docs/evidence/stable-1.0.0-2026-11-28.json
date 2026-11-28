@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "recorded_at": "2026-11-28T10:15:54.056286+00:00",
+  "release": "v1.0.0",
+  "channel": "stable",
+  "operation": "Promote exact tested application binaries; Mac ZIP installation text updated only",
+  "manifest": {
+    "schema": 1,
+    "channel": "stable",
+    "version": "1.0.0",
+    "downloads": {
+      "windows": {
+        "filename": "Shift-Switcher-Windows.zip",
+        "bytes": 72483023,
+        "sha256": "09c9122e7fe10d08686bd35b0c523d2d46d578bd263b5a4e10e0778c25b32c04",
+        "binary_sha256": "efb64aed687ef5876e82e3a185aa61f7c0e02cd31b1c03d561a3524177586f9f",
+        "source_commit": "2ceecc6db71ca3976ff3cd30f556e22f97d084db"
+      },
+      "mac": {
+        "filename": "Shift-Switcher-Mac.zip",
+        "bytes": 1978042,
+        "sha256": "55a49f0bede6ebc44ba25adcb7b654d4538b5414b7e2de110faa58305fb3e9f1",
+        "binary_sha256": "49f60200c9919ff41b7c51bf0854dd84da11a68baaa322d7baa55223731b60f7",
+        "source_commit": "a5e26782d528a8272f960dc2ed7ff0622f732152"
+      }
+    }
+  },
+  "repeated_portable_checks": {
+    "mac": 169,
+    "windows_core": 60,
+    "licensing": 59,
+    "execution_host": "Mac; these do not replace native Windows DPAPI checks"
+  },
+  "native_checks": {
+    "mac": {
+      "sha256": "49f60200c9919ff41b7c51bf0854dd84da11a68baaa322d7baa55223731b60f7",
+      "tested_at": "2026-11-27T19:30:11.734142+00:00",
+      "passed": 11,
+      "suite": "TextEdit; first word, selection, last word, punctuation, exact undo, actual RU/EN",
+      "clipboard_counter_unchanged": true
+    },
+    "windows": {
+      "sha256": "efb64aed687ef5876e82e3a185aa61f7c0e02cd31b1c03d561a3524177586f9f",
+      "core": 60,
+      "licensing": 59,
+      "native_dpapi": 7,
+      "additional_test_date": "2026-11-27",
+      "chrome_auto": true,
+      "immediate_undo": true,
+      "actual_layout_sequence": [
+        "0409",
+        "0419",
+        "0409"
+      ],
+      "clipboard_counter_unchanged": true
+    }
+  },
+  "pro_online_renewal": {
+    "mac": true,
+    "windows": true
+  },
+  "candidate_download_audit": {
+    "date": "2026-11-28",
+    "site_and_github_archive_hashes_equal": true,
+    "both_browser_buttons_downloaded": true
+  },
+  "stable_mac_archive": {
+    "only_changed_entry": "Установка.txt",
+    "all_app_entries_and_permissions_identical": true,
+    "signature": "ad-hoc; strict codesign verified"
+  },
+  "limitations": [
+    "Synthetic CGEvent/CUA functional checks; physical keyboard performance and exact25ms cadence are not established.",
+    "Actual operating-system sign-out/sign-in startup was not tested.",
+    "New benefit issuance through Winston depends on its account service; no new claim flow was tested here.",
+    "Mac has no Apple notarization; Windows has no Authenticode.",
+    "Exact final Mac binary has TextEdit native acceptance; earlier Chrome suites belong to their own older binaries.",
+    "Windows embedded build version is 1.0.0-rc.2; stable release promotion deliberately keeps the tested EXE unchanged."
+  ],
+  "payment_or_banking_changes": false
+}

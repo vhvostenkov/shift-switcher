@@ -9,6 +9,7 @@
 **[Скачать для Mac](https://vhvost.com/shift-switcher/downloads/Shift-Switcher-Mac.zip)**
 
 Ссылки ведут на последнюю проверенную сборку — номер версии выбирать не нужно.
+Стабильный выпуск для обеих платформ доступен также в [GitHub Releases](https://github.com/vhvostenkov/shift-switcher/releases/latest).
 Ручное исправление и отмена бесплатны; пробный Pro на 14 дней добавляет автоматику.
 Пользователям Winston и Radar доступен [бесплатный Pro на два компьютера](https://vhvost.com/shift-switcher/benefits.html), включая бесплатные тарифы. Один ключ подходит для Mac и Windows в любой комбинации.
 Лицензия подходит для Windows+Mac, двух Windows или двух Mac. Продажи закрыты до
@@ -45,7 +46,7 @@
 3. Перезапустите приложение после выдачи разрешений.
 4. Попробуйте в TextEdit: `ghbdtn` + двойной Shift → `привет`.
 
-Кандидат выпуска имеет локальную ad-hoc подпись, без Developer ID и нотариализации Apple.
+Приложение имеет локальную ad-hoc подпись, без Developer ID и нотариализации Apple.
 macOS может не разрешить первый запуск автоматически. Подробная инструкция
 есть [на странице приложения](https://vhvost.com/shift-switcher/#install) и в ZIP.
 
