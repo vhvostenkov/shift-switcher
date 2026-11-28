@@ -1,0 +1,51 @@
+{
+  "version": "1.1.1",
+  "checked_at": "2026-11-28T12:28:16.651111+00:00",
+  "manifest": {
+    "schema": 1,
+    "channel": "stable",
+    "version": "1.1.1",
+    "downloads": {
+      "windows": {
+        "filename": "Shift-Switcher-Windows.zip",
+        "bytes": 72491723,
+        "sha256": "d18e18fe26383ad7350182382e8fbf130963a4c4b2cd70006a06f8b7200ebbaf",
+        "binary_sha256": "7171ad58a995f6f0f17922a8e2f1a37bfa8fd7bf262ed70191ffc1d4667f3e4a",
+        "source_commit": "a3009dca9af3c3eda2f0aa774ca26a1fb8ce74dd"
+      },
+      "mac": {
+        "filename": "Shift-Switcher-Mac.zip",
+        "bytes": 2023097,
+        "sha256": "e60ba6cf7efc91de1688ecbb504cb5242c76674ae59754557daa109477a33cc2",
+        "binary_sha256": "6cadb2e8a439e0ef942a00d4827ad488c7c8eba8e0d251a39eab1d0de3c6babc",
+        "source_commit": "a3009dca9af3c3eda2f0aa774ca26a1fb8ce74dd"
+      }
+    }
+  },
+  "portable": {
+    "swift": 169,
+    "windows_core": 60,
+    "windows_licensing": 59
+  },
+  "mac": {
+    "fixture": "Native Mac AppKit with isolated ID and UserDefaults",
+    "signed_update": true,
+    "modified_zip_rejected_before_exit": true,
+    "downgrade_and_bad_signature_rejected": true,
+    "updated_at_same_path": true,
+    "preferences_loaded_after_relaunch": true,
+    "rollback_after_failed_launch": true,
+    "production_accessibility_and_login_item_after_replace": "not exercised"
+  },
+  "windows": {
+    "fixture": "Windows 11 ARM VM running the x64 executables",
+    "signed_update": true,
+    "updated_at_same_path": true,
+    "exact_release_binary_relaunched": true,
+    "modified_zip_rejected_before_exit": true,
+    "settings_dpapi_and_startup_unchanged": true,
+    "physical_Windows_10_PC": "not exercised in this pass",
+    "automatic_retry_after_rollback": "Suppressed for the restored session by --update-failed"
+  },
+  "payment_changed": false
+}
