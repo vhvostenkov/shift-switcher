@@ -23,19 +23,21 @@ internal sealed class Updater : IDisposable
     private (Release Release, byte[] Feed)? available;
     private bool busy;
     private bool disposed;
+    private readonly string? failedVersion;
     internal bool Automatic { get; set; }
     internal Action<string>? Status { get; init; }
     internal Action? ReadyToExit { get; init; }
     internal Func<bool>? CanRestart { get; init; }
 
-    internal Updater(bool automatic)
+    internal Updater(bool automatic, string? failedVersion)
     {
         Automatic = automatic;
+        this.failedVersion = failedVersion;
         timer.Tick += async (_, _) =>
         {
             if (!Automatic || busy || disposed) return;
             if (DateTimeOffset.UtcNow >= nextCheck) await CheckAsync(false);
-            if (Automatic && available is { } release && CanRestart?.Invoke() == true && Idle())
+            if (Automatic && available is { } release && release.Release.Version != failedVersion && CanRestart?.Invoke() == true && Idle())
                 await InstallAsync(release.Release, release.Feed, false);
         };
         timer.Start();
@@ -141,6 +143,14 @@ internal sealed class Updater : IDisposable
                 start.ArgumentList.Add(argument);
             using var helper = Process.Start(start) ?? throw new IOException("Could not start installer");
             if (!await Task.Run(() => started.WaitOne(20000))) throw new IOException("Installer did not start");
+            if (disposed || (!manual && (!Automatic || CanRestart?.Invoke() != true || !Idle())))
+            {
+                // The helper has finished verification and is waiting for this process to exit.
+                if (!helper.HasExited) helper.Kill();
+                await helper.WaitForExitAsync();
+                nextCheck = DateTimeOffset.UtcNow.AddMinutes(10);
+                return;
+            }
             // The stage is kept until the helper confirms the new process has loaded.
             staging = null;
             ReadyToExit?.Invoke();
@@ -202,7 +212,7 @@ internal sealed class Updater : IDisposable
             var receipt = Guid.NewGuid().ToString("N");
             using var ready = new EventWaitHandle(false, EventResetMode.ManualReset, ReadyEvent(receipt));
             try { File.Replace(candidate, target, backup); }
-            catch { using var unchanged = Launch(target); throw; }
+            catch { using var unchanged = Launch(target, "--update-failed", release.Version); throw; }
             try
             {
                 using var updated = Launch(target, "--update-ready", receipt, Path.GetFileName(staging));
@@ -221,7 +231,7 @@ internal sealed class Updater : IDisposable
             }
             catch (Exception error) when (UpdateFailure(error)) {}
             File.Replace(backup, target, null);
-            using var restored = Launch(target);
+            using var restored = Launch(target, "--update-failed", release.Version);
             return 1;
         }
         catch (Exception error) when (UpdateFailure(error)) { return 1; }

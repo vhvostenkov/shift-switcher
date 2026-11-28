@@ -30,7 +30,9 @@ internal static class Program
             return;
         }
         ApplicationConfiguration.Initialize();
-        using var context = new SwitcherContext(args.Contains("--background"));
+        var failedUpdate = Array.IndexOf(args, "--update-failed");
+        var failedVersion = failedUpdate >= 0 && args.Length > failedUpdate + 1 ? args[failedUpdate + 1] : null;
+        using var context = new SwitcherContext(args.Contains("--background"), failedVersion);
         Updater.Finish(args);
         FormsApplication.Run(context);
     }
@@ -101,7 +103,7 @@ internal sealed class SwitcherContext : ApplicationContext
         return new(new WindowsLicenseStore(WindowsLicenseStore.DefaultPath), keys, environment);
     }
 
-    internal SwitcherContext(bool background)
+    internal SwitcherContext(bool background, string? failedVersion)
     {
         engine = new(settings, () => license.HasPro);
         hotkeys = new();
@@ -119,7 +121,7 @@ internal sealed class SwitcherContext : ApplicationContext
         autoMenu.Click += (_, _) => SetAutomatic(autoMenu.Checked);
         pauseMenu.Click += (_, _) => { engine.Pause(); UpdateIndicator(); };
         menu.Items.Add(autoMenu); menu.Items.Add(pauseMenu); menu.Items.Add(new ToolStripSeparator());
-        updater = new Updater(settings.AutomaticUpdates)
+        updater = new Updater(settings.AutomaticUpdates, failedVersion)
         {
             Status = text => { status.Text = text; },
             CanRestart = () => !window.Visible && !license.Busy,
