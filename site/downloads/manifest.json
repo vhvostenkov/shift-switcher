@@ -1,21 +1,21 @@
 {
   "schema": 1,
   "channel": "stable",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "downloads": {
     "windows": {
       "filename": "Shift-Switcher-Windows.zip",
-      "bytes": 72483023,
-      "sha256": "09c9122e7fe10d08686bd35b0c523d2d46d578bd263b5a4e10e0778c25b32c04",
-      "binary_sha256": "efb64aed687ef5876e82e3a185aa61f7c0e02cd31b1c03d561a3524177586f9f",
-      "source_commit": "2ceecc6db71ca3976ff3cd30f556e22f97d084db"
+      "bytes": 72491445,
+      "sha256": "baa41aaf65ed72accc73d06fa5ad865240fae5e573e8739b7c148d15faeeba97",
+      "binary_sha256": "93ed5804881a34a5bd6668006ad51479c4ee55b95d2c5e169838b5c32d9044ec",
+      "source_commit": "eaf378e4ac6618c33163680c4bcdec5c0e983c6f"
     },
     "mac": {
       "filename": "Shift-Switcher-Mac.zip",
-      "bytes": 1978042,
-      "sha256": "55a49f0bede6ebc44ba25adcb7b654d4538b5414b7e2de110faa58305fb3e9f1",
-      "binary_sha256": "49f60200c9919ff41b7c51bf0854dd84da11a68baaa322d7baa55223731b60f7",
-      "source_commit": "a5e26782d528a8272f960dc2ed7ff0622f732152"
+      "bytes": 2023095,
+      "sha256": "d6b1bf4490b6ab3fc70bed5ac86eb79907842a2e69e7d7a78fd1dc3cf573b9ed",
+      "binary_sha256": "4dff610556b3454263ddbc582c4066f582978deaba951721aef105fac33be528",
+      "source_commit": "eaf378e4ac6618c33163680c4bcdec5c0e983c6f"
     }
   }
 }

@@ -7,6 +7,7 @@ namespace ShiftSwitcher.Windows;
 
 internal sealed class Settings
 {
+    public bool AutomaticUpdates { get; set; } = true;
     internal static readonly string FilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VHVost", "ShiftSwitcher", "settings.json");
     public bool Automatic { get; set; }
     public HashSet<string> KnownWords { get; set; } = [];
