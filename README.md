@@ -9,6 +9,7 @@
 **[Скачать для Mac](https://vhvost.com/shift-switcher/downloads/Shift-Switcher-Mac.zip)**
 
 Ссылки ведут на последнюю проверенную сборку — номер версии выбирать не нужно.
+Обновления доступны из меню значка. [Как работает автообновление](docs/UPDATES.md).
 Стабильный выпуск для обеих платформ доступен также в [GitHub Releases](https://github.com/vhvostenkov/shift-switcher/releases/latest).
 Ручное исправление и отмена бесплатны; пробный Pro на 14 дней добавляет автоматику.
 Пользователям Winston и Radar доступен [бесплатный Pro на два компьютера](https://vhvost.com/shift-switcher/benefits.html), включая бесплатные тарифы. Один ключ подходит для Mac и Windows в любой комбинации.

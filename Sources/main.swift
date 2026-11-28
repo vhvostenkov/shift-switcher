@@ -63,6 +63,9 @@ final class App: NSObject, NSApplicationDelegate {
     var keyboardSpaceCount = 0
     var tapRestartCount = 0
     private var automaticUndoPrefix: Field?
+    @MainActor private lazy var updater = MacUpdater()
+    private var checkUpdateItem: NSMenuItem!
+    private var automaticUpdateItem: NSMenuItem!
     private var keyboardConflict = false
     private let diagnostics = ProcessInfo.processInfo.environment["SHIFT_SWITCHER_DIAGNOSTICS"] == "1"
     let excluded = Set(["com.apple.Terminal", "com.googlecode.iterm2", "com.microsoft.VSCode", "dev.zed.Zed", "com.jetbrains.intellij", "com.jetbrains.pycharm", "com.apple.dt.Xcode", "com.agilebits.onepassword7", "com.1password.1password", "com.apple.Passwords"])
@@ -85,6 +88,15 @@ final class App: NSObject, NSApplicationDelegate {
         _ = item("Разрешить управление текстом…", #selector(permissions), menu)
         _ = item("Подключить клавиатуру повторно", #selector(connect), menu)
         _ = item("Как пользоваться…", #selector(help), menu)
+        if Bundle.main.bundleIdentifier == UpdateRelease.bundleID {
+            checkUpdateItem = item("Проверить обновления…", #selector(checkUpdates), menu)
+            automaticUpdateItem = item("Автоматически проверять обновления", #selector(toggleUpdateChecks), menu)
+            automaticUpdateItem.state = updater.automatic ? .on : .off
+            updater.onAvailable = { [weak self] version in
+                self?.checkUpdateItem.title = "Доступно обновление \(version)…"
+            }
+            updater.start()
+        }
         menu.addItem(.separator())
         _ = item("Завершить Shift Switcher", #selector(quit), menu)
         status.menu = menu
@@ -115,6 +127,7 @@ final class App: NSObject, NSApplicationDelegate {
         }
         fputs("accessibility=\(AXIsProcessTrusted()) inputMonitoring=\(CGPreflightListenEventAccess())\n", stderr)
         connect()
+        finishMacUpdate(CommandLine.arguments)
         if let argument = CommandLine.arguments.first(where: { $0.hasPrefix("--compatibility-acceptance=") }) {
             let target = String(argument.dropFirst("--compatibility-acceptance=".count))
             acceptance = NativeAcceptance(app: self, target: target)
@@ -517,7 +530,16 @@ final class App: NSObject, NSApplicationDelegate {
         alert.informativeText = "Выделите текст и используйте \(shortcutPreferences.correction.title). Без выделения исправится последнее слово перед курсором. Повторное сочетание возвращает раскладку. Настройка клавиш — в «Личные правила → Клавиши».\n\nАвтоматика проверяет до 12 завершённых слов текущей строки по пробелу и после короткой паузы. Соседние слова помогают различить одиночные буквы RU/EN; правильные слова, адреса и числа сохраняются. Анализ локальный, по словарям macOS, без облачного ИИ. Для терминалов, редакторов кода и менеджеров паролей она по умолчанию отключена.\n\nНужны разрешения «Универсальный доступ» и «Мониторинг ввода». После выдачи доступа перезапустите приложение.\n\nТекст обрабатывается в памяти, не отправляется в сеть и не записывается в файлы. Поля без поддержки Accessibility пропускаются. Используйте один переключатель раскладки одновременно."
         alert.runModal()
     }
+    @MainActor @objc func checkUpdates() { updater.check(manual: true) }
+    @MainActor @objc func toggleUpdateChecks() {
+        updater.toggleAutomatic()
+        automaticUpdateItem.state = updater.automatic ? .on : .off
+    }
     @objc func quit() { NSApp.terminate(nil) }
+}
+if CommandLine.arguments.dropFirst().first == "--install-update" {
+    do { try applyMacUpdate(CommandLine.arguments); exit(0) }
+    catch { fputs("[Shift Switcher] Update install failed: \(error)\n", stderr); exit(1) }
 }
 if NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "local.viktor.ShiftSwitcher").contains(where: { $0.processIdentifier != getpid() }) { exit(0) }
 let app = NSApplication.shared

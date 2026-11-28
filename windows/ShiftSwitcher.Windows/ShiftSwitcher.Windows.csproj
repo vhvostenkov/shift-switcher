@@ -8,7 +8,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>ShiftSwitcher</AssemblyName>
-    <Version>1.0.0-rc.2</Version>
+    <Version>1.1.0</Version>
     <LicenseEnvironment Condition="'$(LicenseEnvironment)' == ''">LIVE</LicenseEnvironment>
     <ApplicationIcon>AppIcon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>

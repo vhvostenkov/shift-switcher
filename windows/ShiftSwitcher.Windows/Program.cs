@@ -17,6 +17,11 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        if (args.FirstOrDefault() == "--install-update")
+        {
+            Environment.ExitCode = Updater.Apply(args);
+            return;
+        }
         using var singleton = new Mutex(true, @"Local\VHVost.ShiftSwitcher.Windows", out var created);
         if (!created)
         {
@@ -25,7 +30,9 @@ internal static class Program
             return;
         }
         ApplicationConfiguration.Initialize();
-        FormsApplication.Run(new SwitcherContext(args.Contains("--background")));
+        using var context = new SwitcherContext(args.Contains("--background"));
+        Updater.Finish(args);
+        FormsApplication.Run(context);
     }
     private static bool ShowExistingSettings()
     {
@@ -74,6 +81,7 @@ internal sealed class SwitcherContext : ApplicationContext
     private readonly KeyboardMonitor keyboard;
     private readonly Hotkeys hotkeys;
     private readonly NotifyIcon tray;
+    private readonly Updater updater;
     private readonly System.Windows.Forms.Timer indicator = new() { Interval = 1000 };
     private readonly Form window;
     private readonly Label status = new() { AutoSize = false, Height = 48, Dock = DockStyle.Top };
@@ -111,6 +119,20 @@ internal sealed class SwitcherContext : ApplicationContext
         autoMenu.Click += (_, _) => SetAutomatic(autoMenu.Checked);
         pauseMenu.Click += (_, _) => { engine.Pause(); UpdateIndicator(); };
         menu.Items.Add(autoMenu); menu.Items.Add(pauseMenu); menu.Items.Add(new ToolStripSeparator());
+        updater = new Updater(settings.AutomaticUpdates)
+        {
+            Status = text => { status.Text = text; },
+            CanRestart = () => !window.Visible && !license.Busy,
+            ReadyToExit = ExitThread
+        };
+        menu.Items.Add("Проверить обновления…", null, async (_, _) => await updater.CheckAsync(true));
+        var automaticUpdates = new ToolStripMenuItem("Автоматические обновления") { Checked = settings.AutomaticUpdates, CheckOnClick = true };
+        automaticUpdates.Click += (_, _) =>
+        {
+            updater.Automatic = settings.AutomaticUpdates = automaticUpdates.Checked;
+            SaveSettings();
+        };
+        menu.Items.Add(automaticUpdates);
         menu.Items.Add("Выйти", null, (_, _) => ExitThread());
         tray = new NotifyIcon { Visible = true, ContextMenuStrip = menu, Text = "Shift Switcher · Windows" };
         tray.DoubleClick += (_, _) => { window.Show(); window.Activate(); };
@@ -228,7 +250,7 @@ internal sealed class SwitcherContext : ApplicationContext
     [System.Runtime.InteropServices.DllImport("user32.dll")] private static extern bool DestroyIcon(nint icon);
     protected override void ExitThreadCore()
     {
-        exiting = true; license.Dispose();
+        exiting = true; updater.Dispose(); license.Dispose();
         indicator.Stop(); keyboard.Dispose(); hotkeys.Dispose(); engine.Dispose(); tray.Visible = false; tray.Dispose();
         generatedIcon?.Dispose(); indicator.Dispose(); window.Dispose(); base.ExitThreadCore();
     }
